@@ -2,7 +2,7 @@ const en = {
   brand: {
     name: "HindaviSwarajya",
     tagline: "Maharaj's dream, our duty",
-    quote: "Self-rule is my birthright",
+    quote: "May this Swarajya come to be — it is the will of the Divine",
   },
   common: {
     loading: "Loading…",

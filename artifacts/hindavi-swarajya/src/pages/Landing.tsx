@@ -115,8 +115,8 @@ export default function Landing() {
               India's community seva platform for organizing events, sharing service stories, and helping those in need — together.
             </p>
 
-            <p className="text-base text-[#FF6F00] font-semibold mb-8 font-serif">
-              "स्वराज्य हा माझा जन्मसिद्ध हक्क आहे आणि तो मी मिळवणारच"
+            <p className="text-base text-[#FF6F00] font-semibold mb-8 font-serif" lang="mr">
+              "हे स्वराज्य व्हावे, ही तर श्रींची इच्छा."
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">

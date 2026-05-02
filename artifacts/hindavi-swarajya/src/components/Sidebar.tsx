@@ -189,7 +189,7 @@ export function Sidebar() {
         <div className="px-5 pb-5 shrink-0 border-t border-border/50 pt-3 flex items-center justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[11px] text-primary font-semibold truncate" lang="mr">
-              "स्वराज्य हा माझा जन्मसिद्ध हक्क आहे"
+              "हे स्वराज्य व्हावे, ही तर श्रींची इच्छा."
             </p>
             <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
               {t("nav.dailyInspiration")}
