@@ -91,7 +91,13 @@ export function Sidebar() {
     const Icon = tab.icon;
     const isCreate = tab.id === "create";
     const isActive = isTabActive(tab.href, location);
-    const showAsAccent = isCreate || isActive;
+    // Three visual modes: solid-orange CTA pill (Share Seva), soft-peach active
+    // tint (current page), neutral hover-able row (everything else).
+    const variant: "cta" | "active" | "default" = isCreate
+      ? "cta"
+      : isActive
+        ? "active"
+        : "default";
 
     return (
       <Link key={tab.id} href={tab.href}>
@@ -99,30 +105,41 @@ export function Sidebar() {
           data-testid={`nav-${tab.id}`}
           className={cn(
             "w-full px-3.5 py-3 rounded-2xl transition-all duration-150 text-left cursor-pointer tap-none",
-            showAsAccent
-              ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-4px_rgba(255,111,0,0.5)]"
-              : "text-foreground/75 hover:bg-foreground/5 hover:text-foreground",
+            variant === "cta" &&
+              "bg-gradient-to-r from-primary to-orange-500 text-primary-foreground shadow-[0_6px_18px_-6px_rgba(255,111,0,0.55)] hover:shadow-[0_8px_22px_-6px_rgba(255,111,0,0.65)]",
+            variant === "active" && "bg-primary/10 text-primary",
+            variant === "default" &&
+              "text-foreground/75 hover:bg-foreground/5 hover:text-foreground",
           )}
         >
           <div className="flex items-center gap-3">
             <Icon
               className={cn(
                 "w-[18px] h-[18px] shrink-0",
-                showAsAccent ? "text-primary-foreground" : "text-foreground/55",
+                variant === "cta" && "text-primary-foreground",
+                variant === "active" && "text-primary",
+                variant === "default" && "text-foreground/55",
               )}
-              strokeWidth={showAsAccent ? 2.25 : 1.85}
+              strokeWidth={variant === "cta" ? 2.5 : variant === "active" ? 2.1 : 1.85}
             />
             <div className="min-w-0">
-              <p className={cn(
-                "text-[14px] font-semibold leading-tight truncate",
-                showAsAccent ? "text-primary-foreground" : "",
-              )}>
+              <p
+                className={cn(
+                  "text-[14px] font-semibold leading-tight truncate",
+                  variant === "cta" && "text-primary-foreground",
+                  variant === "active" && "text-primary",
+                )}
+              >
                 {t(tab.labelKey)}
               </p>
-              <p className={cn(
-                "text-[11px] mt-0.5 leading-tight truncate",
-                showAsAccent ? "text-primary-foreground/85" : "text-muted-foreground",
-              )}>
+              <p
+                className={cn(
+                  "text-[11px] mt-0.5 leading-tight truncate",
+                  variant === "cta"
+                    ? "text-primary-foreground/85"
+                    : "text-muted-foreground",
+                )}
+              >
                 {t(tab.descKey)}
               </p>
             </div>
