@@ -1,10 +1,17 @@
-export const RANK_COLORS: Record<string, string> = {
-  Sevak: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  Karyakarta: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  Nayak: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-  Veer: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-  Sardar: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-};
+import { SWARAJYA_RANKS } from "./ranks";
+
+// Tailwind class strings for each rank — used by the lightweight RankBadge
+// component and any consumer that wants a one-liner pill style.
+export const RANK_COLORS: Record<string, string> = SWARAJYA_RANKS.reduce(
+  (acc, r) => {
+    acc[r.name] = `${r.bg} ${r.text} ${r.border}`;
+    return acc;
+  },
+  {
+    Chhava:
+      "bg-gradient-to-r from-amber-500 via-orange-600 to-red-700 text-white border-amber-600",
+  } as Record<string, string>,
+);
 
 export const CATEGORY_COLORS: Record<string, string> = {
   Food: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",

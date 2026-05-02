@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, mudraFromHelped } from "@workspace/db";
 import {
   helpRequestsTable,
   helpRequestJoinsTable,
@@ -26,7 +26,9 @@ async function buildHelpRequest(req: typeof helpRequestsTable.$inferSelect) {
     requesterId: req.requesterId,
     requester: u ? {
       id: u.id, name: u.name, avatar: u.avatar ?? "", location: u.location ?? "",
-      rank: u.rank, totalHelped: u.totalHelped, followersCount: u.followersCount, postsCount: u.postsCount,
+      rank: u.rank, totalHelped: u.totalHelped,
+      mudra: mudraFromHelped(u.totalHelped), chhava: u.chhava,
+      followersCount: u.followersCount, postsCount: u.postsCount,
     } : null,
     peopleNeeded: req.peopleNeeded,
     helpersJoined: joins.map(j => j.userId),

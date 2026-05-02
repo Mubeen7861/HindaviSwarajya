@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, mudraFromHelped } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 
@@ -13,6 +13,8 @@ function serializeProfile(u: typeof usersTable.$inferSelect) {
     location: u.location ?? "",
     rank: u.rank,
     totalHelped: u.totalHelped,
+    mudra: mudraFromHelped(u.totalHelped),
+    chhava: u.chhava,
     followersCount: u.followersCount,
     postsCount: u.postsCount,
     bio: u.bio ?? undefined,

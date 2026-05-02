@@ -1,0 +1,140 @@
+## ⚔️ Swarajya Rank System – Integration Prompt
+
+Build a **gamified ranking system** inspired by the structure of Chhatrapati Shivaji Maharaj’s Swarajya.
+
+### 🎯 Core Concept
+
+Users earn **+10 points for every valid help/contribution** (answers, mentorship, useful posts, etc.).
+Ranks are automatically updated based on total points.
+
+---
+
+## 🧮 Rank Thresholds
+
+Sevak — 0
+Mavla — 10
+Bargir — 30
+Shiledar — 60
+Naik — 120
+Havaldar — 240
+Jumledar — 480
+Hazari — 960
+Panch Hazari — 2,000
+Sardar — 4,000
+Killedar — 7,000
+Deshpande — 10,000
+Deshmukh — 15,000
+Subhedar — 22,000
+Ashta Pradhan — 35,000
+Sarnobat — 60,000
+Sar Senapati — 100,000 (Highest achievable rank)
+
+---
+
+## 🏆 Special Rank Logic
+
+**Chhava (छावा)**
+
+* Not point-based
+* Awarded manually by admin
+* Criteria: Exceptional impact, leadership, community influence
+* Badge: Royal / tiger-themed / elite visual identity
+* Displayed above all ranks (symbolic honor)
+
+**Chhatrapati**
+
+* Not assignable
+* Reserved as legacy inspiration only
+
+---
+
+## ⚙️ Functional Requirements
+
+1. **Auto Rank Upgrade**
+
+   * System should automatically update rank when user crosses threshold
+
+2. **Contribution Validation**
+
+   * Points should only be awarded after validation (admin/moderator or AI moderation)
+
+3. **User Profile Display**
+
+   * Show:
+
+     * Current Rank
+     * Total Points
+     * Progress bar to next rank
+     * Rank badge (icon-based)
+
+4. **Leaderboard System**
+
+   * Global leaderboard based on points
+   * Highlight:
+
+     * Top 10 users
+     * Chhava badge holders separately
+
+5. **Activity Tracking**
+
+   * Track:
+
+     * Number of helps
+     * Points earned
+     * Rank history (optional)
+
+---
+
+## 🎨 UI/UX Guidelines
+
+* Theme: **Maratha Swarajya + modern minimal**
+
+* Colors:
+
+  * Saffron / orange (power, energy)
+  * Dark brown / black (strength)
+  * Gold accents (elite ranks)
+
+* Typography:
+
+  * Bold headings
+  * Optional Devanagari touch for rank names
+
+* Visual Elements:
+
+  * Rank badges (each rank unique)
+  * Progress bar (animated)
+  * Subtle warrior/heritage motifs (not overdone)
+
+---
+
+## 🔥 Engagement Features (Optional but Recommended)
+
+* Rank-up animation (celebration moment)
+* Weekly top contributors badge
+* Streak system (daily contribution bonus)
+* Unlock perks at higher ranks:
+
+  * Priority visibility
+  * Special community access
+  * Webinar hosting rights
+
+---
+
+## 🧠 Logic Summary
+
+* 1 Help = +10 points
+* Rank progression = exponential difficulty
+* Sar Senapati = peak achievement
+* Chhava = rare honor (not grindable)
+
+---
+
+## 🚀 Goal
+
+Create a system that:
+
+* Encourages consistent contribution
+* Builds authority & recognition
+* Feels prestigious and culturally powerful
+* Drives long-term engagement and retention

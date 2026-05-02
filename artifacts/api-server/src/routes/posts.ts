@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, mudraFromHelped } from "@workspace/db";
 import {
   postsTable,
   usersTable,
@@ -15,6 +15,7 @@ import {
   UpdatePostBody,
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
+import { applyRank } from "../lib/applyRank";
 
 const router = Router();
 
@@ -54,6 +55,8 @@ async function buildPost(post: typeof postsTable.$inferSelect) {
           location: u.location ?? "",
           rank: u.rank,
           totalHelped: u.totalHelped,
+          mudra: mudraFromHelped(u.totalHelped),
+          chhava: u.chhava,
           followersCount: u.followersCount,
           postsCount: u.postsCount,
         }
@@ -292,6 +295,7 @@ router.patch("/posts/:id", requireAuth, async (req, res) => {
           .update(usersTable)
           .set({ totalHelped: sql`GREATEST(${usersTable.totalHelped} + ${helpedDelta}, 0)` })
           .where(eq(usersTable.id, userId));
+        await applyRank(tx, userId);
       }
       return row;
     });
@@ -331,6 +335,7 @@ router.delete("/posts/:id", requireAuth, async (req, res) => {
             totalHelped: sql`GREATEST(${usersTable.totalHelped} - ${post.helpedPeople}, 0)`,
           })
           .where(eq(usersTable.id, userId));
+        await applyRank(tx, userId);
       }
       return { deleted: true } as const;
     });

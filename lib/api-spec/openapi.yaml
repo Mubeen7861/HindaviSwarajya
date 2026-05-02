@@ -736,7 +736,24 @@ components:
 
     Rank:
       type: string
-      enum: [Sevak, Karyakarta, Nayak, Veer, Sardar]
+      enum:
+        - Sevak
+        - Mavla
+        - Bargir
+        - Shiledar
+        - Naik
+        - Havaldar
+        - Jumledar
+        - Hazari
+        - Panch Hazari
+        - Sardar
+        - Killedar
+        - Deshpande
+        - Deshmukh
+        - Subhedar
+        - Ashta Pradhan
+        - Sarnobat
+        - Sar Senapati
 
     SevaCategory:
       type: string
@@ -757,6 +774,12 @@ components:
           $ref: "#/components/schemas/Rank"
         totalHelped:
           type: integer
+        mudra:
+          type: integer
+          description: Seva points — totalHelped × 10
+        chhava:
+          type: boolean
+          description: Honorary rank awarded by admins; displayed above the normal rank
         followersCount:
           type: integer
         postsCount:
@@ -768,6 +791,8 @@ components:
         - location
         - rank
         - totalHelped
+        - mudra
+        - chhava
         - followersCount
         - postsCount
 

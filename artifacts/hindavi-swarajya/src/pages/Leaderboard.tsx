@@ -1,14 +1,14 @@
-import { useState } from "react";
 import { Link } from "wouter";
 import { useGetLeaderboard, getGetLeaderboardQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy, Users, Heart, Award, Sparkles } from "lucide-react";
+import { Trophy, Users, Sparkles, Crown } from "lucide-react";
 import { RankBadge } from "@/components/RankBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { EmptyState } from "@/components/EmptyState";
+import { CHHAVA_RANK, mudraFromHelped } from "@/lib/ranks";
 
 export default function Leaderboard() {
   const { data: leaderboard, isLoading } = useGetLeaderboard({ limit: 50 }, {
@@ -17,6 +17,8 @@ export default function Leaderboard() {
     }
   });
 
+  const chhavaHolders = leaderboard?.filter((e) => e.user.chhava) ?? [];
+
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8">
       <div className="mb-8 text-center">
@@ -24,12 +26,38 @@ export default function Leaderboard() {
           <Trophy className="w-8 h-8 text-yellow-500" />
           Seva Leaderboard
         </h1>
-        <p className="text-muted-foreground">Top contributors making an impact in the community</p>
+        <p className="text-muted-foreground">Top contributors making an impact — ranked by Mudra (10 per person helped)</p>
       </div>
+
+      {/* Chhava honor roll */}
+      {chhavaHolders.length > 0 && (
+        <Card className={`mb-6 overflow-hidden border-amber-300 ${CHHAVA_RANK.bg} text-white shadow-lg`}>
+          <CardHeader className="pb-3 border-b border-white/15">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Crown className="w-5 h-5" /> Chhava — Honorary Rank
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="flex flex-wrap gap-3">
+              {chhavaHolders.map((entry) => (
+                <Link key={entry.user.id} href={`/app/profile/${entry.user.id}`}>
+                  <div className="flex items-center gap-2 bg-white/15 backdrop-blur rounded-full pr-3 pl-1 py-1 hover:bg-white/25 transition-colors cursor-pointer">
+                    <Avatar className="w-7 h-7 border border-white/40">
+                      <AvatarImage src={entry.user.avatar} alt={entry.user.name} />
+                      <AvatarFallback>{entry.user.name.substring(0, 2)}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-semibold">{entry.user.name}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-orange-100 dark:border-orange-900/30 overflow-hidden">
         <CardHeader className="bg-primary/5 pb-4 border-b">
-          <CardTitle className="text-lg">Top Karyakartas</CardTitle>
+          <CardTitle className="text-lg">Top Sevaks</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -95,30 +123,32 @@ export default function Leaderboard() {
 
                   <div className="flex-1 min-w-0">
                     <Link href={`/app/profile/${entry.user.id}`}>
-                      <h3 className="font-semibold text-sm sm:text-base truncate cursor-pointer hover:underline" data-testid={`leaderboard-name-${entry.user.id}`}>
+                      <h3 className="font-semibold text-sm sm:text-base truncate cursor-pointer hover:underline flex items-center gap-1.5" data-testid={`leaderboard-name-${entry.user.id}`}>
                         {entry.user.name}
+                        {entry.user.chhava && <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
                       </h3>
                     </Link>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      {entry.user.chhava && <RankBadge rank={entry.user.rank} chhava />}
                       <RankBadge rank={entry.user.rank} />
                     </div>
                   </div>
 
                   <div className="hidden sm:flex items-center gap-6 text-sm text-muted-foreground">
                     <div className="flex flex-col items-center">
-                      <span className="font-bold text-foreground">{entry.postCount}</span>
+                      <span className="font-bold text-foreground tabular-nums">{entry.postCount}</span>
                       <span className="text-xs">Sevas</span>
                     </div>
                     <div className="flex flex-col items-center">
-                      <span className="font-bold text-foreground">{entry.totalLikes}</span>
-                      <span className="text-xs">Likes</span>
+                      <span className="font-bold text-foreground tabular-nums">{entry.totalHelped}</span>
+                      <span className="text-xs">Helped</span>
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-1 ml-2 border-l pl-4 border-border">
-                    <span className="text-xs text-muted-foreground">Impact</span>
-                    <span className="font-bold text-emerald-600 flex items-center gap-1 text-sm sm:text-base">
-                      {entry.totalHelped} <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <div className="flex flex-col items-end gap-0.5 ml-2 border-l pl-4 border-border">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Mudra</span>
+                    <span className="font-bold text-amber-600 flex items-center gap-1 text-sm sm:text-base tabular-nums">
+                      {mudraFromHelped(entry.totalHelped).toLocaleString()} <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
                     </span>
                   </div>
                 </motion.div>

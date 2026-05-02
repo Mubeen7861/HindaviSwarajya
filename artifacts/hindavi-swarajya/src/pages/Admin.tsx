@@ -16,9 +16,10 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Shield, Users, FileText, Calendar, AlertCircle, Trash2,
   TrendingUp, Activity, RefreshCw, ArrowLeft, Edit3, Check, X, LogOut,
-  CheckCircle2, XCircle, Inbox, Clock,
+  CheckCircle2, XCircle, Inbox, Clock, Crown,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { SWARAJYA_RANKS, RANK_NAMES } from "@/lib/ranks";
 
 const ADMIN_TOKEN_KEY = "hs_admin_token";
 
@@ -53,7 +54,7 @@ type Overview = {
   recentPosts: { id: number; content: string; category: string; userId: number; helpedPeople: number; timestamp: string | null }[];
 };
 
-type AdminUser = { id: number; name: string; avatar: string; location: string; rank: string; totalHelped: number; followersCount: number; postsCount: number; joinedAt: string | null };
+type AdminUser = { id: number; name: string; avatar: string; location: string; rank: string; totalHelped: number; mudra: number; chhava: boolean; followersCount: number; postsCount: number; joinedAt: string | null };
 type AdminPost = { id: number; userId: number; userName: string; userAvatar: string; content: string; category: string; helpedPeople: number; likes: number; location: string | null; approvalStatus: string; timestamp: string | null };
 type AdminEvent = { id: number; title: string; category: string; date: string; location: string; status: string; approvalStatus: string; organizerId: number; organizerName: string; volunteersNeeded: number; createdAt: string | null };
 type AdminHelpRequest = { id: number; title: string; category: string; urgency: string; location: string; status: string; approvalStatus: string; requesterId: number; requesterName: string; peopleNeeded: number; deadline: string | null; createdAt: string | null };
@@ -63,17 +64,13 @@ type PendingEvent = { id: number; title: string; description: string; category: 
 type PendingHelpRequest = { id: number; title: string; description: string; category: string; urgency: string; location: string; requesterId: number; requesterName: string; requesterAvatar: string; peopleNeeded: number; deadline: string | null; createdAt: string | null };
 type PendingQueue = { counts: { posts: number; events: number; helpRequests: number }; posts: PendingPost[]; events: PendingEvent[]; helpRequests: PendingHelpRequest[] };
 
-const RANKS = ["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"];
+const RANKS = RANK_NAMES;
 const EVENT_STATUSES = ["upcoming", "ongoing", "completed", "cancelled"];
 const HELP_STATUSES = ["open", "in_progress", "fulfilled", "closed"];
 
-const rankColors: Record<string, string> = {
-  Sevak: "bg-gray-100 text-gray-700",
-  Karyakarta: "bg-blue-100 text-blue-700",
-  Nayak: "bg-purple-100 text-purple-700",
-  Veer: "bg-orange-100 text-orange-700",
-  Sardar: "bg-red-100 text-red-700",
-};
+const rankColors: Record<string, string> = Object.fromEntries(
+  SWARAJYA_RANKS.map((r) => [r.name, `${r.bg} ${r.text}`]),
+);
 
 const statusColors: Record<string, string> = {
   upcoming: "bg-blue-100 text-blue-700",
@@ -226,6 +223,22 @@ export default function Admin() {
       setUsers((u) => u.map((x) => (x.id === id ? { ...x, rank } : x)));
       setEditingRank(null);
       toast({ title: "Rank updated" });
+    } else if (r) {
+      toast({ title: "Update failed", variant: "destructive" });
+    }
+  };
+
+  const toggleChhava = async (id: number, chhava: boolean) => {
+    const r = await safeFetch(`/admin/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ chhava }),
+    });
+    if (r?.ok) {
+      setUsers((u) => u.map((x) => (x.id === id ? { ...x, chhava } : x)));
+      toast({
+        title: chhava ? "Chhava awarded ✦" : "Chhava revoked",
+        description: chhava ? "Honorary rank granted." : "Honorary rank removed.",
+      });
     } else if (r) {
       toast({ title: "Update failed", variant: "destructive" });
     }
@@ -671,9 +684,9 @@ export default function Admin() {
                     <thead>
                       <tr className="border-b border-gray-100 bg-gray-50/80">
                         <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">User</th>
-                        <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Rank</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Rank · Honor</th>
                         <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden md:table-cell">Location</th>
-                        <th className="text-right px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden lg:table-cell">Helped</th>
+                        <th className="text-right px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden lg:table-cell">Mudra</th>
                         <th className="text-right px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden lg:table-cell">Posts</th>
                         <th className="text-right px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden xl:table-cell">Joined</th>
                         <th className="px-4 py-3 w-24"></th>
@@ -711,16 +724,28 @@ export default function Admin() {
                                 </button>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${rankColors[u.rank] ?? "bg-gray-100 text-gray-600"}`}>{u.rank}</span>
-                                <button onClick={() => setEditingRank({ id: u.id, rank: u.rank })} className="w-5 h-5 flex items-center justify-center rounded text-gray-300 hover:text-gray-600 hover:bg-gray-100">
+                                <button onClick={() => setEditingRank({ id: u.id, rank: u.rank })} className="w-5 h-5 flex items-center justify-center rounded text-gray-300 hover:text-gray-600 hover:bg-gray-100" title="Edit rank">
                                   <Edit3 className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => toggleChhava(u.id, !u.chhava)}
+                                  className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide transition-all ${
+                                    u.chhava
+                                      ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm hover:shadow-md"
+                                      : "bg-gray-50 text-gray-400 border border-dashed border-gray-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300"
+                                  }`}
+                                  title={u.chhava ? "Revoke Chhava honor" : "Grant Chhava honor"}
+                                  data-testid={`button-chhava-${u.id}`}
+                                >
+                                  <Crown className="w-2.5 h-2.5" /> Chhava
                                 </button>
                               </div>
                             )}
                           </td>
                           <td className="px-4 py-3 text-gray-600 text-xs hidden md:table-cell">{u.location}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-orange-600 hidden lg:table-cell">{u.totalHelped}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-amber-600 hidden lg:table-cell tabular-nums">{u.mudra?.toLocaleString() ?? 0}</td>
                           <td className="px-4 py-3 text-right text-gray-600 hidden lg:table-cell">{u.postsCount}</td>
                           <td className="px-4 py-3 text-right text-xs text-gray-400 hidden xl:table-cell">
                             {u.joinedAt ? formatDistanceToNow(new Date(u.joinedAt), { addSuffix: true }) : "—"}

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, mudraFromHelped } from "@workspace/db";
 import { postsTable, usersTable, postTagsTable, postLikesTable } from "@workspace/db";
 import { sql, desc } from "drizzle-orm";
 
@@ -75,6 +75,8 @@ router.get("/leaderboard", async (req, res) => {
             location: u.location,
             rank: u.rank,
             totalHelped: u.totalHelped,
+            mudra: mudraFromHelped(u.totalHelped),
+            chhava: u.chhava,
             followersCount: u.followersCount,
             postsCount: u.postsCount,
           },

@@ -4,11 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Heart, Users, Calendar, Trophy, ArrowRight,
   Star, Shield, Zap, Globe, CheckCircle, ChevronRight,
-  Flame
+  Flame, Crown,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SWARAJYA_RANKS, CHHAVA_RANK } from "@/lib/ranks";
 
 const FEATURES = [
   {
@@ -38,7 +39,7 @@ const FEATURES = [
   {
     icon: Trophy,
     title: "Earn Recognition",
-    desc: "Rise through ranks — Sevak, Karyakarta, Nayak, Veer, Sardar — as your seva grows.",
+    desc: "Earn 10 Mudra per person helped and rise through 17 Swarajya ranks — from Sevak to Sar Senapati.",
     color: "bg-purple-50 text-purple-600",
   },
   {
@@ -194,24 +195,49 @@ export default function Landing() {
 
       {/* ── Ranks Section ── */}
       <section className="py-16 px-4 sm:px-6 bg-orange-50/50">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-5xl mx-auto text-center">
           <Zap className="w-8 h-8 text-[#FF6F00] mx-auto mb-3" />
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 font-serif mb-3">
-            Your Seva Earns You Rank
+            The Swarajya Rank System
           </h2>
-          <p className="text-gray-500 mb-8 max-w-md mx-auto">Rise through the ranks as your service grows. Each act of seva moves you closer to becoming a Sardar of the community.</p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            {[
-              { rank: "Sevak", desc: "Starting your journey", color: "bg-green-100 text-green-800 border-green-200" },
-              { rank: "Karyakarta", desc: "Active volunteer", color: "bg-blue-100 text-blue-800 border-blue-200" },
-              { rank: "Nayak", desc: "Community leader", color: "bg-purple-100 text-purple-800 border-purple-200" },
-              { rank: "Veer", desc: "Dedicated warrior", color: "bg-orange-100 text-orange-800 border-orange-200" },
-              { rank: "Sardar", desc: "Elite champion", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-            ].map((r) => (
-              <div key={r.rank} className={`border rounded-xl px-4 py-3 text-center ${r.color}`}>
-                <p className="font-bold text-sm">{r.rank}</p>
-                <p className="text-xs mt-0.5 opacity-80">{r.desc}</p>
+          <p className="text-gray-500 mb-2 max-w-xl mx-auto">
+            Earn <span className="font-bold text-[#FF6F00]">10 Mudra</span> for every person you help. Rise through 17 ranks inspired by the structure of Chhatrapati Shivaji Maharaj's Swarajya.
+          </p>
+          <p className="text-xs text-gray-400 mb-8">From Sevak to Sar Senapati — and the rare honor of <Crown className="inline w-3.5 h-3.5 text-amber-500" /> Chhava</p>
+
+          {/* Honorary Chhava callout */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className={`mx-auto max-w-md mb-8 rounded-2xl p-5 ${CHHAVA_RANK.bg} text-white shadow-lg`}
+          >
+            <div className="flex items-center justify-center gap-3">
+              <Crown className="w-6 h-6" />
+              <div className="text-left">
+                <p className="font-bold text-lg">Chhava <span className="opacity-80 text-sm font-medium">· छावा</span></p>
+                <p className="text-xs opacity-90">Honorary rank — awarded by admins for exceptional impact.</p>
               </div>
+            </div>
+          </motion.div>
+
+          {/* 17-rank ladder */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+            {SWARAJYA_RANKS.map((r, i) => (
+              <motion.div
+                key={r.name}
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.025 }}
+                className={`border rounded-xl p-3 text-center ${r.bg} ${r.text} ${r.border} ${r.name === "Sar Senapati" ? "ring-2 ring-amber-400" : ""}`}
+                title={r.description}
+              >
+                <p className="text-[10px] font-semibold opacity-70 tabular-nums">#{i + 1}</p>
+                <p className="font-bold text-sm leading-tight">{r.name}</p>
+                <p className="text-[10px] opacity-70 leading-tight">{r.devanagari}</p>
+                <p className="text-[10px] mt-1 font-semibold tabular-nums opacity-80">
+                  {r.threshold === 0 ? "Start" : `${r.threshold >= 1000 ? `${r.threshold / 1000}k` : r.threshold} Mudra`}
+                </p>
+              </motion.div>
             ))}
           </div>
         </div>

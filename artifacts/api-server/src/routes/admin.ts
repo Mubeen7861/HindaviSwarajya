@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, mudraFromHelped, SWARAJYA_RANK_NAMES } from "@workspace/db";
 import {
   usersTable,
   postsTable,
@@ -16,6 +16,7 @@ import {
 import { eq, desc, sql } from "drizzle-orm";
 import { timingSafeEqual } from "crypto";
 import { signAdminToken, requireAdminAuth } from "../middlewares/adminAuth";
+import { applyRank } from "../lib/applyRank";
 
 const router = Router();
 
@@ -125,6 +126,8 @@ router.get("/admin/users", async (req, res) => {
         location: u.location,
         rank: u.rank,
         totalHelped: u.totalHelped,
+        mudra: mudraFromHelped(u.totalHelped),
+        chhava: u.chhava,
         followersCount: u.followersCount,
         postsCount: u.postsCount,
         bio: u.bio ?? null,
@@ -140,21 +143,31 @@ router.get("/admin/users", async (req, res) => {
 router.patch("/admin/users/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { rank, name, location, bio } = req.body as {
-      rank?: string; name?: string; location?: string; bio?: string;
+    const { rank, name, location, bio, chhava } = req.body as {
+      rank?: string; name?: string; location?: string; bio?: string; chhava?: boolean;
     };
     const update: Record<string, unknown> = {};
-    if (rank !== undefined) update.rank = rank;
+    if (rank !== undefined) {
+      if (typeof rank !== "string" || !SWARAJYA_RANK_NAMES.includes(rank as (typeof SWARAJYA_RANK_NAMES)[number])) {
+        res.status(400).json({ error: `Invalid rank. Must be one of: ${SWARAJYA_RANK_NAMES.join(", ")}` });
+        return;
+      }
+      update.rank = rank;
+    }
     if (name !== undefined) update.name = name;
     if (location !== undefined) update.location = location;
     if (bio !== undefined) update.bio = bio;
+    if (typeof chhava === "boolean") update.chhava = chhava;
     if (Object.keys(update).length === 0) {
       res.status(400).json({ error: "Nothing to update" });
       return;
     }
     const [user] = await db.update(usersTable).set(update).where(eq(usersTable.id, id)).returning();
     if (!user) { res.status(404).json({ error: "Not found" }); return; }
-    res.json({ id: user.id, name: user.name, rank: user.rank, location: user.location, bio: user.bio });
+    res.json({
+      id: user.id, name: user.name, rank: user.rank, location: user.location,
+      bio: user.bio, chhava: user.chhava,
+    });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -241,6 +254,7 @@ router.delete("/admin/posts/:id", async (req, res) => {
             totalHelped: sql`GREATEST(${usersTable.totalHelped} - ${post.helpedPeople}, 0)`,
           })
           .where(eq(usersTable.id, post.userId));
+        await applyRank(tx, post.userId);
       }
       return true;
     });
@@ -351,6 +365,7 @@ router.post("/admin/posts/:id/approve", async (req, res) => {
             totalHelped: sql`${usersTable.totalHelped} + ${post.helpedPeople}`,
           })
           .where(eq(usersTable.id, post.userId));
+        await applyRank(tx, post.userId);
       }
       return { id: updated.id, approvalStatus: updated.approvalStatus };
     });
@@ -383,6 +398,7 @@ router.post("/admin/posts/:id/reject", async (req, res) => {
             totalHelped: sql`GREATEST(${usersTable.totalHelped} - ${post.helpedPeople}, 0)`,
           })
           .where(eq(usersTable.id, post.userId));
+        await applyRank(tx, post.userId);
       }
       return { id: updated.id, approvalStatus: updated.approvalStatus };
     });

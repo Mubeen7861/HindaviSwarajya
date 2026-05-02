@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, mudraFromHelped } from "@workspace/db";
 import {
   eventsTable,
   eventTagsTable,
@@ -31,7 +31,9 @@ async function buildEvent(event: typeof eventsTable.$inferSelect) {
     organizerId: event.organizerId,
     organizer: u ? {
       id: u.id, name: u.name, avatar: u.avatar ?? "", location: u.location ?? "",
-      rank: u.rank, totalHelped: u.totalHelped, followersCount: u.followersCount, postsCount: u.postsCount,
+      rank: u.rank, totalHelped: u.totalHelped,
+      mudra: mudraFromHelped(u.totalHelped), chhava: u.chhava,
+      followersCount: u.followersCount, postsCount: u.postsCount,
     } : null,
     volunteersNeeded: event.volunteersNeeded,
     volunteersRegistered: registrations.map(r => r.userId),

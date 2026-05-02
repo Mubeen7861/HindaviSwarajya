@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, mudraFromHelped } from "@workspace/db";
 import { usersTable, postsTable, followsTable } from "@workspace/db";
 import { eq, sql, desc } from "drizzle-orm";
 import { postTagsTable, postLikesTable, commentsTable } from "@workspace/db";
@@ -42,6 +42,8 @@ async function buildPost(post: typeof postsTable.$inferSelect) {
           location: u.location ?? "",
           rank: u.rank,
           totalHelped: u.totalHelped,
+          mudra: mudraFromHelped(u.totalHelped),
+          chhava: u.chhava,
           followersCount: u.followersCount,
           postsCount: u.postsCount,
         }
@@ -80,6 +82,8 @@ router.get("/users", async (req, res) => {
         location: u.location ?? "",
         rank: u.rank,
         totalHelped: u.totalHelped,
+        mudra: mudraFromHelped(u.totalHelped),
+        chhava: u.chhava,
         followersCount: u.followersCount,
         postsCount: u.postsCount,
       }))
@@ -106,6 +110,8 @@ router.get("/users/:id", async (req, res) => {
       location: user.location ?? "",
       rank: user.rank,
       totalHelped: user.totalHelped,
+      mudra: mudraFromHelped(user.totalHelped),
+      chhava: user.chhava,
       followersCount: user.followersCount,
       postsCount: user.postsCount,
       bio: user.bio ?? undefined,

@@ -1,8 +1,9 @@
-import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { SWARAJYA_RANK_NAMES } from "../ranks";
 
-export const rankEnum = ["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"] as const;
+export const rankEnum = SWARAJYA_RANK_NAMES;
 
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -16,6 +17,7 @@ export const usersTable = pgTable("users", {
   followersCount: integer("followers_count").notNull().default(0),
   postsCount: integer("posts_count").notNull().default(0),
   bio: text("bio"),
+  chhava: boolean("chhava").notNull().default(false),
   joinedAt: timestamp("joined_at").defaultNow(),
 });
 

@@ -13,10 +13,22 @@ export type Rank = (typeof Rank)[keyof typeof Rank];
 
 export const Rank = {
   Sevak: "Sevak",
-  Karyakarta: "Karyakarta",
-  Nayak: "Nayak",
-  Veer: "Veer",
+  Mavla: "Mavla",
+  Bargir: "Bargir",
+  Shiledar: "Shiledar",
+  Naik: "Naik",
+  Havaldar: "Havaldar",
+  Jumledar: "Jumledar",
+  Hazari: "Hazari",
+  Panch_Hazari: "Panch Hazari",
   Sardar: "Sardar",
+  Killedar: "Killedar",
+  Deshpande: "Deshpande",
+  Deshmukh: "Deshmukh",
+  Subhedar: "Subhedar",
+  Ashta_Pradhan: "Ashta Pradhan",
+  Sarnobat: "Sarnobat",
+  Sar_Senapati: "Sar Senapati",
 } as const;
 
 export type SevaCategory = (typeof SevaCategory)[keyof typeof SevaCategory];
@@ -36,6 +48,10 @@ export interface User {
   location: string;
   rank: Rank;
   totalHelped: number;
+  /** Seva points — totalHelped × 10 */
+  mudra: number;
+  /** Honorary rank awarded by admins; displayed above the normal rank */
+  chhava: boolean;
   followersCount: number;
   postsCount: number;
 }

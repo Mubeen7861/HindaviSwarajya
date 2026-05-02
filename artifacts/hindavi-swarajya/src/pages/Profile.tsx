@@ -47,17 +47,11 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { Crown } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-
-const RANK_ORDER = ["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"];
-const RANK_THRESHOLD = [0, 50, 200, 500, 1000];
-const RANK_COLORS: Record<string, { bg: string; text: string; border: string; ring: string }> = {
-  Sevak:      { bg: "bg-gray-100",   text: "text-gray-700",   border: "border-gray-300",  ring: "ring-gray-300" },
-  Karyakarta: { bg: "bg-blue-100",   text: "text-blue-700",   border: "border-blue-300",  ring: "ring-blue-400" },
-  Nayak:      { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-300",ring: "ring-purple-400" },
-  Veer:       { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300",ring: "ring-orange-400" },
-  Sardar:     { bg: "bg-red-100",    text: "text-red-700",    border: "border-red-300",   ring: "ring-red-500" },
-};
+import {
+  SWARAJYA_RANKS, CHHAVA_RANK, getRankDef, getRankProgress, mudraFromHelped,
+} from "@/lib/ranks";
 
 const CATEGORY_ICONS: Record<string, string> = {
   Food: "🍛", Education: "📚", Health: "❤️", Shelter: "🏠",
@@ -292,16 +286,10 @@ export default function Profile() {
   const sortedCategories = Object.entries(impactByCategory).sort((a, b) => b[1].helped - a[1].helped);
   const maxHelped = sortedCategories[0]?.[1].helped ?? 1;
 
-  // Rank progress
-  const rankIdx = RANK_ORDER.indexOf(user?.rank ?? "Sevak");
-  const nextRank = RANK_ORDER[rankIdx + 1];
-  const currentThreshold = RANK_THRESHOLD[rankIdx] ?? 0;
-  const nextThreshold = RANK_THRESHOLD[rankIdx + 1] ?? null;
-  const progress = nextThreshold
-    ? Math.min(((user?.totalHelped ?? 0) - currentThreshold) / (nextThreshold - currentThreshold) * 100, 100)
-    : 100;
-
-  const rankStyle = RANK_COLORS[user?.rank ?? "Sevak"] ?? RANK_COLORS.Sevak;
+  // Rank progress (Mudra-based: 1 help = 10 Mudra)
+  const rankProgress = getRankProgress(user?.totalHelped ?? 0);
+  const rankStyle = user?.chhava ? CHHAVA_RANK : rankProgress.current;
+  const totalMudra = mudraFromHelped(user?.totalHelped ?? 0);
   const isFollowing = following !== null ? following : false;
 
   if (isMeRoute && currentUserId === undefined) {
@@ -440,16 +428,17 @@ export default function Profile() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3 pb-4">
+        <div className="grid grid-cols-4 gap-2 pb-4">
           {[
-            { label: "Sevas", value: user.postsCount, icon: Flame, color: "text-orange-500" },
-            { label: "Helped", value: user.totalHelped, icon: Heart, color: "text-emerald-500" },
-            { label: "Followers", value: user.followersCount, icon: Users, color: "text-blue-500" },
+            { label: "Mudra",     value: totalMudra,         icon: Sparkles, color: "text-amber-500" },
+            { label: "Helped",    value: user.totalHelped,    icon: Heart,    color: "text-emerald-500" },
+            { label: "Sevas",     value: user.postsCount,     icon: Flame,    color: "text-orange-500" },
+            { label: "Followers", value: user.followersCount, icon: Users,    color: "text-blue-500" },
           ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-gray-50 rounded-2xl p-3 text-center border border-gray-100">
+            <div key={label} className="bg-gray-50 rounded-2xl p-2.5 text-center border border-gray-100">
               <Icon className={`w-4 h-4 ${color} mx-auto mb-1`} />
-              <p className="text-lg font-bold text-gray-900">{value.toLocaleString()}</p>
-              <p className="text-xs text-gray-500">{label}</p>
+              <p className="text-base font-bold text-gray-900 tabular-nums">{value.toLocaleString()}</p>
+              <p className="text-[10px] text-gray-500">{label}</p>
             </div>
           ))}
         </div>
@@ -773,66 +762,110 @@ export default function Profile() {
 
           {/* ── Journey / Rank ── */}
           <TabsContent value="journey" className="px-5 py-4 mt-0 space-y-4">
-            <div className={`rounded-2xl border p-5 ${rankStyle.bg} ${rankStyle.border}`}>
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${rankStyle.bg}`}>
-                  <Award className={`w-6 h-6 ${rankStyle.text}`} />
+            {/* Chhava honorary badge */}
+            {user.chhava && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className={`rounded-2xl border p-5 ${CHHAVA_RANK.bg} ${CHHAVA_RANK.border} text-white shadow-lg`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center ring-2 ring-white/30">
+                    <Crown className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-90">Honorary Rank</p>
+                    <p className="text-2xl font-bold">Chhava <span className="opacity-80 text-base font-semibold">· छावा</span></p>
+                    <p className="text-xs opacity-90 mt-0.5">{CHHAVA_RANK.description}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold opacity-60">Current Rank</p>
-                  <p className={`text-xl font-bold ${rankStyle.text}`}>{user.rank}</p>
+              </motion.div>
+            )}
+
+            {/* Current rank + progress */}
+            <div className={`rounded-2xl border p-5 ${rankProgress.current.bg} ${rankProgress.current.border}`}>
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-white/60 ring-1 ${rankProgress.current.ring}`}>
+                  <Award className={`w-6 h-6 ${rankProgress.current.text}`} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Current Rank</p>
+                  <p className={`text-xl font-bold ${rankProgress.current.text}`}>
+                    {rankProgress.current.name}
+                    <span className="ml-2 text-sm font-semibold opacity-70">{rankProgress.current.devanagari}</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-semibold opacity-60 uppercase tracking-wide">Mudra</p>
+                  <p className={`text-lg font-bold tabular-nums ${rankProgress.current.text}`}>{totalMudra.toLocaleString()}</p>
                 </div>
               </div>
-              {nextRank ? (
+              {rankProgress.next ? (
                 <>
                   <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="opacity-60">Progress to {nextRank}</span>
-                    <span className="font-semibold">{user.totalHelped} / {nextThreshold}</span>
+                    <span className="opacity-70">Next: <span className="font-semibold">{rankProgress.next.name}</span></span>
+                    <span className="font-semibold tabular-nums">
+                      {totalMudra.toLocaleString()} / {rankProgress.next.threshold.toLocaleString()}
+                    </span>
                   </div>
-                  <div className="h-2.5 bg-white/50 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-white/60 rounded-full overflow-hidden">
                     <motion.div
-                      className={`h-full rounded-full ${rankStyle.text.replace("text-", "bg-")}`}
+                      className={`h-full rounded-full ${rankProgress.current.text.replace("text-", "bg-")}`}
                       initial={{ width: 0 }}
-                      animate={{ width: `${progress}%` }}
+                      animate={{ width: `${rankProgress.progress}%` }}
                       transition={{ duration: 0.8 }}
                     />
                   </div>
-                  <p className="text-xs opacity-60 mt-2">
-                    {Math.max(0, (nextThreshold ?? 0) - user.totalHelped)} more people to help to reach {nextRank}
+                  <p className="text-xs opacity-70 mt-2">
+                    Help {rankProgress.helpedToNext} more {rankProgress.helpedToNext === 1 ? "person" : "people"} (+{rankProgress.mudraToNext.toLocaleString()} Mudra) to reach {rankProgress.next.name}
                   </p>
                 </>
               ) : (
                 <div className="flex items-center gap-2 mt-2">
-                  <Star className={`w-4 h-4 ${rankStyle.text}`} />
-                  <p className={`text-sm font-semibold ${rankStyle.text}`}>Highest rank achieved!</p>
+                  <Star className={`w-4 h-4 ${rankProgress.current.text}`} />
+                  <p className={`text-sm font-semibold ${rankProgress.current.text}`}>Supreme rank achieved — Sar Senapati!</p>
                 </div>
               )}
+              <p className="text-[11px] opacity-60 mt-3 italic">{rankProgress.current.description}</p>
             </div>
+
+            {/* Full 17-rank ladder */}
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Rank Ladder</p>
-              {RANK_ORDER.map((rank, i) => {
-                const achieved = RANK_ORDER.indexOf(user.rank) >= i;
-                const isCurrent = user.rank === rank;
-                const r = RANK_COLORS[rank] ?? RANK_COLORS.Sevak;
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Swarajya Ladder</p>
+                <p className="text-[10px] text-gray-400">17 ranks · 10 Mudra per help</p>
+              </div>
+              {SWARAJYA_RANKS.map((rank, i) => {
+                const achieved = totalMudra >= rank.threshold;
+                const isCurrent = rankProgress.current.name === rank.name && !user.chhava;
                 return (
                   <div
-                    key={rank}
+                    key={rank.name}
                     className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                      isCurrent ? `${r.bg} ${r.border} shadow-sm`
+                      isCurrent ? `${rank.bg} ${rank.border} shadow-sm`
                         : achieved ? "bg-gray-50 border-gray-100"
-                          : "bg-white border-gray-100 opacity-40"
+                          : "bg-white border-gray-100 opacity-50"
                     }`}
                   >
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold tabular-nums shrink-0
+                      bg-white/80 border border-gray-200 text-gray-500">
+                      {i + 1}
+                    </div>
                     {achieved
-                      ? <CheckCircle2 className={`w-5 h-5 ${isCurrent ? r.text : "text-gray-400"} shrink-0`} />
+                      ? <CheckCircle2 className={`w-5 h-5 ${isCurrent ? rank.text : "text-gray-400"} shrink-0`} />
                       : <div className="w-5 h-5 rounded-full border-2 border-gray-200 shrink-0" />
                     }
-                    <div className="flex-1">
-                      <p className={`text-sm font-semibold ${isCurrent ? r.text : "text-gray-700"}`}>{rank}</p>
-                      <p className="text-xs text-gray-400">{RANK_THRESHOLD[i].toLocaleString()}+ people helped</p>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold truncate ${isCurrent ? rank.text : achieved ? "text-gray-700" : "text-gray-500"}`}>
+                        {rank.name} <span className="text-[11px] opacity-60 font-normal">· {rank.devanagari}</span>
+                      </p>
+                      <p className="text-[11px] text-gray-400 tabular-nums">
+                        {rank.threshold.toLocaleString()} Mudra
+                        {rank.threshold > 0 && ` · ${(rank.threshold / 10).toLocaleString()} helped`}
+                      </p>
                     </div>
                     {isCurrent && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${r.bg} ${r.text}`}>You are here</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide ${rank.bg} ${rank.text} shrink-0`}>You</span>
                     )}
                   </div>
                 );
