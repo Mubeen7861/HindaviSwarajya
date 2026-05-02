@@ -6,6 +6,7 @@ import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/Sidebar";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import PostDetail from "@/pages/PostDetail";
@@ -110,10 +111,19 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
+/** Mounts useCurrentUser() once for any signed-in route to guarantee that
+ *  the DB user row is lazily provisioned from Clerk on first sign-in,
+ *  even before the user visits a page that needs the user record. */
+function EnsureUserProvisioned() {
+  useCurrentUser();
+  return null;
+}
+
 /** Full app layout with sidebar — only for authenticated users */
 function AppLayout() {
   return (
     <div className="min-h-[100dvh] flex bg-background text-foreground">
+      <EnsureUserProvisioned />
       <Sidebar />
       <main className="flex-1 md:ml-72 flex flex-col min-h-[100dvh] pb-16 md:pb-0">
         <div className="md:hidden h-14" />

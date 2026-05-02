@@ -23,6 +23,11 @@ Full-stack community seva (service) social platform built as a pnpm workspace mo
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+- `pnpm --filter @workspace/db run push-force` — same, force-apply (used when adding NOT NULL columns to empty tables)
+
+### Database workflow
+
+This project uses **Drizzle push-only** (no migration files). Schema changes in `lib/db/src/schema/*.ts` are applied directly via `push` / `push-force`. There is no `drizzle/` migrations directory — `drizzle.config.ts` is configured for push mode.
 
 ## Artifacts
 
@@ -102,6 +107,8 @@ The signed-in Clerk user is the source of truth. On the server, `requireAuth` (i
 The Orval custom-fetch (`lib/api-client-react/src/custom-fetch.ts`) defaults `credentials: "include"` so all generated client calls send the Clerk session cookie automatically.
 
 There is no `CURRENT_USER_ID` constant. No mutating endpoint trusts user IDs from the request body — they are always derived from `req.dbUser.id`.
+
+To guarantee that the DB row is provisioned the moment a user reaches the app (not just when they call a mutating endpoint), `App.tsx`'s `AppLayout` mounts an `EnsureUserProvisioned` component that calls `useCurrentUser()` unconditionally. The first `GET /api/me` triggers `requireAuth.resolveOrProvisionUser` which inserts the user row.
 
 ## Codegen Notes
 
