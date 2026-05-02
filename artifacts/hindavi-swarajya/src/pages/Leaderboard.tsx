@@ -3,10 +3,12 @@ import { Link } from "wouter";
 import { useGetLeaderboard, getGetLeaderboardQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy, Users, Heart, Award } from "lucide-react";
+import { Trophy, Users, Heart, Award, Sparkles } from "lucide-react";
 import { RankBadge } from "@/components/RankBadge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { EmptyState } from "@/components/EmptyState";
 
 export default function Leaderboard() {
   const { data: leaderboard, isLoading } = useGetLeaderboard({ limit: 50 }, {
@@ -44,8 +46,21 @@ export default function Leaderboard() {
               ))}
             </div>
           ) : leaderboard?.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              No top contributors yet. Be the first!
+            <div className="p-6">
+              <EmptyState
+                icon={Trophy}
+                title="The leaderboard is waiting for its first hero"
+                description="Share a seva and you might be the very first karyakarta to top the list."
+                action={
+                  <Link href="/app/create">
+                    <Button className="bg-[#FF6F00] hover:bg-[#E65100] text-white gap-2 rounded-xl shadow-sm" data-testid="button-empty-leaderboard-share">
+                      <Sparkles className="w-4 h-4" />
+                      Share your first Seva
+                    </Button>
+                  </Link>
+                }
+                testId="empty-state-leaderboard"
+              />
             </div>
           ) : (
             <div className="divide-y divide-border">

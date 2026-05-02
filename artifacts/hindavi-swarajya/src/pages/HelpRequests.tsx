@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
+import { EmptyState } from "@/components/EmptyState";
 
 const CATEGORIES = ["Food","Education","Health","Shelter","Other"] as const;
 const URGENCIES = ["Low","Medium","High","Emergency"] as const;
@@ -218,14 +219,25 @@ export default function HelpRequests() {
         {isLoading ? (
           <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-36 rounded-2xl" />)}</div>
         ) : filteredReqs.length === 0 ? (
-          <div className="text-center py-20">
-            <Heart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-600 mb-1">No help requests</h3>
-            <p className="text-sm text-muted-foreground mb-4">Post a request if you or someone needs help.</p>
-            <Button onClick={() => setCreateOpen(true)} className="bg-[#FF6F00] hover:bg-[#E65100] gap-2">
-              <Plus className="w-4 h-4" /> Post Request
-            </Button>
-          </div>
+          <EmptyState
+            icon={Heart}
+            title={
+              search || filterCategory !== "All"
+                ? "No requests match your filters"
+                : "No open help requests right now"
+            }
+            description={
+              search || filterCategory !== "All"
+                ? "Try clearing your search or picking a different category."
+                : "If you or someone in your community needs a hand — food, blood, shelter, anything — post it here and sevaks will respond."
+            }
+            action={
+              <Button onClick={() => setCreateOpen(true)} className="bg-[#FF6F00] hover:bg-[#E65100] gap-2 rounded-xl shadow-sm" data-testid="button-empty-post-request">
+                <Plus className="w-4 h-4" /> Post a Help Request
+              </Button>
+            }
+            testId="empty-state-help-requests"
+          />
         ) : (
           <>
             {emergencyReqs.length > 0 && (

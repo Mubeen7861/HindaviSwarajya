@@ -17,10 +17,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Search, SlidersHorizontal, Calendar, Users, Heart,
-  Target, Flame, ArrowUpRight, Star
+  Target, Flame, ArrowUpRight, Star, Sparkles
 } from "lucide-react";
 import { Link } from "wouter";
 import { useListEvents, getListEventsQueryKey } from "@workspace/api-client-react";
+import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [search, setSearch] = useState("");
@@ -175,14 +177,28 @@ export default function Home() {
               ))}
             </div>
           ) : posts?.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
-              <Target className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-gray-700 mb-1">No sevas found</h3>
-              <p className="text-sm text-muted-foreground">Try adjusting your filters or be the first to post!</p>
-              <Link href="/app/create" className="text-primary mt-3 inline-block hover:underline font-medium text-sm">
-                Share a Seva
-              </Link>
-            </div>
+            <EmptyState
+              icon={debouncedSearch || category !== "all" ? Target : Sparkles}
+              title={
+                debouncedSearch || category !== "all"
+                  ? "No sevas match your filters"
+                  : "Be the first to share a seva"
+              }
+              description={
+                debouncedSearch || category !== "all"
+                  ? "Try clearing your search or picking a different category."
+                  : "Every act of service inspires the next. Share what you did today and start the chain."
+              }
+              action={
+                <Link href="/app/create">
+                  <Button className="bg-[#FF6F00] hover:bg-[#E65100] text-white gap-2 rounded-xl shadow-sm" data-testid="button-empty-share-seva">
+                    <Sparkles className="w-4 h-4" />
+                    Share a Seva
+                  </Button>
+                </Link>
+              }
+              testId="empty-state-feed"
+            />
           ) : (
             <div className="space-y-4">
               {posts?.map((post) => (

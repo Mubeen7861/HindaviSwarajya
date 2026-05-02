@@ -23,10 +23,11 @@ import { useToast } from "@/hooks/use-toast";
 import {
   MapPin, Users, Heart, ArrowLeft, CalendarDays,
   Edit2, UserPlus, UserCheck, Award, Flame, Star,
-  BarChart3, CheckCircle2,
+  BarChart3, CheckCircle2, Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { EmptyState } from "@/components/EmptyState";
 
 const RANK_ORDER = ["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"];
 const RANK_THRESHOLD = [0, 50, 200, 500, 1000];
@@ -305,20 +306,26 @@ export default function Profile() {
                 {[1, 2].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}
               </div>
             ) : !posts?.length ? (
-              <div className="text-center py-16">
-                <Flame className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                <p className="text-sm font-semibold text-gray-600 mb-1">No sevas yet</p>
-                <p className="text-xs text-gray-400 mb-4">
-                  {isOwn ? "Share your first act of service." : `${user.name} hasn't posted yet.`}
-                </p>
-                {isOwn && (
-                  <Link href="/app/create">
-                    <Button size="sm" className="bg-[#FF6F00] hover:bg-orange-600 text-white rounded-xl text-xs">
-                      Share a Seva
-                    </Button>
-                  </Link>
-                )}
-              </div>
+              <EmptyState
+                icon={Flame}
+                title={isOwn ? "Your seva story starts here" : `${user.name} hasn't shared a seva yet`}
+                description={
+                  isOwn
+                    ? "Post your first act of service — even a small one — and inspire others to follow."
+                    : "Check back soon to see what they've contributed to the community."
+                }
+                action={
+                  isOwn ? (
+                    <Link href="/app/create">
+                      <Button className="bg-[#FF6F00] hover:bg-orange-600 text-white gap-2 rounded-xl shadow-sm" data-testid="button-empty-profile-share">
+                        <Sparkles className="w-4 h-4" />
+                        Share your first Seva
+                      </Button>
+                    </Link>
+                  ) : undefined
+                }
+                testId="empty-state-profile-posts"
+              />
             ) : (
               posts.map((post, i) => (
                 <motion.div key={post.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
@@ -333,10 +340,26 @@ export default function Profile() {
             {postsLoading ? (
               <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
             ) : sortedCategories.length === 0 ? (
-              <div className="text-center py-16">
-                <BarChart3 className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                <p className="text-sm text-gray-400">No impact data yet</p>
-              </div>
+              <EmptyState
+                icon={BarChart3}
+                title={isOwn ? "Your impact chart is waiting" : "No impact data yet"}
+                description={
+                  isOwn
+                    ? "Once you share sevas across categories, you'll see your impact light up here."
+                    : `${user.name} hasn't logged any seva yet.`
+                }
+                action={
+                  isOwn ? (
+                    <Link href="/app/create">
+                      <Button className="bg-[#FF6F00] hover:bg-orange-600 text-white gap-2 rounded-xl shadow-sm" data-testid="button-empty-profile-impact">
+                        <Sparkles className="w-4 h-4" />
+                        Share a Seva
+                      </Button>
+                    </Link>
+                  ) : undefined
+                }
+                testId="empty-state-profile-impact"
+              />
             ) : (
               <div className="space-y-4">
                 {/* Total banner */}

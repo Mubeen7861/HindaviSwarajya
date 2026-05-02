@@ -23,6 +23,7 @@ import {
   CheckCircle, ArrowLeft, Sparkles, Tag, Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { EmptyState } from "@/components/EmptyState";
 
 const EVENT_TYPES = ["Seminar","Cleaning Drive","Food Distribution","Medical Camp","Blood Donation","Tree Plantation","Awareness Campaign","Workshop","Other"] as const;
 const CATEGORIES = ["Food","Education","Health","Shelter","Other"] as const;
@@ -236,14 +237,25 @@ export default function Events() {
             {[1,2,3,4].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}
           </div>
         ) : filteredEvents.length === 0 ? (
-          <div className="text-center py-20">
-            <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-600 mb-1">No events found</h3>
-            <p className="text-sm text-muted-foreground mb-4">Be the first to organize a seva event!</p>
-            <Button onClick={() => setCreateOpen(true)} className="bg-[#FF6F00] hover:bg-[#E65100] gap-2">
-              <Plus className="w-4 h-4" /> Create Event
-            </Button>
-          </div>
+          <EmptyState
+            icon={Calendar}
+            title={
+              search || filterStatus !== "all"
+                ? "No events match your filters"
+                : "No active events yet — start one"
+            }
+            description={
+              search || filterStatus !== "all"
+                ? "Try clearing your search or switching to a different status."
+                : "Plan a medical camp, food drive, or cleaning mission and bring sevaks together for greater impact."
+            }
+            action={
+              <Button onClick={() => setCreateOpen(true)} className="bg-[#FF6F00] hover:bg-[#E65100] gap-2 rounded-xl shadow-sm" data-testid="button-empty-create-event">
+                <Plus className="w-4 h-4" /> Create Event
+              </Button>
+            }
+            testId="empty-state-events"
+          />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <AnimatePresence>

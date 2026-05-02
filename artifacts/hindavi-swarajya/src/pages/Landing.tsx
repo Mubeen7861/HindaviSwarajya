@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-client-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const FEATURES = [
   {
@@ -49,7 +50,7 @@ const FEATURES = [
 ];
 
 export default function Landing() {
-  const { data: stats } = useGetStatsSummary({
+  const { data: stats, isLoading: statsLoading } = useGetStatsSummary({
     query: { queryKey: getGetStatsSummaryQueryKey(), staleTime: 60_000 },
   });
 
@@ -60,7 +61,8 @@ export default function Landing() {
         { value: stats.totalPosts, label: "Seva Acts", icon: Calendar },
       ]
     : [];
-  const showStats = liveStats.some((s) => (s.value ?? 0) > 0);
+  const hasRealStats = liveStats.some((s) => (s.value ?? 0) > 0);
+  const showStatsSection = statsLoading || hasRealStats;
 
   return (
     <div className="min-h-screen bg-white text-gray-900 overflow-x-hidden">
@@ -132,24 +134,34 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Live Stats (only when there's real data) ── */}
-      {showStats && (
+      {/* ── Live Stats (skeleton while loading, hidden when all zero) ── */}
+      {showStatsSection && (
         <section className="py-14 bg-gradient-to-r from-[#FF6F00] to-[#E65100]">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {liveStats.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                viewport={{ once: true }}
-                className="text-center text-white"
-              >
-                <s.icon className="w-6 h-6 mx-auto mb-2 text-white/80" />
-                <p className="text-3xl font-bold mb-0.5">{s.value.toLocaleString()}</p>
-                <p className="text-sm text-orange-100">{s.label}</p>
-              </motion.div>
-            ))}
+            {statsLoading ? (
+              [1, 2, 3].map((i) => (
+                <div key={i} className="text-center flex flex-col items-center gap-2">
+                  <Skeleton className="w-6 h-6 rounded-md bg-white/30" />
+                  <Skeleton className="h-8 w-24 bg-white/30" />
+                  <Skeleton className="h-3 w-20 bg-white/20" />
+                </div>
+              ))
+            ) : (
+              liveStats.map((s, i) => (
+                <motion.div
+                  key={s.label}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  viewport={{ once: true }}
+                  className="text-center text-white"
+                >
+                  <s.icon className="w-6 h-6 mx-auto mb-2 text-white/80" />
+                  <p className="text-3xl font-bold mb-0.5">{s.value.toLocaleString()}</p>
+                  <p className="text-sm text-orange-100">{s.label}</p>
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
       )}

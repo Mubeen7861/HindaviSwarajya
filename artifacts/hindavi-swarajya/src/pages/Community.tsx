@@ -12,10 +12,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RankBadge } from "@/components/RankBadge";
 import {
   ArrowLeft, Search, MessageCircle, Users,
-  Heart, Trophy, Crown, Award, Medal, MapPin,
+  Heart, Trophy, Crown, Award, Medal, MapPin, Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
+import { EmptyState } from "@/components/EmptyState";
 
 const categoryColors: Record<string, string> = {
   Food: "bg-green-100 text-green-700",
@@ -106,13 +107,24 @@ export default function Community() {
                 ))}
               </div>
             ) : filteredPosts.length === 0 ? (
-              <div className="text-center py-16">
-                <MessageCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">{search ? "No discussions found" : "No posts yet — be the first!"}</p>
-                <Link href="/app/create">
-                  <Button variant="outline" size="sm" className="mt-3 text-primary border-primary/30">Share a Seva</Button>
-                </Link>
-              </div>
+              <EmptyState
+                icon={MessageCircle}
+                title={search ? "No discussions match your search" : "Start the first conversation"}
+                description={
+                  search
+                    ? "Try a different keyword or clear your search."
+                    : "Share what your seva looked like today — even a small act can spark a movement."
+                }
+                action={
+                  <Link href="/app/create">
+                    <Button className="bg-[#FF6F00] hover:bg-[#E65100] text-white gap-2 rounded-xl shadow-sm" data-testid="button-empty-community-share">
+                      <Sparkles className="w-4 h-4" />
+                      Share a Seva
+                    </Button>
+                  </Link>
+                }
+                testId="empty-state-community-discussions"
+              />
             ) : filteredPosts.map((p, i) => (
               <motion.div key={p.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                 <Link href={`/app/post/${p.id}`}>
@@ -167,10 +179,24 @@ export default function Community() {
                 {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
               </div>
             ) : filteredMembers.length === 0 ? (
-              <div className="text-center py-16">
-                <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No members found</p>
-              </div>
+              <EmptyState
+                icon={Users}
+                title={search ? "No members match your search" : "Your sevak community is just getting started"}
+                description={
+                  search
+                    ? "Try searching by a different name or location."
+                    : "Invite friends and family to join — every new sevak grows our impact."
+                }
+                action={
+                  <Link href="/app/create">
+                    <Button className="bg-[#FF6F00] hover:bg-[#E65100] text-white gap-2 rounded-xl shadow-sm" data-testid="button-empty-community-members">
+                      <Sparkles className="w-4 h-4" />
+                      Share a Seva to inspire others
+                    </Button>
+                  </Link>
+                }
+                testId="empty-state-community-members"
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {filteredMembers.map((m, i) => (
@@ -229,6 +255,24 @@ export default function Community() {
                       <div className="flex-1 space-y-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div>
                     </div>
                   ))}
+                </div>
+              ) : leaderboard.length === 0 ? (
+                <div className="p-6">
+                  <EmptyState
+                    icon={Trophy}
+                    title="No top sevaks yet"
+                    description="Be the first to share a seva and claim the #1 spot."
+                    compact
+                    action={
+                      <Link href="/app/create">
+                        <Button className="bg-[#FF6F00] hover:bg-[#E65100] text-white gap-2 rounded-xl shadow-sm" data-testid="button-empty-community-leaderboard">
+                          <Sparkles className="w-4 h-4" />
+                          Share your first Seva
+                        </Button>
+                      </Link>
+                    }
+                    testId="empty-state-community-leaderboard"
+                  />
                 </div>
               ) : (
                 <div className="divide-y divide-gray-50">
