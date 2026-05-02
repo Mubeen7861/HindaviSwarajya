@@ -117,6 +117,32 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
+// PATCH /api/users/:id
+router.patch("/users/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { name, bio, location } = req.body as { name?: string; bio?: string; location?: string };
+    const update: Record<string, unknown> = {};
+    if (name !== undefined && name.trim()) update.name = name.trim();
+    if (bio !== undefined) update.bio = bio.trim();
+    if (location !== undefined && location.trim()) update.location = location.trim();
+    if (Object.keys(update).length === 0) {
+      res.status(400).json({ error: "Nothing to update" });
+      return;
+    }
+    const [user] = await db.update(usersTable).set(update).where(eq(usersTable.id, id)).returning();
+    if (!user) { res.status(404).json({ error: "Not found" }); return; }
+    res.json({
+      id: user.id, name: user.name, avatar: user.avatar, location: user.location,
+      rank: user.rank, totalHelped: user.totalHelped, followersCount: user.followersCount,
+      postsCount: user.postsCount, bio: user.bio ?? undefined, joinedAt: user.joinedAt?.toISOString() ?? undefined,
+    });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST /api/users/:id/follow
 router.post("/users/:id/follow", async (req, res) => {
   try {
