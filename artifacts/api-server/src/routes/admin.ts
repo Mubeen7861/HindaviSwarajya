@@ -14,8 +14,43 @@ import {
   followsTable,
 } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
+import { timingSafeEqual } from "crypto";
+import { signAdminToken, requireAdminAuth } from "../middlewares/adminAuth";
 
 const router = Router();
+
+// ── LOGIN (public) ─────────────────────────────────────────────────────────────
+
+router.post("/admin/login", (req, res) => {
+  const { username, password } = req.body as { username?: string; password?: string };
+  if (!username || !password) {
+    res.status(400).json({ error: "Username and password are required" });
+    return;
+  }
+
+  const expectedUser = process.env["ADMIN_USERNAME"] ?? "admin";
+  const expectedPass = process.env["ADMIN_PASSWORD"] ?? "changeme";
+
+  const uMatch = timingSafeEqual(
+    Buffer.from(username.padEnd(64)),
+    Buffer.from(expectedUser.padEnd(64))
+  );
+  const pMatch = timingSafeEqual(
+    Buffer.from(password.padEnd(64)),
+    Buffer.from(expectedPass.padEnd(64))
+  );
+
+  if (!uMatch || !pMatch) {
+    res.status(401).json({ error: "Invalid username or password" });
+    return;
+  }
+
+  res.json({ token: signAdminToken(username) });
+});
+
+// ── All routes below this line require admin auth ─────────────────────────────
+
+router.use("/admin", requireAdminAuth);
 
 // GET /api/admin/overview
 router.get("/admin/overview", async (req, res) => {
@@ -66,7 +101,6 @@ router.get("/admin/overview", async (req, res) => {
 
 // ── USERS ─────────────────────────────────────────────────────────────────────
 
-// GET /api/admin/users
 router.get("/admin/users", async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
@@ -97,15 +131,11 @@ router.get("/admin/users", async (req, res) => {
   }
 });
 
-// PATCH /api/admin/users/:id
 router.patch("/admin/users/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { rank, name, location, bio } = req.body as {
-      rank?: string;
-      name?: string;
-      location?: string;
-      bio?: string;
+      rank?: string; name?: string; location?: string; bio?: string;
     };
     const update: Record<string, unknown> = {};
     if (rank !== undefined) update.rank = rank;
@@ -125,7 +155,6 @@ router.patch("/admin/users/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/admin/users/:id
 router.delete("/admin/users/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -155,23 +184,17 @@ router.delete("/admin/users/:id", async (req, res) => {
 
 // ── POSTS ─────────────────────────────────────────────────────────────────────
 
-// GET /api/admin/posts
 router.get("/admin/posts", async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
     const offset = parseInt(req.query.offset as string) || 0;
     const rows = await db
-      .select({
-        post: postsTable,
-        userName: usersTable.name,
-        userAvatar: usersTable.avatar,
-      })
+      .select({ post: postsTable, userName: usersTable.name, userAvatar: usersTable.avatar })
       .from(postsTable)
       .leftJoin(usersTable, eq(postsTable.userId, usersTable.id))
       .orderBy(desc(postsTable.timestamp))
       .limit(limit)
       .offset(offset);
-
     res.json(
       rows.map(({ post, userName, userAvatar }) => ({
         id: post.id,
@@ -192,7 +215,6 @@ router.get("/admin/posts", async (req, res) => {
   }
 });
 
-// DELETE /api/admin/posts/:id
 router.delete("/admin/posts/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -215,22 +237,17 @@ router.delete("/admin/posts/:id", async (req, res) => {
 
 // ── EVENTS ────────────────────────────────────────────────────────────────────
 
-// GET /api/admin/events
 router.get("/admin/events", async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
     const offset = parseInt(req.query.offset as string) || 0;
     const rows = await db
-      .select({
-        event: eventsTable,
-        organizerName: usersTable.name,
-      })
+      .select({ event: eventsTable, organizerName: usersTable.name })
       .from(eventsTable)
       .leftJoin(usersTable, eq(eventsTable.organizerId, usersTable.id))
       .orderBy(desc(eventsTable.createdAt))
       .limit(limit)
       .offset(offset);
-
     res.json(
       rows.map(({ event, organizerName }) => ({
         id: event.id,
@@ -251,17 +268,12 @@ router.get("/admin/events", async (req, res) => {
   }
 });
 
-// PATCH /api/admin/events/:id
 router.patch("/admin/events/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { status } = req.body as { status?: string };
     if (!status) { res.status(400).json({ error: "status required" }); return; }
-    const [event] = await db
-      .update(eventsTable)
-      .set({ status })
-      .where(eq(eventsTable.id, id))
-      .returning();
+    const [event] = await db.update(eventsTable).set({ status }).where(eq(eventsTable.id, id)).returning();
     if (!event) { res.status(404).json({ error: "Not found" }); return; }
     res.json({ id: event.id, status: event.status });
   } catch (err) {
@@ -270,7 +282,6 @@ router.patch("/admin/events/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/admin/events/:id
 router.delete("/admin/events/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -286,22 +297,17 @@ router.delete("/admin/events/:id", async (req, res) => {
 
 // ── HELP REQUESTS ─────────────────────────────────────────────────────────────
 
-// GET /api/admin/help-requests
 router.get("/admin/help-requests", async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
     const offset = parseInt(req.query.offset as string) || 0;
     const rows = await db
-      .select({
-        hr: helpRequestsTable,
-        requesterName: usersTable.name,
-      })
+      .select({ hr: helpRequestsTable, requesterName: usersTable.name })
       .from(helpRequestsTable)
       .leftJoin(usersTable, eq(helpRequestsTable.requesterId, usersTable.id))
       .orderBy(desc(helpRequestsTable.createdAt))
       .limit(limit)
       .offset(offset);
-
     res.json(
       rows.map(({ hr, requesterName }) => ({
         id: hr.id,
@@ -323,17 +329,12 @@ router.get("/admin/help-requests", async (req, res) => {
   }
 });
 
-// PATCH /api/admin/help-requests/:id
 router.patch("/admin/help-requests/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { status } = req.body as { status?: string };
     if (!status) { res.status(400).json({ error: "status required" }); return; }
-    const [hr] = await db
-      .update(helpRequestsTable)
-      .set({ status })
-      .where(eq(helpRequestsTable.id, id))
-      .returning();
+    const [hr] = await db.update(helpRequestsTable).set({ status }).where(eq(helpRequestsTable.id, id)).returning();
     if (!hr) { res.status(404).json({ error: "Not found" }); return; }
     res.json({ id: hr.id, status: hr.status });
   } catch (err) {
@@ -342,7 +343,6 @@ router.patch("/admin/help-requests/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/admin/help-requests/:id
 router.delete("/admin/help-requests/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);

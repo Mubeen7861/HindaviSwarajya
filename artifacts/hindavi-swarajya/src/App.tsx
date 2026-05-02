@@ -16,6 +16,7 @@ import Events from "@/pages/Events";
 import HelpRequests from "@/pages/HelpRequests";
 import Community from "@/pages/Community";
 import Admin from "@/pages/Admin";
+import AdminLogin from "@/pages/AdminLogin";
 import SignInPage from "@/pages/SignInPage";
 import SignUpPage from "@/pages/SignUpPage";
 import NotFound from "@/pages/not-found";
@@ -197,6 +198,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/" component={HomeRoute} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
+            <Route path="/app/admin/login" component={AdminLogin} />
             <Route path="/app/*?" component={AppRoute} />
             <Route component={NotFound} />
           </Switch>

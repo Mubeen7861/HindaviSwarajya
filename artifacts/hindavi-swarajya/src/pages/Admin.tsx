@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -16,11 +15,33 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Shield, Users, FileText, Calendar, AlertCircle, Trash2,
-  TrendingUp, Activity, RefreshCw, ArrowLeft, Edit3, Check, X,
+  TrendingUp, Activity, RefreshCw, ArrowLeft, Edit3, Check, X, LogOut,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+const ADMIN_TOKEN_KEY = "hs_admin_token";
+
+function getToken(): string | null {
+  return sessionStorage.getItem(ADMIN_TOKEN_KEY);
+}
+
+function clearToken(): void {
+  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+}
+
 const API_BASE = "/api";
+
+function adminFetch(path: string, init?: RequestInit): Promise<Response> {
+  const token = getToken() ?? "";
+  return fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-token": token,
+      ...(init?.headers ?? {}),
+    },
+  });
+}
 
 type Overview = {
   counts: { users: number; posts: number; events: number; helpRequests: number; totalHelped: number };
@@ -79,6 +100,7 @@ function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType
 
 export default function Admin() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [posts, setPosts] = useState<AdminPost[]>([]);
@@ -90,57 +112,63 @@ export default function Admin() {
   const setLoad = (key: string, val: boolean) =>
     setLoading((prev) => ({ ...prev, [key]: val }));
 
+  const handleUnauth = useCallback(() => {
+    clearToken();
+    navigate("/app/admin/login");
+  }, [navigate]);
+
+  const safeFetch = useCallback(async (path: string, init?: RequestInit): Promise<Response | null> => {
+    const res = await adminFetch(path, init);
+    if (res.status === 401) { handleUnauth(); return null; }
+    return res;
+  }, [handleUnauth]);
+
+  useEffect(() => {
+    if (!getToken()) { navigate("/app/admin/login"); }
+  }, [navigate]);
+
   const fetchOverview = useCallback(async () => {
     setLoad("overview", true);
     try {
-      const r = await fetch(`${API_BASE}/admin/overview`);
-      setOverview(await r.json());
-    } finally {
-      setLoad("overview", false);
-    }
-  }, []);
+      const r = await safeFetch("/admin/overview");
+      if (r) setOverview(await r.json());
+    } finally { setLoad("overview", false); }
+  }, [safeFetch]);
 
   const fetchUsers = useCallback(async () => {
     setLoad("users", true);
     try {
-      const r = await fetch(`${API_BASE}/admin/users?limit=100`);
-      setUsers(await r.json());
-    } finally {
-      setLoad("users", false);
-    }
-  }, []);
+      const r = await safeFetch("/admin/users?limit=100");
+      if (r) setUsers(await r.json());
+    } finally { setLoad("users", false); }
+  }, [safeFetch]);
 
   const fetchPosts = useCallback(async () => {
     setLoad("posts", true);
     try {
-      const r = await fetch(`${API_BASE}/admin/posts?limit=100`);
-      setPosts(await r.json());
-    } finally {
-      setLoad("posts", false);
-    }
-  }, []);
+      const r = await safeFetch("/admin/posts?limit=100");
+      if (r) setPosts(await r.json());
+    } finally { setLoad("posts", false); }
+  }, [safeFetch]);
 
   const fetchEvents = useCallback(async () => {
     setLoad("events", true);
     try {
-      const r = await fetch(`${API_BASE}/admin/events?limit=100`);
-      setEvents(await r.json());
-    } finally {
-      setLoad("events", false);
-    }
-  }, []);
+      const r = await safeFetch("/admin/events?limit=100");
+      if (r) setEvents(await r.json());
+    } finally { setLoad("events", false); }
+  }, [safeFetch]);
 
   const fetchHelpReqs = useCallback(async () => {
     setLoad("help", true);
     try {
-      const r = await fetch(`${API_BASE}/admin/help-requests?limit=100`);
-      setHelpReqs(await r.json());
-    } finally {
-      setLoad("help", false);
-    }
-  }, []);
+      const r = await safeFetch("/admin/help-requests?limit=100");
+      if (r) setHelpReqs(await r.json());
+    } finally { setLoad("help", false); }
+  }, [safeFetch]);
 
   useEffect(() => {
+    if (!getToken()) return;
     fetchOverview();
     fetchUsers();
     fetchPosts();
@@ -148,89 +176,91 @@ export default function Admin() {
     fetchHelpReqs();
   }, [fetchOverview, fetchUsers, fetchPosts, fetchEvents, fetchHelpReqs]);
 
+  const handleLogout = () => {
+    clearToken();
+    navigate("/app/admin/login");
+  };
+
   const deleteUser = async (id: number) => {
-    const r = await fetch(`${API_BASE}/admin/users/${id}`, { method: "DELETE" });
-    if (r.ok) {
+    const r = await safeFetch(`/admin/users/${id}`, { method: "DELETE" });
+    if (r?.ok) {
       setUsers((u) => u.filter((x) => x.id !== id));
       fetchOverview();
       toast({ title: "User deleted" });
-    } else {
+    } else if (r) {
       toast({ title: "Delete failed", variant: "destructive" });
     }
   };
 
   const saveRank = async (id: number, rank: string) => {
-    const r = await fetch(`${API_BASE}/admin/users/${id}`, {
+    const r = await safeFetch(`/admin/users/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rank }),
     });
-    if (r.ok) {
+    if (r?.ok) {
       setUsers((u) => u.map((x) => (x.id === id ? { ...x, rank } : x)));
       setEditingRank(null);
       toast({ title: "Rank updated" });
-    } else {
+    } else if (r) {
       toast({ title: "Update failed", variant: "destructive" });
     }
   };
 
   const deletePost = async (id: number) => {
-    const r = await fetch(`${API_BASE}/admin/posts/${id}`, { method: "DELETE" });
-    if (r.ok) {
+    const r = await safeFetch(`/admin/posts/${id}`, { method: "DELETE" });
+    if (r?.ok) {
       setPosts((p) => p.filter((x) => x.id !== id));
       fetchOverview();
       toast({ title: "Post deleted" });
-    } else {
+    } else if (r) {
       toast({ title: "Delete failed", variant: "destructive" });
     }
   };
 
   const updateEventStatus = async (id: number, status: string) => {
-    const r = await fetch(`${API_BASE}/admin/events/${id}`, {
+    const r = await safeFetch(`/admin/events/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    if (r.ok) {
+    if (r?.ok) {
       setEvents((e) => e.map((x) => (x.id === id ? { ...x, status } : x)));
       toast({ title: "Event status updated" });
-    } else {
+    } else if (r) {
       toast({ title: "Update failed", variant: "destructive" });
     }
   };
 
   const deleteEvent = async (id: number) => {
-    const r = await fetch(`${API_BASE}/admin/events/${id}`, { method: "DELETE" });
-    if (r.ok) {
+    const r = await safeFetch(`/admin/events/${id}`, { method: "DELETE" });
+    if (r?.ok) {
       setEvents((e) => e.filter((x) => x.id !== id));
       fetchOverview();
       toast({ title: "Event deleted" });
-    } else {
+    } else if (r) {
       toast({ title: "Delete failed", variant: "destructive" });
     }
   };
 
   const updateHelpStatus = async (id: number, status: string) => {
-    const r = await fetch(`${API_BASE}/admin/help-requests/${id}`, {
+    const r = await safeFetch(`/admin/help-requests/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    if (r.ok) {
+    if (r?.ok) {
       setHelpReqs((h) => h.map((x) => (x.id === id ? { ...x, status } : x)));
       toast({ title: "Status updated" });
-    } else {
+    } else if (r) {
       toast({ title: "Update failed", variant: "destructive" });
     }
   };
 
   const deleteHelpReq = async (id: number) => {
-    const r = await fetch(`${API_BASE}/admin/help-requests/${id}`, { method: "DELETE" });
-    if (r.ok) {
+    const r = await safeFetch(`/admin/help-requests/${id}`, { method: "DELETE" });
+    if (r?.ok) {
       setHelpReqs((h) => h.filter((x) => x.id !== id));
       fetchOverview();
       toast({ title: "Request deleted" });
-    } else {
+    } else if (r) {
       toast({ title: "Delete failed", variant: "destructive" });
     }
   };
@@ -253,15 +283,26 @@ export default function Admin() {
             <p className="text-xs text-muted-foreground">Manage platform content & users</p>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 text-xs"
-          onClick={() => { fetchOverview(); fetchUsers(); fetchPosts(); fetchEvents(); fetchHelpReqs(); }}
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Refresh All
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 text-xs"
+            onClick={() => { fetchOverview(); fetchUsers(); fetchPosts(); fetchEvents(); fetchHelpReqs(); }}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Refresh
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Logout
+          </Button>
+        </div>
       </div>
 
       {/* Body */}
@@ -299,7 +340,6 @@ export default function Admin() {
                   <StatCard icon={TrendingUp} label="People Helped" value={overview.counts.totalHelped} color="bg-green-50 text-green-600" />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  {/* Recent Users */}
                   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-50 flex items-center gap-2">
                       <Users className="w-4 h-4 text-blue-500" />
@@ -321,7 +361,6 @@ export default function Admin() {
                       ))}
                     </div>
                   </div>
-                  {/* Recent Posts */}
                   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-50 flex items-center gap-2">
                       <Activity className="w-4 h-4 text-orange-500" />
@@ -384,13 +423,8 @@ export default function Admin() {
                           <td className="px-4 py-3">
                             {editingRank?.id === u.id ? (
                               <div className="flex items-center gap-1.5">
-                                <Select
-                                  value={editingRank.rank}
-                                  onValueChange={(v) => setEditingRank({ id: u.id, rank: v })}
-                                >
-                                  <SelectTrigger className="h-7 text-xs w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
+                                <Select value={editingRank.rank} onValueChange={(v) => setEditingRank({ id: u.id, rank: v })}>
+                                  <SelectTrigger className="h-7 text-xs w-32"><SelectValue /></SelectTrigger>
                                   <SelectContent>
                                     {RANKS.map(r => <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>)}
                                   </SelectContent>
@@ -427,15 +461,11 @@ export default function Admin() {
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Delete {u.name}?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently delete the user and all their posts, comments, and activity. This action cannot be undone.
-                                  </AlertDialogDescription>
+                                  <AlertDialogDescription>This will permanently delete the user and all their posts, comments, and activity. This action cannot be undone.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteUser(u.id)} className="bg-red-600 hover:bg-red-700">
-                                    Delete
-                                  </AlertDialogAction>
+                                  <AlertDialogAction onClick={() => deleteUser(u.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
@@ -502,15 +532,11 @@ export default function Admin() {
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Delete this post?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently remove the post and all its likes and comments.
-                                  </AlertDialogDescription>
+                                  <AlertDialogDescription>This will permanently remove the post and all its likes and comments.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deletePost(p.id)} className="bg-red-600 hover:bg-red-700">
-                                    Delete
-                                  </AlertDialogAction>
+                                  <AlertDialogAction onClick={() => deletePost(p.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
@@ -553,9 +579,7 @@ export default function Admin() {
                           <td className="px-4 py-3">
                             <Select value={ev.status} onValueChange={(v) => updateEventStatus(ev.id, v)}>
                               <SelectTrigger className="h-7 text-xs w-32 border-0 shadow-none p-0 gap-1">
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[ev.status] ?? "bg-gray-100 text-gray-600"}`}>
-                                  {ev.status}
-                                </span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[ev.status] ?? "bg-gray-100 text-gray-600"}`}>{ev.status}</span>
                               </SelectTrigger>
                               <SelectContent>
                                 {EVENT_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
@@ -572,15 +596,11 @@ export default function Admin() {
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Delete "{ev.title}"?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently remove the event and all registrations.
-                                  </AlertDialogDescription>
+                                  <AlertDialogDescription>This will permanently remove the event and all registrations.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteEvent(ev.id)} className="bg-red-600 hover:bg-red-700">
-                                    Delete
-                                  </AlertDialogAction>
+                                  <AlertDialogAction onClick={() => deleteEvent(ev.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
@@ -620,16 +640,12 @@ export default function Admin() {
                           </td>
                           <td className="px-4 py-3 text-xs text-gray-600 hidden md:table-cell">{hr.requesterName}</td>
                           <td className="px-4 py-3">
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${urgencyColors[hr.urgency] ?? "bg-gray-100 text-gray-600"}`}>
-                              {hr.urgency}
-                            </span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${urgencyColors[hr.urgency] ?? "bg-gray-100 text-gray-600"}`}>{hr.urgency}</span>
                           </td>
                           <td className="px-4 py-3">
                             <Select value={hr.status} onValueChange={(v) => updateHelpStatus(hr.id, v)}>
                               <SelectTrigger className="h-7 text-xs w-32 border-0 shadow-none p-0 gap-1">
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[hr.status] ?? "bg-gray-100 text-gray-600"}`}>
-                                  {hr.status}
-                                </span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[hr.status] ?? "bg-gray-100 text-gray-600"}`}>{hr.status}</span>
                               </SelectTrigger>
                               <SelectContent>
                                 {HELP_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
@@ -646,15 +662,11 @@ export default function Admin() {
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Delete this request?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently remove the help request and all volunteer joins.
-                                  </AlertDialogDescription>
+                                  <AlertDialogDescription>This will permanently remove the help request and all volunteer joins.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteHelpReq(hr.id)} className="bg-red-600 hover:bg-red-700">
-                                    Delete
-                                  </AlertDialogAction>
+                                  <AlertDialogAction onClick={() => deleteHelpReq(hr.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
