@@ -27,6 +27,15 @@ Full-stack community seva (service) social platform built as a pnpm workspace mo
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - `pnpm --filter @workspace/db run push-force` — same, force-apply (used when adding NOT NULL columns to empty tables)
 
+### Home banners (admin-managed carousel)
+
+- DB table: `banners` (`lib/db/src/schema/banners.ts`) — title, body, CTA label/href, optional imageUrl, gradientFrom/gradientTo (hex), position (asc), active flag.
+- Public endpoint: `GET /api/banners` — active only, sorted by position.
+- Admin endpoints (require `x-admin-token`): `GET/POST/PATCH/DELETE /api/admin/banners[/:id]`.
+- Frontend: `BannerCarousel` component (auto-rotates 6s, pauses on hover/focus, prev/next, dot indicators, swipe). Renders on Home; falls back to default i18n banner when list is empty.
+- Admin UI: "Banners" tab with create/edit dialog (color pickers, live preview), reorder (up/down swap), activate/deactivate, delete.
+- Inline-style background values are sanitized (hex colors must match `^#([0-9a-f]{3}|[0-9a-f]{6})$`, image URLs must be http(s) and free of CSS-injection chars) on both server (POST/PATCH validation) and client (`bannerBackground` helper) to prevent stored XSS via the `style` attribute.
+
 ### Database workflow
 
 This project uses **Drizzle push-only** (no migration files). Schema changes in `lib/db/src/schema/*.ts` are applied directly via `push` / `push-force`. There is no `drizzle/` migrations directory — `drizzle.config.ts` is configured for push mode.

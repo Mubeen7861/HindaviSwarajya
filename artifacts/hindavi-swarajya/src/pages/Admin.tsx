@@ -11,15 +11,24 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Shield, Users, FileText, Calendar, AlertCircle, Trash2,
   TrendingUp, Activity, RefreshCw, ArrowLeft, Edit3, Check, X, LogOut,
   CheckCircle2, XCircle, Inbox, Clock, Crown,
+  Image as ImageIcon, Plus, ChevronUp, ChevronDown, Eye, EyeOff,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { SWARAJYA_RANKS, RANK_NAMES } from "@/lib/ranks";
+import { bannerBackground } from "@/components/BannerCarousel";
 
 const ADMIN_TOKEN_KEY = "hs_admin_token";
 
@@ -63,6 +72,37 @@ type PendingPost = { id: number; userId: number; userName: string; userAvatar: s
 type PendingEvent = { id: number; title: string; description: string; category: string; eventType: string; date: string; time: string; location: string; organizerId: number; organizerName: string; organizerAvatar: string; volunteersNeeded: number; image: string | null; createdAt: string | null };
 type PendingHelpRequest = { id: number; title: string; description: string; category: string; urgency: string; location: string; requesterId: number; requesterName: string; requesterAvatar: string; peopleNeeded: number; deadline: string | null; createdAt: string | null };
 type PendingQueue = { counts: { posts: number; events: number; helpRequests: number }; posts: PendingPost[]; events: PendingEvent[]; helpRequests: PendingHelpRequest[] };
+
+type AdminBanner = {
+  id: number;
+  subtitle: string;
+  title: string;
+  body: string;
+  ctaLabel: string;
+  ctaHref: string;
+  imageUrl: string | null;
+  gradientFrom: string;
+  gradientTo: string;
+  position: number;
+  active: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+type BannerDraft = Omit<AdminBanner, "id" | "createdAt" | "updatedAt" | "imageUrl"> & { imageUrl: string };
+
+const EMPTY_BANNER_DRAFT: BannerDraft = {
+  subtitle: "",
+  title: "",
+  body: "",
+  ctaLabel: "",
+  ctaHref: "",
+  imageUrl: "",
+  gradientFrom: "#FF6F00",
+  gradientTo: "#EA580C",
+  position: 0,
+  active: true,
+};
 
 const RANKS = RANK_NAMES;
 const EVENT_STATUSES = ["upcoming", "ongoing", "completed", "cancelled"];
@@ -119,8 +159,13 @@ export default function Admin() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [helpReqs, setHelpReqs] = useState<AdminHelpRequest[]>([]);
   const [pending, setPending] = useState<PendingQueue | null>(null);
+  const [banners, setBanners] = useState<AdminBanner[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [editingRank, setEditingRank] = useState<{ id: number; rank: string } | null>(null);
+  const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
+  const [bannerEditingId, setBannerEditingId] = useState<number | null>(null);
+  const [bannerDraft, setBannerDraft] = useState<BannerDraft>(EMPTY_BANNER_DRAFT);
+  const [bannerSaving, setBannerSaving] = useState(false);
 
   const setLoad = (key: string, val: boolean) =>
     setLoading((prev) => ({ ...prev, [key]: val }));
@@ -188,6 +233,14 @@ export default function Admin() {
     } finally { setLoad("pending", false); }
   }, [safeFetch]);
 
+  const fetchBanners = useCallback(async () => {
+    setLoad("banners", true);
+    try {
+      const r = await safeFetch("/admin/banners");
+      if (r) setBanners(await r.json());
+    } finally { setLoad("banners", false); }
+  }, [safeFetch]);
+
   useEffect(() => {
     if (!getToken()) return;
     fetchOverview();
@@ -196,7 +249,8 @@ export default function Admin() {
     fetchEvents();
     fetchHelpReqs();
     fetchPending();
-  }, [fetchOverview, fetchUsers, fetchPosts, fetchEvents, fetchHelpReqs, fetchPending]);
+    fetchBanners();
+  }, [fetchOverview, fetchUsers, fetchPosts, fetchEvents, fetchHelpReqs, fetchPending, fetchBanners]);
 
   const handleLogout = () => {
     clearToken();
@@ -225,6 +279,95 @@ export default function Admin() {
       toast({ title: "Rank updated" });
     } else if (r) {
       toast({ title: "Update failed", variant: "destructive" });
+    }
+  };
+
+  const openCreateBanner = () => {
+    setBannerEditingId(null);
+    setBannerDraft({ ...EMPTY_BANNER_DRAFT, position: banners.length });
+    setBannerDialogOpen(true);
+  };
+
+  const openEditBanner = (b: AdminBanner) => {
+    setBannerEditingId(b.id);
+    setBannerDraft({
+      subtitle: b.subtitle,
+      title: b.title,
+      body: b.body,
+      ctaLabel: b.ctaLabel,
+      ctaHref: b.ctaHref,
+      imageUrl: b.imageUrl ?? "",
+      gradientFrom: b.gradientFrom,
+      gradientTo: b.gradientTo,
+      position: b.position,
+      active: b.active,
+    });
+    setBannerDialogOpen(true);
+  };
+
+  const saveBanner = async () => {
+    if (!bannerDraft.title.trim()) {
+      toast({ title: "Title is required", variant: "destructive" });
+      return;
+    }
+    setBannerSaving(true);
+    try {
+      const payload = { ...bannerDraft, imageUrl: bannerDraft.imageUrl || null };
+      const r = bannerEditingId == null
+        ? await safeFetch("/admin/banners", { method: "POST", body: JSON.stringify(payload) })
+        : await safeFetch(`/admin/banners/${bannerEditingId}`, { method: "PATCH", body: JSON.stringify(payload) });
+      if (r?.ok) {
+        await fetchBanners();
+        setBannerDialogOpen(false);
+        toast({ title: bannerEditingId == null ? "Banner created" : "Banner updated" });
+      } else if (r) {
+        const err = await r.json().catch(() => ({}));
+        toast({ title: err.error ?? "Save failed", variant: "destructive" });
+      }
+    } finally {
+      setBannerSaving(false);
+    }
+  };
+
+  const toggleBannerActive = async (b: AdminBanner) => {
+    const r = await safeFetch(`/admin/banners/${b.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ active: !b.active }),
+    });
+    if (r?.ok) {
+      setBanners((rows) => rows.map((x) => (x.id === b.id ? { ...x, active: !b.active } : x)));
+      toast({ title: !b.active ? "Banner activated" : "Banner deactivated" });
+    } else if (r) {
+      toast({ title: "Update failed", variant: "destructive" });
+    }
+  };
+
+  const deleteBanner = async (id: number) => {
+    const r = await safeFetch(`/admin/banners/${id}`, { method: "DELETE" });
+    if (r?.ok) {
+      setBanners((rows) => rows.filter((x) => x.id !== id));
+      toast({ title: "Banner deleted" });
+    } else if (r) {
+      toast({ title: "Delete failed", variant: "destructive" });
+    }
+  };
+
+  const moveBanner = async (b: AdminBanner, dir: -1 | 1) => {
+    const sorted = [...banners].sort((a, c) => a.position - c.position || a.id - c.id);
+    const idx = sorted.findIndex((x) => x.id === b.id);
+    const swapIdx = idx + dir;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= sorted.length) return;
+    const other = sorted[swapIdx];
+    const newPosA = other.position;
+    const newPosB = b.position;
+    const [r1, r2] = await Promise.all([
+      safeFetch(`/admin/banners/${b.id}`, { method: "PATCH", body: JSON.stringify({ position: newPosA }) }),
+      safeFetch(`/admin/banners/${other.id}`, { method: "PATCH", body: JSON.stringify({ position: newPosB }) }),
+    ]);
+    if (r1?.ok && r2?.ok) {
+      await fetchBanners();
+    } else {
+      toast({ title: "Reorder failed", variant: "destructive" });
     }
   };
 
@@ -368,7 +511,7 @@ export default function Admin() {
       {/* Body */}
       <div className="flex-1 overflow-hidden">
         <Tabs defaultValue="overview" className="flex flex-col h-full">
-          <TabsList className="mx-6 mt-4 mb-0 grid grid-cols-6 bg-gray-100 rounded-xl h-9 shrink-0">
+          <TabsList className="mx-6 mt-4 mb-0 grid grid-cols-7 bg-gray-100 rounded-xl h-9 shrink-0">
             <TabsTrigger value="overview" className="text-xs rounded-lg">Overview</TabsTrigger>
             <TabsTrigger value="pending" className="text-xs rounded-lg gap-1">
               <span>Pending</span>
@@ -390,6 +533,9 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="help" className="text-xs rounded-lg">
               Help {helpReqs.length > 0 && <span className="ml-1 text-[10px] bg-gray-200 text-gray-600 rounded-full px-1.5">{helpReqs.length}</span>}
+            </TabsTrigger>
+            <TabsTrigger value="banners" className="text-xs rounded-lg" data-testid="tab-banners">
+              Banners {banners.length > 0 && <span className="ml-1 text-[10px] bg-gray-200 text-gray-600 rounded-full px-1.5">{banners.length}</span>}
             </TabsTrigger>
           </TabsList>
 
@@ -987,7 +1133,317 @@ export default function Admin() {
               </div>
             )}
           </TabsContent>
+
+          {/* ── Banners ── */}
+          <TabsContent value="banners" className="flex-1 overflow-y-auto px-6 py-5 mt-0 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Home banners</h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Promotional cards shown in the homepage carousel. Active banners rotate every 6 seconds.
+                </p>
+              </div>
+              <Button onClick={openCreateBanner} className="bg-primary hover:bg-primary/90" data-testid="button-create-banner">
+                <Plus className="w-4 h-4 mr-1" /> New banner
+              </Button>
+            </div>
+
+            {loading.banners && banners.length === 0 ? (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {[1, 2].map((i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
+              </div>
+            ) : banners.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-10 text-center">
+                <ImageIcon className="w-10 h-10 text-gray-300 mx-auto mb-3" strokeWidth={1.5} />
+                <p className="font-semibold text-gray-700">No banners yet</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  The homepage shows the default seva banner. Add your first custom banner to start a carousel.
+                </p>
+                <Button onClick={openCreateBanner} className="mt-4 bg-primary hover:bg-primary/90">
+                  <Plus className="w-4 h-4 mr-1" /> Create banner
+                </Button>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...banners].sort((a, b) => a.position - b.position || a.id - b.id).map((b, idx, arr) => (
+                  <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col" data-testid={`banner-card-${b.id}`}>
+                    <div
+                      className="relative h-32 px-4 py-3"
+                      style={{ background: bannerBackground(b) }}
+                    >
+                      {b.subtitle && (
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm mb-1.5">
+                          <span className="text-[9px] uppercase tracking-wider font-semibold text-white truncate max-w-[140px]">{b.subtitle}</span>
+                        </div>
+                      )}
+                      <h3 className="text-white font-semibold text-base leading-tight line-clamp-2">{b.title}</h3>
+                      {!b.active && (
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/40 text-white text-[10px] font-semibold uppercase tracking-wide">
+                          Hidden
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 flex flex-col gap-2 flex-1">
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="font-mono">#{b.position}</span>
+                        {b.ctaLabel && <span className="truncate text-gray-600 max-w-[150px]">→ {b.ctaLabel}</span>}
+                      </div>
+                      {b.body && <p className="text-xs text-gray-600 line-clamp-2">{b.body}</p>}
+                      <div className="flex items-center gap-1 mt-auto pt-2 border-t border-gray-100">
+                        <button
+                          type="button"
+                          onClick={() => moveBanner(b, -1)}
+                          disabled={idx === 0}
+                          className="w-7 h-7 rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+                          title="Move up"
+                          data-testid={`button-banner-up-${b.id}`}
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveBanner(b, 1)}
+                          disabled={idx === arr.length - 1}
+                          className="w-7 h-7 rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+                          title="Move down"
+                          data-testid={`button-banner-down-${b.id}`}
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleBannerActive(b)}
+                          className={`w-7 h-7 rounded-md flex items-center justify-center ${b.active ? "text-emerald-600 hover:bg-emerald-50" : "text-gray-400 hover:bg-gray-100"}`}
+                          title={b.active ? "Deactivate" : "Activate"}
+                          data-testid={`button-banner-toggle-${b.id}`}
+                        >
+                          {b.active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                        </button>
+                        <div className="flex-1" />
+                        <button
+                          type="button"
+                          onClick={() => openEditBanner(b)}
+                          className="w-7 h-7 rounded-md text-gray-500 hover:bg-gray-100 flex items-center justify-center"
+                          title="Edit"
+                          data-testid={`button-banner-edit-${b.id}`}
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              type="button"
+                              className="w-7 h-7 rounded-md text-red-500 hover:bg-red-50 flex items-center justify-center"
+                              title="Delete"
+                              data-testid={`button-banner-delete-${b.id}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete banner?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                "{b.title}" will be removed from the homepage carousel. This cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteBanner(b.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
+
+        {/* ── Banner edit dialog ── */}
+        <Dialog open={bannerDialogOpen} onOpenChange={setBannerDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{bannerEditingId == null ? "New banner" : "Edit banner"}</DialogTitle>
+              <DialogDescription>
+                Banners appear in the homepage carousel. Active banners rotate automatically.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-4 py-2">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="banner-subtitle">Eyebrow / subtitle</Label>
+                  <Input
+                    id="banner-subtitle"
+                    value={bannerDraft.subtitle}
+                    onChange={(e) => setBannerDraft({ ...bannerDraft, subtitle: e.target.value })}
+                    placeholder="CREATE IMPACT AT SCALE"
+                    maxLength={60}
+                    data-testid="input-banner-subtitle"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="banner-position">Order position</Label>
+                  <Input
+                    id="banner-position"
+                    type="number"
+                    value={bannerDraft.position}
+                    onChange={(e) => setBannerDraft({ ...bannerDraft, position: Number(e.target.value) || 0 })}
+                    data-testid="input-banner-position"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="banner-title">Title <span className="text-red-500">*</span></Label>
+                <Input
+                  id="banner-title"
+                  value={bannerDraft.title}
+                  onChange={(e) => setBannerDraft({ ...bannerDraft, title: e.target.value })}
+                  placeholder="Organise a seva event"
+                  maxLength={120}
+                  data-testid="input-banner-title"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="banner-body">Body</Label>
+                <Textarea
+                  id="banner-body"
+                  value={bannerDraft.body}
+                  onChange={(e) => setBannerDraft({ ...bannerDraft, body: e.target.value })}
+                  placeholder="Plan seminars, cleaning drives, food distribution..."
+                  rows={3}
+                  maxLength={300}
+                  data-testid="input-banner-body"
+                />
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="banner-cta-label">CTA label</Label>
+                  <Input
+                    id="banner-cta-label"
+                    value={bannerDraft.ctaLabel}
+                    onChange={(e) => setBannerDraft({ ...bannerDraft, ctaLabel: e.target.value })}
+                    placeholder="Create event"
+                    maxLength={40}
+                    data-testid="input-banner-cta-label"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="banner-cta-href">CTA link</Label>
+                  <Input
+                    id="banner-cta-href"
+                    value={bannerDraft.ctaHref}
+                    onChange={(e) => setBannerDraft({ ...bannerDraft, ctaHref: e.target.value })}
+                    placeholder="/app/events or https://..."
+                    data-testid="input-banner-cta-href"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="banner-image">Background image URL (optional)</Label>
+                <Input
+                  id="banner-image"
+                  value={bannerDraft.imageUrl}
+                  onChange={(e) => setBannerDraft({ ...bannerDraft, imageUrl: e.target.value })}
+                  placeholder="https://..."
+                  data-testid="input-banner-image"
+                />
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="banner-from">Gradient start</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="banner-from"
+                      type="color"
+                      value={bannerDraft.gradientFrom}
+                      onChange={(e) => setBannerDraft({ ...bannerDraft, gradientFrom: e.target.value })}
+                      className="w-12 h-9 p-1 cursor-pointer"
+                    />
+                    <Input
+                      value={bannerDraft.gradientFrom}
+                      onChange={(e) => setBannerDraft({ ...bannerDraft, gradientFrom: e.target.value })}
+                      className="flex-1 font-mono text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="banner-to">Gradient end</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="banner-to"
+                      type="color"
+                      value={bannerDraft.gradientTo}
+                      onChange={(e) => setBannerDraft({ ...bannerDraft, gradientTo: e.target.value })}
+                      className="w-12 h-9 p-1 cursor-pointer"
+                    />
+                    <Input
+                      value={bannerDraft.gradientTo}
+                      onChange={(e) => setBannerDraft({ ...bannerDraft, gradientTo: e.target.value })}
+                      className="flex-1 font-mono text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                <div>
+                  <Label htmlFor="banner-active" className="font-semibold cursor-pointer">Active</Label>
+                  <p className="text-xs text-gray-500 mt-0.5">Show this banner on the homepage</p>
+                </div>
+                <Switch
+                  id="banner-active"
+                  checked={bannerDraft.active}
+                  onCheckedChange={(v) => setBannerDraft({ ...bannerDraft, active: v })}
+                  data-testid="switch-banner-active"
+                />
+              </div>
+
+              {/* Live preview */}
+              <div className="space-y-1.5">
+                <Label className="text-xs uppercase tracking-wide text-gray-500">Preview</Label>
+                <div
+                  className="relative overflow-hidden rounded-2xl px-5 py-5 min-h-[140px]"
+                  style={{
+                    background: bannerBackground({
+                      gradientFrom: bannerDraft.gradientFrom,
+                      gradientTo: bannerDraft.gradientTo,
+                      imageUrl: bannerDraft.imageUrl || null,
+                    }),
+                  }}
+                >
+                  {bannerDraft.subtitle && (
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm mb-2">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-white">{bannerDraft.subtitle}</span>
+                    </div>
+                  )}
+                  <h3 className="text-white font-semibold text-lg leading-tight">{bannerDraft.title || "Title preview"}</h3>
+                  {bannerDraft.body && <p className="text-white/85 text-[13px] mt-1.5">{bannerDraft.body}</p>}
+                  {bannerDraft.ctaLabel && (
+                    <div className="mt-3 inline-flex items-center gap-2 bg-white text-primary font-semibold text-[12px] px-3 py-1.5 rounded-full">
+                      {bannerDraft.ctaLabel}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setBannerDialogOpen(false)}>Cancel</Button>
+              <Button onClick={saveBanner} disabled={bannerSaving} className="bg-primary hover:bg-primary/90" data-testid="button-save-banner">
+                {bannerSaving ? "Saving..." : bannerEditingId == null ? "Create banner" : "Save changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

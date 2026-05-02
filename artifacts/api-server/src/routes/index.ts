@@ -7,6 +7,7 @@ import statsRouter from "./stats";
 import eventsRouter from "./events";
 import helpRequestsRouter from "./help-requests";
 import adminRouter from "./admin";
+import bannersRouter from "./banners";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(statsRouter);
 router.use(eventsRouter);
 router.use(helpRequestsRouter);
 router.use(adminRouter);
+router.use(bannersRouter);
 
 export default router;

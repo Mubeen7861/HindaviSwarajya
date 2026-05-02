@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { BannerCarousel, type Banner } from "@/components/BannerCarousel";
 import {
   useListPosts,
   useGetStatsSummary,
@@ -31,6 +32,20 @@ export default function Home() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
+  const [banners, setBanners] = useState<Banner[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/banners")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: Banner[]) => {
+        if (!cancelled && Array.isArray(data)) setBanners(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -133,30 +148,17 @@ export default function Home() {
             </Select>
           </div>
 
-          {/* ── Featured banner — minimal premium ── */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-orange-600 px-5 py-5 sm:px-6 sm:py-6">
-            <Flame className="absolute -right-4 -top-4 w-32 h-32 text-white/10" strokeWidth={1.25} />
-            <div className="relative z-10 max-w-md">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm mb-3">
-                <Star className="w-3 h-3 text-white" strokeWidth={2} />
-                <span className="text-[10.5px] uppercase tracking-[0.1em] font-semibold text-white">
-                  {t("home.bannerSubtitle")}
-                </span>
-              </div>
-              <h3 className="text-white font-semibold text-lg leading-tight tracking-tight">
-                {t("home.bannerTitle")}
-              </h3>
-              <p className="text-white/85 text-[13px] mt-1.5 leading-relaxed">
-                {t("home.bannerBody")}
-              </p>
-              <Link href="/app/events">
-                <button className="mt-4 inline-flex items-center gap-2 bg-white text-primary font-semibold text-[13px] px-4 py-2.5 rounded-full hover:bg-orange-50 transition-colors tap-none">
-                  <Calendar className="w-3.5 h-3.5" strokeWidth={2.25} />
-                  {t("home.bannerCta")}
-                </button>
-              </Link>
-            </div>
-          </div>
+          {/* ── Featured banner carousel — admin-managed ── */}
+          <BannerCarousel
+            banners={banners}
+            fallback={{
+              subtitle: t("home.bannerSubtitle"),
+              title: t("home.bannerTitle"),
+              body: t("home.bannerBody"),
+              ctaLabel: t("home.bannerCta"),
+              ctaHref: "/app/events",
+            }}
+          />
 
           {/* ── Feed ── */}
           {postsLoading ? (
