@@ -314,6 +314,199 @@
   }
 }
 
+/* ──────────────────────────────────────────────────────────
+ * VINTAGE SWARAJYA THEME
+ * Scoped to .vintage-landing so the rest of the app is unaffected.
+ * Palette: parchment, burnt saffron, mud brown, antique gold, charcoal.
+ * ────────────────────────────────────────────────────────── */
+.vintage-landing {
+  --vint-parchment:    #F3E4C6;
+  --vint-parchment-2:  #E7D2A8;
+  --vint-parchment-3:  #D9BE85;
+  --vint-saffron:      #B8430E;
+  --vint-saffron-deep: #8B2E08;
+  --vint-mud:          #5C3A1E;
+  --vint-charcoal:     #2A1F14;
+  --vint-gold:         #C8A45C;
+  --vint-gold-soft:    #E0C078;
+  --vint-ink:          #3A2718;
+  color: var(--vint-ink);
+}
+
+/* Parchment / aged paper background using layered gradients + grain */
+.vintage-landing .vint-parchment {
+  background-color: var(--vint-parchment);
+  background-image:
+    radial-gradient(ellipse at 20% 15%, rgba(184, 67, 14, 0.08), transparent 55%),
+    radial-gradient(ellipse at 80% 85%, rgba(92, 58, 30, 0.10), transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(255, 240, 200, 0.45), transparent 70%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(92, 58, 30, 0.025) 0px,
+      rgba(92, 58, 30, 0.025) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+}
+.vintage-landing .vint-paper {
+  background-color: #F8EBD0;
+  background-image:
+    radial-gradient(ellipse at top right, rgba(184, 67, 14, 0.05), transparent 60%),
+    radial-gradient(ellipse at bottom left, rgba(92, 58, 30, 0.06), transparent 60%);
+  box-shadow:
+    inset 0 0 40px rgba(92, 58, 30, 0.12),
+    0 1px 2px rgba(42, 31, 20, 0.08);
+}
+/* Aged grain overlay — drop into ::before of any container */
+.vintage-landing .vint-grain {
+  position: relative;
+}
+.vintage-landing .vint-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+  background-image:
+    radial-gradient(circle at 12% 20%, rgba(92, 58, 30, 0.3) 0.5px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(92, 58, 30, 0.25) 0.5px, transparent 1px),
+    radial-gradient(circle at 40% 80%, rgba(92, 58, 30, 0.3) 0.5px, transparent 1px),
+    radial-gradient(circle at 90% 30%, rgba(92, 58, 30, 0.2) 0.5px, transparent 1px);
+  background-size: 80px 80px, 60px 60px, 100px 100px, 50px 50px;
+}
+
+/* Vintage card: aged paper with dark warm border + soft warm shadow */
+.vintage-landing .vint-card {
+  background-color: #FAEFD6;
+  border: 1px solid rgba(92, 58, 30, 0.22);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 8px 18px -8px rgba(92, 58, 30, 0.25),
+    0 2px 4px rgba(42, 31, 20, 0.08);
+  border-radius: 0.75rem;
+}
+.vintage-landing .vint-card-strong {
+  background-color: #F3E0B8;
+  border: 1.5px solid rgba(92, 58, 30, 0.35);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 12px 24px -10px rgba(92, 58, 30, 0.35),
+    0 3px 6px rgba(42, 31, 20, 0.1);
+}
+
+/* Stamped seal button */
+.vintage-landing .vint-btn-primary {
+  background-color: var(--vint-saffron);
+  background-image: linear-gradient(180deg, #C9531E 0%, var(--vint-saffron) 60%, var(--vint-saffron-deep) 100%);
+  color: #FFF6E1;
+  border: 1px solid var(--vint-saffron-deep);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.18) inset,
+    0 6px 14px -4px rgba(139, 46, 8, 0.5);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.02em;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.vintage-landing .vint-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.22) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.22) inset,
+    0 10px 20px -6px rgba(139, 46, 8, 0.55);
+}
+.vintage-landing .vint-btn-primary:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.18) inset,
+    0 3px 8px -2px rgba(139, 46, 8, 0.45);
+}
+.vintage-landing .vint-btn-secondary {
+  background-color: rgba(243, 224, 184, 0.7);
+  color: var(--vint-saffron-deep);
+  border: 1.5px solid rgba(139, 46, 8, 0.4);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 4px 10px -4px rgba(92, 58, 30, 0.25);
+}
+.vintage-landing .vint-btn-secondary:hover {
+  background-color: rgba(243, 224, 184, 0.95);
+  border-color: rgba(139, 46, 8, 0.7);
+}
+
+/* Vintage chip/badge */
+.vintage-landing .vint-chip {
+  background-color: rgba(250, 239, 214, 0.85);
+  border: 1px solid rgba(139, 46, 8, 0.35);
+  color: var(--vint-saffron-deep);
+  box-shadow: 0 1px 2px rgba(92, 58, 30, 0.12), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+/* Antique gold hairline — section divider */
+.vintage-landing .vint-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200, 164, 92, 0.7), transparent);
+}
+
+/* Coin shine — slow rotating highlight */
+@keyframes vint-shine {
+  0%   { transform: translateX(-120%) rotate(8deg); opacity: 0; }
+  20%  { opacity: 0.7; }
+  60%  { opacity: 0.7; }
+  100% { transform: translateX(120%) rotate(8deg); opacity: 0; }
+}
+.vintage-landing .vint-coin-shine { position: relative; overflow: hidden; }
+.vintage-landing .vint-coin-shine::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 246, 225, 0.55) 50%, transparent 70%);
+  animation: vint-shine 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Slow drifting dust particles */
+@keyframes vint-dust {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.5; }
+  100% { transform: translateY(-120vh) translateX(20px); opacity: 0; }
+}
+.vintage-landing .vint-dust {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+}
+.vintage-landing .vint-dust span {
+  position: absolute;
+  bottom: -10px;
+  width: 4px; height: 4px; border-radius: 9999px;
+  background: rgba(232, 200, 130, 0.6);
+  filter: blur(1px);
+  animation: vint-dust linear infinite;
+}
+
+/* Fort silhouette — repeating SVG pattern */
+.vintage-landing .vint-fort {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 140' preserveAspectRatio='none'><path fill='%235C3A1E' fill-opacity='0.45' d='M0 140 V90 L20 90 L20 70 L40 70 L40 90 L60 90 L60 60 L80 60 L80 50 L100 50 L100 60 L120 60 L120 80 L140 80 L140 50 L160 50 L160 30 L180 30 L180 50 L200 50 L200 80 L220 80 L220 60 L240 60 L240 70 L260 70 L260 50 L280 50 L280 35 L300 35 L300 20 L320 20 L320 35 L340 35 L340 50 L360 50 L360 70 L380 70 L380 60 L400 60 L400 80 L420 80 L420 50 L440 50 L440 30 L460 30 L460 50 L480 50 L480 80 L500 80 L500 60 L520 60 L520 50 L540 50 L540 70 L560 70 L560 60 L580 60 L580 90 L600 90 L600 140 Z'/></svg>");
+  background-repeat: repeat-x;
+  background-position: bottom center;
+  background-size: 1200px 140px;
+}
+
+/* Vintage section heading underline ornament */
+.vintage-landing .vint-ornament {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--vint-gold);
+}
+.vintage-landing .vint-ornament::before,
+.vintage-landing .vint-ornament::after {
+  content: "";
+  width: 40px; height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+}
+
 /**
  * Using the elevate system.
  * Automatic contrast adjustment.

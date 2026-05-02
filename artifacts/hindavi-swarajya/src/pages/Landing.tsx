@@ -90,26 +90,45 @@ export default function Landing() {
   const showStatsSection = statsLoading || hasRealStats;
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 overflow-x-hidden">
+    <div className="vintage-landing min-h-screen vint-parchment overflow-x-hidden">
 
-      {/* ── Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
+      {/* ── Navbar (parchment, antique gold rule) ── */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md shadow-sm"
+        style={{
+          backgroundColor: "rgba(243, 228, 198, 0.92)",
+          borderBottom: "1px solid rgba(200, 164, 92, 0.45)",
+        }}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF6F00] to-[#E65100] flex items-center justify-center shadow-sm">
-              <Flame className="w-5 h-5 text-white" />
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shadow-inner"
+              style={{
+                background: "linear-gradient(180deg, #C9531E 0%, #B8430E 60%, #8B2E08 100%)",
+                border: "1px solid #8B2E08",
+                boxShadow: "0 1px 0 rgba(255,255,255,0.18) inset, 0 -2px 0 rgba(0,0,0,0.18) inset",
+              }}
+            >
+              <Flame className="w-5 h-5 text-[#FFF6E1]" />
             </div>
             <div>
-              <div className="text-base font-bold text-[#FF6F00] leading-none font-serif">HindaviSwarajya</div>
-              <div className="text-[10px] text-gray-400 leading-none mt-0.5">हिंदवी स्वराज्य</div>
+              <div className="text-base font-bold leading-none font-serif" style={{ color: "#8B2E08" }}>
+                HindaviSwarajya
+              </div>
+              <div className="text-[10px] leading-none mt-0.5" style={{ color: "#5C3A1E", opacity: 0.75 }}>
+                हिंदवी स्वराज्य
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/sign-in">
-              <Button variant="ghost" className="text-gray-600 hover:text-[#FF6F00]">Sign In</Button>
+              <Button variant="ghost" className="font-semibold" style={{ color: "#5C3A1E" }}>
+                Sign In
+              </Button>
             </Link>
             <Link href="/sign-up">
-              <Button className="bg-[#FF6F00] hover:bg-[#E65100] text-white shadow-sm gap-1.5">
+              <Button className="vint-btn-primary gap-1.5 font-bold">
                 Join Free <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
@@ -117,70 +136,93 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="pt-24 pb-20 px-4 sm:px-6 relative overflow-hidden">
-        {/* Premium saffron+gold backdrop */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-amber-50/40 pointer-events-none" />
-        <div className="absolute top-20 right-0 w-[28rem] h-[28rem] rounded-full bg-[#FF6F00]/10 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-amber-300/10 blur-3xl pointer-events-none" />
-        {/* Subtle radial dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, #FF6F00 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-        />
+      {/* ── Hero (parchment + fort silhouette + drifting dust) ── */}
+      <section className="vint-parchment vint-grain pt-28 pb-32 px-4 sm:px-6 relative overflow-hidden">
+        {/* Soft warm vignettes */}
+        <div className="absolute top-20 right-0 w-[28rem] h-[28rem] rounded-full pointer-events-none"
+             style={{ background: "radial-gradient(circle, rgba(184,67,14,0.18), transparent 70%)" }} />
+        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none"
+             style={{ background: "radial-gradient(circle, rgba(200,164,92,0.20), transparent 70%)" }} />
+
+        {/* Drifting dust particles */}
+        <div className="vint-dust" aria-hidden="true">
+          {Array.from({ length: 14 }).map((_, i) => {
+            const left = (i * 7.3) % 100;
+            const dur = 14 + (i % 5) * 3;
+            const delay = (i * 1.7) % 12;
+            const size = 2 + (i % 3);
+            return (
+              <span
+                key={i}
+                style={{
+                  left: `${left}%`,
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  animationDuration: `${dur}s`,
+                  animationDelay: `${delay}s`,
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Fort silhouette at bottom */}
+        <div className="vint-fort absolute left-0 right-0 bottom-0 h-36 pointer-events-none" aria-hidden="true" />
 
         <div className="relative max-w-5xl mx-auto text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            {/* Premium "World's First" badge */}
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FF6F00] to-[#E65100] text-white shadow-lg shadow-orange-200/60">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+            {/* Vintage seal badge */}
+            <div className="vint-chip inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full font-bold uppercase tracking-widest text-[10px] sm:text-[11px]">
               <Sparkles className="w-3.5 h-3.5" />
-              <span className="text-[11px] sm:text-xs font-semibold tracking-wide uppercase">
-                World's First Seva Platform
-              </span>
+              World's First Seva Platform
               <Sparkles className="w-3.5 h-3.5" />
             </div>
 
-            {/* Decorative ornament — three saffron dots */}
-            <div className="flex justify-center items-center gap-1.5 mb-4" aria-hidden="true">
-              <span className="w-1 h-1 rounded-full bg-[#FF6F00]/40" />
-              <Crown className="w-4 h-4 text-amber-500" />
-              <span className="w-1 h-1 rounded-full bg-[#FF6F00]/40" />
+            {/* Decorative ornament — gold rule + crown */}
+            <div className="flex justify-center items-center gap-3 mb-5" aria-hidden="true">
+              <span className="w-12 h-px" style={{ background: "linear-gradient(90deg, transparent, #C8A45C)" }} />
+              <Crown className="w-5 h-5" style={{ color: "#C8A45C" }} />
+              <span className="w-12 h-px" style={{ background: "linear-gradient(270deg, transparent, #C8A45C)" }} />
             </div>
 
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-gray-900 leading-[1.05] mb-5 font-serif tracking-tight">
+            <h1
+              className="text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.05] mb-5 font-serif tracking-tight"
+              style={{ color: "#2A1F14", textShadow: "0 1px 0 rgba(255,246,225,0.5)" }}
+            >
               Serve. Unite.{" "}
-              <span className="bg-gradient-to-r from-[#FF6F00] via-[#E65100] to-amber-600 bg-clip-text text-transparent">
+              <span style={{
+                background: "linear-gradient(180deg, #B8430E 0%, #8B2E08 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}>
                 Build Swarajya.
               </span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-6 leading-relaxed">
+            <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-6 leading-relaxed" style={{ color: "#5C3A1E" }}>
               World's first seva platform inspired by the vision of{" "}
-              <span className="font-semibold text-gray-800">Chhatrapati Shivaji Maharaj</span>
+              <span className="font-bold" style={{ color: "#2A1F14" }}>Chhatrapati Shivaji Maharaj</span>
               {" "}— a movement, not just a platform.
             </p>
 
-            {/* Marathi emotional line — framed in a quote card */}
+            {/* Marathi emotional line — framed in a vintage scroll */}
             <div className="max-w-xl mx-auto mb-8 relative">
-              <div className="absolute -left-2 top-0 text-5xl text-[#FF6F00]/20 font-serif leading-none select-none" aria-hidden="true">"</div>
-              <div className="absolute -right-2 bottom-0 text-5xl text-[#FF6F00]/20 font-serif leading-none select-none rotate-180" aria-hidden="true">"</div>
-              <p className="text-base sm:text-lg text-[#FF6F00] font-semibold font-serif px-6 leading-relaxed" lang="mr">
+              <div className="absolute -left-2 top-0 text-5xl font-serif leading-none select-none" style={{ color: "rgba(184,67,14,0.25)" }} aria-hidden="true">"</div>
+              <div className="absolute -right-2 bottom-0 text-5xl font-serif leading-none select-none rotate-180" style={{ color: "rgba(184,67,14,0.25)" }} aria-hidden="true">"</div>
+              <p className="text-base sm:text-lg font-bold font-serif px-6 leading-relaxed" style={{ color: "#8B2E08" }} lang="mr">
                 हे महाराजांचं स्वप्न आहे — या आधुनिक जगात पुन्हा जिवंत करण्याचा आमचा प्रयत्न.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               <Link href="/sign-up">
-                <Button size="lg" className="bg-gradient-to-r from-[#FF6F00] to-[#E65100] hover:from-[#E65100] hover:to-[#BF360C] text-white shadow-xl shadow-orange-200 gap-2 text-base px-8 h-12 font-semibold">
+                <Button size="lg" className="vint-btn-primary gap-2 text-base px-8 h-12 font-bold rounded-md">
                   <Heart className="w-4 h-4" /> Start Your Seva Journey
                 </Button>
               </Link>
               <Link href="/sign-up">
-                <Button size="lg" variant="outline" className="border-2 border-[#FF6F00]/30 bg-white/60 backdrop-blur text-[#FF6F00] hover:bg-orange-50 gap-2 text-base px-8 h-12 font-semibold">
+                <Button size="lg" className="vint-btn-secondary gap-2 text-base px-8 h-12 font-bold rounded-md">
                   Join the Movement <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -195,9 +237,9 @@ export default function Landing() {
               ].map((t) => (
                 <span
                   key={t.label}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-orange-100 text-gray-600 shadow-sm"
+                  className="vint-chip inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold"
                 >
-                  <t.icon className="w-3 h-3 text-[#FF6F00]" />
+                  <t.icon className="w-3 h-3" style={{ color: "#B8430E" }} />
                   {t.label}
                 </span>
               ))}
@@ -206,10 +248,22 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Live Stats (skeleton while loading, hidden when all zero) ── */}
+      {/* ── Live Stats (banner — burnt saffron with stamped feel) ── */}
       {showStatsSection && (
-        <section className="py-14 bg-gradient-to-r from-[#FF6F00] to-[#E65100]">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <section
+          className="vint-grain py-14 relative overflow-hidden"
+          style={{
+            background: "linear-gradient(180deg, #B8430E 0%, #8B2E08 100%)",
+            borderTop: "2px solid rgba(200,164,92,0.45)",
+            borderBottom: "2px solid rgba(42,31,20,0.45)",
+            color: "#FFF6E1",
+          }}
+        >
+          <div className="absolute inset-0 opacity-20 pointer-events-none"
+               style={{
+                 backgroundImage: "repeating-linear-gradient(90deg, rgba(255,246,225,0.15) 0px, rgba(255,246,225,0.15) 1px, transparent 1px, transparent 80px)",
+               }} />
+          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
             {statsLoading ? (
               [1, 2, 3].map((i) => (
                 <div key={i} className="text-center flex flex-col items-center gap-2">
@@ -226,11 +280,15 @@ export default function Landing() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
                   viewport={{ once: true }}
-                  className="text-center text-white"
+                  className="text-center"
                 >
-                  <s.icon className="w-6 h-6 mx-auto mb-2 text-white/80" />
-                  <p className="text-3xl font-bold mb-0.5">{s.value.toLocaleString()}</p>
-                  <p className="text-sm text-orange-100">{s.label}</p>
+                  <s.icon className="w-6 h-6 mx-auto mb-2" style={{ color: "#E0C078" }} />
+                  <p className="text-4xl font-bold font-serif mb-0.5 tabular-nums" style={{ textShadow: "0 1px 0 rgba(0,0,0,0.25)" }}>
+                    {s.value.toLocaleString()}
+                  </p>
+                  <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "#F3E0B8" }}>
+                    {s.label}
+                  </p>
                 </motion.div>
               ))
             )}
@@ -238,53 +296,71 @@ export default function Landing() {
         </section>
       )}
 
-      {/* ── Features ── */}
-      <section className="py-20 px-4 sm:px-6 bg-white">
+      {/* ── Features (parchment paper cards) ── */}
+      <section className="vint-parchment vint-grain py-20 px-4 sm:px-6 relative">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 font-serif mb-3">
-              Everything you need for <span className="text-[#FF6F00]">Seva</span>
+            <div className="vint-ornament mb-3 mx-auto"><span className="text-[10px] uppercase tracking-[0.3em] font-bold">सेवा</span></div>
+            <h2 className="text-3xl sm:text-4xl font-bold font-serif mb-3" style={{ color: "#2A1F14" }}>
+              Everything you need for{" "}
+              <span style={{ color: "#8B2E08" }}>Seva</span>
             </h2>
-            <p className="text-gray-500 text-lg max-w-xl mx-auto">
+            <p className="text-lg max-w-xl mx-auto" style={{ color: "#5C3A1E" }}>
               A complete platform for community service — organize, connect, help, and grow together.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map((f, i) => (
-              <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} viewport={{ once: true }}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${f.color}`}>
-                  <f.icon className="w-5 h-5" />
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.07 }}
+                viewport={{ once: true }}
+                className="vint-card p-5 transition-all duration-300 hover:-translate-y-1"
+              >
+                <div
+                  className="w-11 h-11 rounded-md flex items-center justify-center mb-3"
+                  style={{
+                    background: "linear-gradient(180deg, #E7D2A8 0%, #D9BE85 100%)",
+                    border: "1px solid rgba(139,46,8,0.3)",
+                    color: "#8B2E08",
+                    boxShadow: "0 1px 0 rgba(255,255,255,0.5) inset",
+                  }}
+                >
+                  <f.icon className="w-5 h-5" strokeWidth={1.75} />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-1.5">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+                <h3 className="font-bold font-serif text-lg mb-1.5" style={{ color: "#2A1F14" }}>{f.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "#5C3A1E" }}>{f.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Premium Rank Ladder ── */}
-      <section className="py-20 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-b from-stone-50 via-orange-50/30 to-white">
-        {/* Decorative blurs */}
-        <div className="absolute top-10 left-1/4 w-72 h-72 rounded-full bg-amber-200/20 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-1/4 w-72 h-72 rounded-full bg-[#FF6F00]/10 blur-3xl pointer-events-none" />
+      {/* ── Premium Rank Ladder (parchment) ── */}
+      <section className="vint-parchment vint-grain py-20 px-4 sm:px-6 relative overflow-hidden">
+        {/* Decorative warm glows */}
+        <div className="absolute top-10 left-1/4 w-72 h-72 rounded-full pointer-events-none"
+             style={{ background: "radial-gradient(circle, rgba(200,164,92,0.20), transparent 70%)" }} />
+        <div className="absolute bottom-10 right-1/4 w-72 h-72 rounded-full pointer-events-none"
+             style={{ background: "radial-gradient(circle, rgba(184,67,14,0.15), transparent 70%)" }} />
 
         <div className="relative max-w-6xl mx-auto">
           {/* Section header */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white border border-amber-200 shadow-sm">
-              <Crown className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-amber-700">
+            <div className="vint-chip inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full">
+              <Crown className="w-3.5 h-3.5" style={{ color: "#C8A45C" }} />
+              <span className="text-[11px] font-bold tracking-widest uppercase">
                 17 Ranks · 5 Tiers
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 font-serif mb-4 tracking-tight">
-              The <span className="bg-gradient-to-r from-amber-600 via-[#FF6F00] to-[#E65100] bg-clip-text text-transparent">Swarajya</span> Rank System
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-serif mb-4 tracking-tight" style={{ color: "#2A1F14" }}>
+              The <span style={{ color: "#8B2E08" }}>Swarajya</span> Rank System
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+            <p className="max-w-2xl mx-auto text-base sm:text-lg leading-relaxed" style={{ color: "#5C3A1E" }}>
               Every person you help earns you{" "}
-              <span className="font-bold text-[#FF6F00]">10 Mudra</span>. Rise through the ranks of
+              <span className="font-bold" style={{ color: "#8B2E08" }}>10 Mudra</span>. Rise through the ranks of
               the Maratha Empire — from <span className="font-semibold">Sevak</span> to{" "}
               <span className="font-semibold">Sar Senapati</span>.
             </p>
@@ -303,10 +379,17 @@ export default function Landing() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: tIdx * 0.05 }}
-                  className="relative rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden"
+                  className="vint-card-strong relative overflow-hidden"
                 >
-                  {/* Tier header strip */}
-                  <div className={`relative bg-gradient-to-r ${tier.accent} px-5 py-3 text-white flex items-center justify-between`}>
+                  {/* Tier header strip — muted brown/saffron */}
+                  <div
+                    className="relative px-5 py-3 flex items-center justify-between"
+                    style={{
+                      background: "linear-gradient(180deg, #5C3A1E 0%, #2A1F14 100%)",
+                      color: "#F3E0B8",
+                      borderBottom: "1px solid #C8A45C",
+                    }}
+                  >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
                         <TIcon className="w-4 h-4" />
@@ -475,27 +558,27 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section className="py-20 px-4 sm:px-6 bg-gradient-to-b from-white via-orange-50/40 to-white relative overflow-hidden">
-        {/* subtle saffron accent */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#FF6F00]/5 blur-3xl pointer-events-none" />
+      {/* ── How It Works (parchment) ── */}
+      <section className="vint-parchment vint-grain py-20 px-4 sm:px-6 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+             style={{ background: "radial-gradient(circle, rgba(184,67,14,0.10), transparent 70%)" }} />
 
         <div className="relative max-w-6xl mx-auto">
           {/* Section header */}
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white border border-orange-200 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-[#FF6F00]" />
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-[#FF6F00]">
+            <div className="vint-chip inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-bold tracking-widest uppercase">
                 Your Journey in Swarajya
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 font-serif mb-3 tracking-tight">
-              How It <span className="bg-gradient-to-r from-amber-600 via-[#FF6F00] to-[#E65100] bg-clip-text text-transparent">Works</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-serif mb-3 tracking-tight" style={{ color: "#2A1F14" }}>
+              How It <span style={{ color: "#8B2E08" }}>Works</span>
             </h2>
-            <p className="text-lg sm:text-xl font-semibold text-[#FF6F00] font-serif" lang="mr">
+            <p className="text-lg sm:text-xl font-bold font-serif" style={{ color: "#8B2E08" }} lang="mr">
               स्वराज्य कसे घडते
             </p>
-            <p className="mt-4 text-gray-600 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">
+            <p className="mt-4 max-w-xl mx-auto text-base sm:text-lg leading-relaxed" style={{ color: "#5C3A1E" }}>
               Five simple steps. One powerful movement. Start with action, rise with respect.
             </p>
           </div>
@@ -552,24 +635,32 @@ export default function Landing() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.08 }}
-                        className="relative h-full rounded-2xl bg-white border border-gray-100 shadow-sm p-5 sm:p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-orange-200"
+                        className="vint-card relative h-full p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1"
                       >
                         {/* Step number */}
                         <div className="flex items-center justify-between mb-4">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${step.accent} flex items-center justify-center text-white shadow-md group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
-                            <Icon className="w-6 h-6" strokeWidth={2.2} />
+                          <div
+                            className="w-12 h-12 rounded-md flex items-center justify-center group-hover:scale-110 group-hover:rotate-2 transition-transform duration-300"
+                            style={{
+                              background: "linear-gradient(180deg, #C9531E 0%, #B8430E 60%, #8B2E08 100%)",
+                              border: "1px solid #8B2E08",
+                              color: "#FFF6E1",
+                              boxShadow: "0 1px 0 rgba(255,255,255,0.18) inset, 0 -2px 0 rgba(0,0,0,0.18) inset, 0 6px 12px -4px rgba(139,46,8,0.45)",
+                            }}
+                          >
+                            <Icon className="w-6 h-6" strokeWidth={1.8} />
                           </div>
-                          <span className="text-3xl font-extrabold text-gray-200 tabular-nums leading-none font-serif select-none">
+                          <span className="text-4xl font-extrabold tabular-nums leading-none font-serif select-none" style={{ color: "rgba(184,67,14,0.20)" }}>
                             0{i + 1}
                           </span>
                         </div>
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-serif leading-tight mb-1">
+                        <h3 className="text-lg sm:text-xl font-bold font-serif leading-tight mb-1" style={{ color: "#2A1F14" }}>
                           {step.title}
                         </h3>
-                        <p className={`text-sm font-bold bg-gradient-to-r ${step.accent} bg-clip-text text-transparent mb-2`}>
+                        <p className="text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: "#8B2E08" }}>
                           {step.tagline}
                         </p>
-                        <p className="text-sm text-gray-600 leading-relaxed">
+                        <p className="text-sm leading-relaxed" style={{ color: "#5C3A1E" }}>
                           {step.desc}
                         </p>
                       </motion.div>
@@ -582,7 +673,13 @@ export default function Landing() {
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: i * 0.08 + 0.2 }}
-                            className="w-7 h-7 rounded-full bg-white border border-orange-200 shadow-sm flex items-center justify-center text-[#FF6F00] group-hover:translate-x-1 transition-transform duration-300"
+                            className="w-7 h-7 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform duration-300"
+                            style={{
+                              backgroundColor: "#FAEFD6",
+                              border: "1px solid #C8A45C",
+                              color: "#8B2E08",
+                              boxShadow: "0 2px 4px rgba(92,58,30,0.2)",
+                            }}
                           >
                             <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
                           </motion.div>
@@ -603,15 +700,23 @@ export default function Landing() {
             transition={{ delay: 0.4 }}
             className="mt-14 max-w-3xl mx-auto text-center"
           >
-            <div className="relative inline-block px-6 sm:px-10 py-6 rounded-2xl bg-gradient-to-br from-[#FF6F00] to-[#E65100] text-white shadow-xl shadow-orange-300/40 overflow-hidden">
-              <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full border-4 border-white/15" />
-              <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full border-4 border-white/10" />
-              <Flame className="w-7 h-7 text-white/90 mx-auto mb-3" />
-              <p className="text-xl sm:text-2xl font-bold font-serif leading-snug">
+            <div
+              className="relative inline-block px-6 sm:px-10 py-6 rounded-md overflow-hidden"
+              style={{
+                background: "linear-gradient(180deg, #5C3A1E 0%, #2A1F14 100%)",
+                border: "1.5px solid #C8A45C",
+                color: "#FFF6E1",
+                boxShadow: "0 1px 0 rgba(255,255,255,0.08) inset, 0 -2px 0 rgba(0,0,0,0.4) inset, 0 14px 28px -10px rgba(42,31,20,0.55)",
+              }}
+            >
+              <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full" style={{ border: "2px solid rgba(200,164,92,0.35)" }} />
+              <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full" style={{ border: "2px solid rgba(200,164,92,0.2)" }} />
+              <Flame className="w-7 h-7 mx-auto mb-3" style={{ color: "#E0C078" }} />
+              <p className="text-xl sm:text-2xl font-bold font-serif leading-snug" style={{ textShadow: "0 1px 0 rgba(0,0,0,0.4)" }}>
                 This is not just a platform.<br />
-                <span className="text-amber-100">This is a movement built on seva.</span>
+                <span style={{ color: "#E0C078" }}>This is a movement built on seva.</span>
               </p>
-              <p className="mt-3 text-base sm:text-lg font-semibold opacity-95 font-serif" lang="mr">
+              <p className="mt-3 text-base sm:text-lg font-bold font-serif" style={{ color: "#F3E0B8" }} lang="mr">
                 हे फक्त प्लॅटफॉर्म नाही… हे स्वराज्य आहे.
               </p>
             </div>
@@ -619,34 +724,62 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="py-20 px-4 sm:px-6 bg-gradient-to-br from-[#FF6F00] to-[#E65100] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-8 left-8 w-32 h-32 rounded-full border-2 border-white" />
-          <div className="absolute bottom-8 right-8 w-48 h-48 rounded-full border-2 border-white" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border-2 border-white" />
+      {/* ── CTA (burnt saffron stamped banner) ── */}
+      <section
+        className="vint-grain py-20 px-4 sm:px-6 relative overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg, #B8430E 0%, #8B2E08 100%)",
+          borderTop: "2px solid rgba(200,164,92,0.55)",
+          color: "#FFF6E1",
+        }}
+      >
+        <div className="absolute inset-0 opacity-15 pointer-events-none">
+          <div className="absolute top-8 left-8 w-32 h-32 rounded-full" style={{ border: "2px solid #C8A45C" }} />
+          <div className="absolute bottom-8 right-8 w-48 h-48 rounded-full" style={{ border: "2px solid #C8A45C" }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full" style={{ border: "2px solid #C8A45C" }} />
         </div>
+        {/* Fort silhouette echo */}
+        <div className="vint-fort absolute left-0 right-0 bottom-0 h-24 pointer-events-none opacity-50" aria-hidden="true" />
+
         <div className="relative max-w-2xl mx-auto text-center">
-          <Flame className="w-10 h-10 text-white/80 mx-auto mb-4" />
-          <h2 className="text-3xl sm:text-4xl font-bold text-white font-serif mb-3">
+          <Flame className="w-10 h-10 mx-auto mb-4" style={{ color: "#E0C078" }} />
+          <h2 className="text-3xl sm:text-4xl font-bold font-serif mb-3" style={{ textShadow: "0 1px 0 rgba(0,0,0,0.3)" }}>
             Ready to serve?
           </h2>
-          <p className="text-lg text-orange-100 mb-8 max-w-md mx-auto">
+          <p className="text-lg mb-8 max-w-md mx-auto" style={{ color: "#F3E0B8" }}>
             Join the community of sevaks across India. Your first act of service starts here.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/sign-up">
-              <Button size="lg" className="bg-white text-[#FF6F00] hover:bg-orange-50 font-bold gap-2 px-8 h-12 shadow-lg">
+              <Button
+                size="lg"
+                className="font-bold gap-2 px-8 h-12 rounded-md"
+                style={{
+                  backgroundColor: "#FAEFD6",
+                  color: "#8B2E08",
+                  border: "1.5px solid #C8A45C",
+                  boxShadow: "0 1px 0 rgba(255,255,255,0.5) inset, 0 6px 14px -4px rgba(0,0,0,0.35)",
+                }}
+              >
                 <Heart className="w-4 h-4" /> Create Free Account
               </Button>
             </Link>
             <Link href="/sign-in">
-              <Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10 gap-2 px-8 h-12">
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-2 px-8 h-12 font-bold rounded-md"
+                style={{
+                  borderColor: "rgba(243,224,184,0.5)",
+                  color: "#FFF6E1",
+                  backgroundColor: "transparent",
+                }}
+              >
                 Sign In <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>
-          <div className="flex items-center justify-center gap-4 mt-6 text-orange-100 text-xs">
+          <div className="flex items-center justify-center gap-4 mt-6 text-xs" style={{ color: "#F3E0B8" }}>
             {["Free forever", "No ads", "Community-driven"].map(t => (
               <span key={t} className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" />{t}</span>
             ))}
@@ -654,16 +787,29 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="py-8 px-4 sm:px-6 bg-gray-900 text-center">
+      {/* ── Footer (charcoal & antique gold) ── */}
+      <footer
+        className="py-8 px-4 sm:px-6 text-center"
+        style={{
+          background: "linear-gradient(180deg, #2A1F14 0%, #1A1108 100%)",
+          borderTop: "1px solid rgba(200,164,92,0.45)",
+        }}
+      >
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-7 h-7 rounded-lg bg-[#FF6F00] flex items-center justify-center">
-            <Flame className="w-4 h-4 text-white" />
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center"
+            style={{
+              background: "linear-gradient(180deg, #C9531E 0%, #B8430E 60%, #8B2E08 100%)",
+              border: "1px solid #8B2E08",
+              boxShadow: "0 1px 0 rgba(255,255,255,0.18) inset",
+            }}
+          >
+            <Flame className="w-4 h-4" style={{ color: "#FFF6E1" }} />
           </div>
-          <span className="text-white font-bold font-serif">HindaviSwarajya</span>
+          <span className="font-bold font-serif" style={{ color: "#E0C078" }}>HindaviSwarajya</span>
         </div>
-        <p className="text-gray-400 text-xs mb-1">हिंदवी स्वराज्य — Community Seva Platform</p>
-        <p className="text-gray-600 text-xs">"महाराजांचे स्वप्न, आमचे कर्तव्य" © 2026</p>
+        <p className="text-xs mb-1" style={{ color: "#C8A45C" }}>हिंदवी स्वराज्य — Community Seva Platform</p>
+        <p className="text-xs" style={{ color: "#8C6F3D" }}>"महाराजांचे स्वप्न, आमचे कर्तव्य" © 2026</p>
       </footer>
     </div>
   );

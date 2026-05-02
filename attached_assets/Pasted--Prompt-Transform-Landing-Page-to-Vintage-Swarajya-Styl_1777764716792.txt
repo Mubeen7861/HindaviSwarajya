@@ -1,0 +1,149 @@
+## 🎨 Prompt — Transform Landing Page to Vintage Swarajya Style
+
+Redesign the existing landing page UI into a **vintage, raw, 17th-century Hindavi Swarajya-inspired style**, influenced by the era of Chhatrapati Shivaji Maharaj.
+
+---
+
+### 🎯 Goal:
+
+Convert the current modern UI into a **historic, cinematic, and powerful experience** while keeping usability intact.
+
+---
+
+## 🎨 Style Transformation Rules
+
+### 1. Background
+
+* Replace clean/flat backgrounds with:
+
+  * Old parchment texture
+  * Aged paper / stone texture
+  * Subtle grain, dust, scratches
+* Use warm earthy tones:
+
+  * Burnt saffron
+  * Mud brown
+  * Dark charcoal
+
+---
+
+### 2. Color System
+
+* Primary: Deep saffron (muted, not bright)
+* Secondary: Dark brown / near black
+* Accent: Antique gold (very subtle highlights)
+* Remove:
+
+  * Bright gradients
+  * Neon colors
+  * Modern blue/purple palettes
+
+---
+
+### 3. Typography
+
+* Headings:
+
+  * Bold serif or Devanagari-style font
+  * Slight rough / carved feel
+* Body:
+
+  * Keep clean and readable (modern for usability)
+
+---
+
+### 4. UI Components
+
+#### Buttons:
+
+* Style like **stamped metal or carved wood**
+* Slight rough edges
+* Press effect (like a seal/stamp)
+
+#### Cards / Sections:
+
+* Look like **aged paper blocks**
+* Soft shadows, not glassy
+
+#### Icons:
+
+* Replace modern icons with:
+
+  * Minimal engraved-style icons
+  * Thin line + rough edges
+
+---
+
+### 5. Decorative Elements (Subtle Only)
+
+* Add faded:
+
+  * Fort silhouettes
+  * Sword textures
+  * Bhagwa flag hints
+* Keep opacity low (background only, not distracting)
+
+---
+
+### 6. Motion & Effects
+
+* Add:
+
+  * Slow dust particles
+  * Light rays
+  * Soft glow on hover
+* Avoid:
+
+  * Fast animations
+  * Tech-style transitions
+
+---
+
+### 7. Badge Integration
+
+* Use coin badges as:
+
+  * Highlights
+  * Achievements
+* Add slight metallic shine (subtle)
+
+---
+
+### 8. Overall Tone
+
+* Raw
+* Historic
+* Purpose-driven
+* Feels like a **movement, not a startup**
+
+---
+
+## ⚡ Balance Rule (IMPORTANT)
+
+Maintain:
+
+* 60% usability
+* 40% vintage styling
+
+Do NOT:
+
+* Reduce readability
+* Over-texture the UI
+* Make it feel outdated or cluttered
+
+---
+
+## 🧠 Final Feel
+
+The interface should feel like:
+👉 “A digital Swarajya platform built in today’s world”
+
+Not:
+❌ A history-themed website
+❌ A modern SaaS product
+
+---
+
+### 🔥 One-line Direction
+
+👉 “Turn this UI into a cinematic, raw Swarajya-era experience while keeping it clean and usable.”
