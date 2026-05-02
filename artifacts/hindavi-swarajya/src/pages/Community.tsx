@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useListPosts, useGetLeaderboard, getListPostsQueryKey, getGetLeaderboardQueryKey } from "@workspace/api-client-react";
+import {
+  useListPosts, useGetLeaderboard, useListUsers,
+  getListPostsQueryKey, getGetLeaderboardQueryKey, getListUsersQueryKey,
+} from "@workspace/api-client-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,112 +11,63 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RankBadge } from "@/components/RankBadge";
 import {
-  ArrowLeft, Search, Users, MessageCircle, BookOpen,
-  Pin, Eye, Heart, Trophy, Crown, Award, Medal
+  ArrowLeft, Search, MessageCircle, Users,
+  Heart, Trophy, Crown, Award, Medal, MapPin,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 
-const MOCK_DISCUSSIONS = [
-  {
-    id: "d1", title: "How can we organize more effective seva drives in our local communities?",
-    content: "I've been thinking about ways to make our seva activities more impactful and reach more people in need. What strategies have worked well in your areas?",
-    author: { name: "Vikrant Jadhav", avatar: "https://i.pravatar.cc/100?u=vikrant", rank: "Nayak", location: "Nashik" },
-    category: "General", timeAgo: "2 hours ago", replies: 23, likes: 45, views: 156, isPinned: true,
-    tags: ["seva", "community", "organization"],
-  },
-  {
-    id: "d2", title: "Understanding Maharaj's philosophy on Swarajya in modern context",
-    content: "How do we apply Chhatrapati Shivaji Maharaj's principles of self-governance and independence in today's world?",
-    author: { name: "Dr. Rajendra More", avatar: "https://i.pravatar.cc/100?u=rajendra", rank: "Sardar", location: "Pune" },
-    category: "Teachings", timeAgo: "5 hours ago", replies: 41, likes: 89, views: 312, isPinned: true,
-    tags: ["maharaj", "philosophy", "swarajya"],
-  },
-  {
-    id: "d3", title: "Best practices for running a free medical camp",
-    content: "Sharing my experience from running 12 medical camps in rural Maharashtra. Happy to answer questions!",
-    author: { name: "Dr. Priya Shinde", avatar: "https://i.pravatar.cc/100?u=priya", rank: "Karyakarta", location: "Satara" },
-    category: "Support", timeAgo: "1 day ago", replies: 17, likes: 52, views: 198,
-    tags: ["health", "medical-camp", "tips"],
-  },
-  {
-    id: "d4", title: "Youth education initiative — looking for tutors in Marathwada",
-    content: "We are starting a free tutoring program for Class 8–10 students in rural Marathwada. Need volunteers who can commit 4 hours/week.",
-    author: { name: "Sneha Kulkarni", avatar: "https://i.pravatar.cc/100?u=sneha", rank: "Sevak", location: "Aurangabad" },
-    category: "Events", timeAgo: "2 days ago", replies: 8, likes: 31, views: 112,
-    tags: ["education", "volunteer", "tutoring"],
-  },
-  {
-    id: "d5", title: "Celebrating 500 lives changed in our food distribution drive!",
-    content: "Our team has reached a milestone — 500 families fed through our monthly drives. Sharing photos and stories.",
-    author: { name: "Manoj Patil", avatar: "https://i.pravatar.cc/100?u=manoj", rank: "Nayak", location: "Kolhapur" },
-    category: "General", timeAgo: "3 days ago", replies: 34, likes: 127, views: 420,
-    tags: ["milestone", "food", "impact"],
-  },
-];
-
-const MOCK_TEACHINGS = [
-  {
-    id: "t1", title: "The Seven Pillars of Maharaj's Leadership",
-    quote: "स्वराज्य हा माझा जन्मसिद्ध हक्क आहे",
-    content: "Shivaji Maharaj's leadership was built on seven principles — courage, strategy, justice, humility, inclusivity, spirituality, and service.",
-    author: { name: "Pandit Dinanath", avatar: "https://i.pravatar.cc/100?u=pandit", rank: "Sardar" },
-    category: "Leadership", likes: 234, saves: 89, timeAgo: "1 week ago",
-    image: "https://images.unsplash.com/photo-1598538651017-a45d505b5ef4?w=400&h=200&fit=crop",
-  },
-  {
-    id: "t2", title: "Seva as Dharma — Ancient Wisdom for Modern Action",
-    quote: "सेवा परमो धर्म:",
-    content: "The concept of seva — selfless service — is at the heart of the Hindavi Swarajya movement. Every act of kindness strengthens the community.",
-    author: { name: "Acharya Suresh", avatar: "https://i.pravatar.cc/100?u=acharya", rank: "Senapati" },
-    category: "Values", likes: 189, saves: 67, timeAgo: "2 weeks ago",
-    image: "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=400&h=200&fit=crop",
-  },
-  {
-    id: "t3", title: "The Mavala Spirit — Courage in Community",
-    quote: "जो वाढविल धर्म सकळांचा सो वाढविल राज्य आपणासि",
-    content: "Maharaj's Mavale — mountain warriors — embodied the spirit of service to the community. Their courage was not just on the battlefield.",
-    author: { name: "Prof. Shashikant", avatar: "https://i.pravatar.cc/100?u=shashi", rank: "Nayak" },
-    category: "History", likes: 145, saves: 44, timeAgo: "3 weeks ago",
-    image: "https://images.unsplash.com/photo-1586899028174-e7098604235b?w=400&h=200&fit=crop",
-  },
-];
-
 const categoryColors: Record<string, string> = {
-  General: "bg-gray-100 text-gray-700",
-  Teachings: "bg-purple-100 text-purple-700",
-  Events: "bg-blue-100 text-blue-700",
-  Support: "bg-green-100 text-green-700",
-  Leadership: "bg-orange-100 text-orange-700",
-  Values: "bg-teal-100 text-teal-700",
-  History: "bg-amber-100 text-amber-700",
-  Inspiration: "bg-pink-100 text-pink-700",
+  Food: "bg-green-100 text-green-700",
+  Education: "bg-blue-100 text-blue-700",
+  Health: "bg-red-100 text-red-700",
+  Shelter: "bg-purple-100 text-purple-700",
+  Other: "bg-gray-100 text-gray-700",
 };
 
 export default function Community() {
   const [search, setSearch] = useState("");
 
-  const { data: leaderboard } = useGetLeaderboard({ limit: 10 }, {
-    query: { queryKey: getGetLeaderboardQueryKey({ limit: 10 }) },
-  });
-
-  const filteredDiscussions = MOCK_DISCUSSIONS.filter(d =>
-    !search || d.title.toLowerCase().includes(search.toLowerCase()) || d.content.toLowerCase().includes(search.toLowerCase())
+  const { data: posts, isLoading: postsLoading } = useListPosts(
+    { limit: 50, sortBy: "likes" as const },
+    { query: { queryKey: getListPostsQueryKey({ limit: 50, sortBy: "likes" as const }) } }
   );
+
+  const { data: members, isLoading: membersLoading } = useListUsers(
+    { limit: 50 },
+    { query: { queryKey: getListUsersQueryKey({ limit: 50 }) } }
+  );
+
+  const { data: leaderboard } = useGetLeaderboard(
+    { limit: 10 },
+    { query: { queryKey: getGetLeaderboardQueryKey({ limit: 10 }) } }
+  );
+
+  const filteredPosts = posts?.filter((p) =>
+    !search ||
+    p.content.toLowerCase().includes(search.toLowerCase()) ||
+    p.tags?.some((t) => t.toLowerCase().includes(search.toLowerCase()))
+  ) ?? [];
+
+  const filteredMembers = members?.filter((m) =>
+    !search ||
+    m.name.toLowerCase().includes(search.toLowerCase()) ||
+    m.location.toLowerCase().includes(search.toLowerCase())
+  ) ?? [];
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
         <div className="flex items-center gap-3">
-          <Link href="/">
+          <Link href="/app">
             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-primary font-serif leading-tight">Community</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Discussions, teachings & connections</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Discussions, members & connections</p>
           </div>
         </div>
       </div>
@@ -122,7 +76,12 @@ export default function Community() {
       <div className="px-6 py-3 border-b border-gray-100 bg-white">
         <div className="relative max-w-xl">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input placeholder="Search discussions and teachings..." className="pl-9 h-9 bg-gray-50 border-gray-200 rounded-xl text-sm" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input
+            placeholder="Search posts, members, tags..."
+            className="pl-9 h-9 bg-gray-50 border-gray-200 rounded-xl text-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </div>
 
@@ -131,82 +90,128 @@ export default function Community() {
         <Tabs defaultValue="discussions" className="flex flex-col h-full">
           <TabsList className="mx-6 mt-3 mb-0 grid grid-cols-3 bg-gray-100 rounded-xl h-9">
             <TabsTrigger value="discussions" className="text-xs rounded-lg">Discussions</TabsTrigger>
-            <TabsTrigger value="teachings" className="text-xs rounded-lg">Teachings</TabsTrigger>
+            <TabsTrigger value="members" className="text-xs rounded-lg">Members</TabsTrigger>
             <TabsTrigger value="leaderboard" className="text-xs rounded-lg">Top Sevaks</TabsTrigger>
           </TabsList>
 
-          {/* ── Discussions ── */}
+          {/* ── Discussions (real posts) ── */}
           <TabsContent value="discussions" className="flex-1 overflow-y-auto px-6 py-4 space-y-3 mt-0">
-            {filteredDiscussions.length === 0 ? (
+            {postsLoading ? (
+              <div className="space-y-3">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div className="flex gap-3 mb-3"><Skeleton className="w-9 h-9 rounded-full" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>
+                    <Skeleton className="h-12 w-full mb-2" /><Skeleton className="h-3 w-2/3" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredPosts.length === 0 ? (
               <div className="text-center py-16">
                 <MessageCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No discussions found</p>
+                <p className="text-gray-500 text-sm">{search ? "No discussions found" : "No posts yet — be the first!"}</p>
+                <Link href="/app/create">
+                  <Button variant="outline" size="sm" className="mt-3 text-primary border-primary/30">Share a Seva</Button>
+                </Link>
               </div>
-            ) : filteredDiscussions.map((d, i) => (
-              <motion.div key={d.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-4 cursor-pointer">
-                  <div className="flex items-start gap-3 mb-2">
-                    <Avatar className="w-9 h-9 shrink-0">
-                      <AvatarImage src={d.author.avatar} />
-                      <AvatarFallback className="text-xs">{d.author.name.substring(0, 2)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                        <span className="text-sm font-semibold text-gray-900">{d.author.name}</span>
-                        <RankBadge rank={d.author.rank} />
-                        {d.isPinned && <Pin className="w-3 h-3 text-[#FF6F00]" />}
+            ) : filteredPosts.map((p, i) => (
+              <motion.div key={p.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                <Link href={`/app/post/${p.id}`}>
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-4 cursor-pointer">
+                    <div className="flex items-start gap-3 mb-2">
+                      <Avatar className="w-9 h-9 shrink-0">
+                        <AvatarImage src={p.user?.avatar} />
+                        <AvatarFallback className="text-xs">{(p.user?.name ?? "U").substring(0, 2)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <span className="text-sm font-semibold text-gray-900">{p.user?.name ?? "Unknown"}</span>
+                          {p.user?.rank && <RankBadge rank={p.user.rank} />}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColors[p.category] ?? "bg-gray-100 text-gray-700"}`}>{p.category}</span>
+                          <span className="text-xs text-gray-400">
+                            {p.timestamp ? formatDistanceToNow(new Date(p.timestamp), { addSuffix: true }) : ""}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColors[d.category] ?? "bg-gray-100 text-gray-700"}`}>{d.category}</span>
-                        <span className="text-xs text-gray-400">{d.timeAgo}</span>
+                    </div>
+                    <p className="text-sm text-gray-800 line-clamp-3 mb-3">{p.content}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                        <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{p.comments?.length ?? 0}</span>
+                        <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{p.likes}</span>
+                        {p.helpedPeople > 0 && (
+                          <span className="flex items-center gap-1 text-green-600 font-medium">
+                            <Users className="w-3 h-3" />{p.helpedPeople} helped
+                          </span>
+                        )}
                       </div>
+                      {p.tags && p.tags.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                          {p.tags.slice(0, 2).map((t) => (
+                            <span key={t} className="text-xs bg-orange-50 text-[#FF6F00] px-2 py-0.5 rounded-full">#{t}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-1 leading-snug">{d.title}</h3>
-                  <p className="text-sm text-gray-500 line-clamp-2 mb-3">{d.content}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-xs text-gray-400">
-                      <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{d.replies}</span>
-                      <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{d.likes}</span>
-                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{d.views}</span>
-                    </div>
-                    <div className="flex gap-1 flex-wrap">
-                      {d.tags.slice(0, 2).map(t => (
-                        <span key={t} className="text-xs bg-orange-50 text-[#FF6F00] px-2 py-0.5 rounded-full">#{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                </Link>
               </motion.div>
             ))}
           </TabsContent>
 
-          {/* ── Teachings ── */}
-          <TabsContent value="teachings" className="flex-1 overflow-y-auto px-6 py-4 space-y-4 mt-0">
-            {MOCK_TEACHINGS.map((t, i) => (
-              <motion.div key={t.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer">
-                  {t.image && <img src={t.image} alt={t.title} className="w-full h-36 object-cover" loading="lazy" />}
-                  <div className="p-4">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColors[t.category] ?? "bg-gray-100 text-gray-700"}`}>{t.category}</span>
-                    <h3 className="font-bold text-gray-900 mt-2 mb-1">{t.title}</h3>
-                    <blockquote className="text-sm text-[#FF6F00] font-medium italic border-l-2 border-[#FF6F00]/30 pl-3 mb-2">"{t.quote}"</blockquote>
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-3">{t.content}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6"><AvatarImage src={t.author.avatar} /><AvatarFallback className="text-xs">{t.author.name.substring(0, 2)}</AvatarFallback></Avatar>
-                        <span className="text-xs text-gray-500">{t.author.name}</span>
-                        <RankBadge rank={t.author.rank} />
+          {/* ── Members (real users) ── */}
+          <TabsContent value="members" className="flex-1 overflow-y-auto px-6 py-4 mt-0">
+            {membersLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+              </div>
+            ) : filteredMembers.length === 0 ? (
+              <div className="text-center py-16">
+                <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">No members found</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {filteredMembers.map((m, i) => (
+                  <motion.div key={m.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                    <Link href={`/app/profile/${m.id}`}>
+                      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-4 cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-11 h-11 shrink-0">
+                            <AvatarImage src={m.avatar} />
+                            <AvatarFallback>{m.name.substring(0, 2)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 truncate">{m.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <RankBadge rank={m.rank} />
+                              <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                                <MapPin className="w-2.5 h-2.5" />{m.location}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+                          <div className="text-center">
+                            <p className="text-sm font-bold text-[#FF6F00]">{m.totalHelped}</p>
+                            <p className="text-[10px] text-gray-400">helped</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-bold text-gray-800">{m.postsCount}</p>
+                            <p className="text-[10px] text-gray-400">posts</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-bold text-gray-800">{m.followersCount}</p>
+                            <p className="text-[10px] text-gray-400">followers</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{t.likes}</span>
-                        <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" />{t.saves}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* ── Leaderboard ── */}
@@ -217,7 +222,14 @@ export default function Community() {
                 <span className="text-sm font-bold text-gray-800">Top Sevaks Leaderboard</span>
               </div>
               {!leaderboard ? (
-                <div className="p-4 space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="flex gap-3 items-center"><Skeleton className="w-10 h-10 rounded-full" /><div className="flex-1 space-y-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>)}</div>
+                <div className="p-4 space-y-3">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className="flex gap-3 items-center">
+                      <Skeleton className="w-10 h-10 rounded-full" />
+                      <div className="flex-1 space-y-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="divide-y divide-gray-50">
                   {leaderboard.map((entry, i) => (

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import {
-  Home, Calendar, Plus, AlertCircle, Users, TrendingUp, User as UserIcon, Flame
+  Home, Calendar, Plus, AlertCircle, Users, TrendingUp, User as UserIcon, Shield, Flame
 } from "lucide-react";
 import { CURRENT_USER_ID } from "@/lib/constants";
 import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-client-react";
@@ -15,6 +15,7 @@ const tabs = [
   { href: "/app/community", id: "community", icon: Users, label: "Community", description: "Connect with sevaks" },
   { href: "/app/leaderboard", id: "leaderboard", icon: TrendingUp, label: "Leaderboard", description: "Top contributors" },
   { href: `/app/profile/${CURRENT_USER_ID}`, id: "profile", icon: UserIcon, label: "Profile", description: "Your seva journey" },
+  { href: "/app/admin", id: "admin", icon: Shield, label: "Admin", description: "Manage platform" },
 ];
 
 export function Sidebar() {

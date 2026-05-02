@@ -20,11 +20,7 @@ import {
   Target, Flame, ArrowUpRight, Star
 } from "lucide-react";
 import { Link } from "wouter";
-
-const upcomingEvents = [
-  { title: "Health Awareness Seminar", date: "May 15", slots: "2/20" },
-  { title: "Food Distribution Drive", date: "May 20", slots: "2/30" },
-];
+import { useListEvents, getListEventsQueryKey } from "@workspace/api-client-react";
 
 export default function Home() {
   const [search, setSearch] = useState("");
@@ -56,6 +52,10 @@ export default function Home() {
   const { data: leaderboard } = useGetLeaderboard({ limit: 5 }, {
     query: { queryKey: getGetLeaderboardQueryKey({ limit: 5 }) },
   });
+  const { data: upcomingEventsData } = useListEvents(
+    { status: "upcoming" as const, limit: 3 },
+    { query: { queryKey: getListEventsQueryKey({ status: "upcoming" as const, limit: 3 }) } }
+  );
 
   return (
     <div className="flex flex-col h-full">
@@ -221,21 +221,27 @@ export default function Home() {
               <span className="text-xs text-primary font-semibold cursor-pointer hover:underline">View All</span>
             </div>
             <div className="p-3 space-y-2.5">
-              {upcomingEvents.map((ev) => (
-                <div key={ev.title} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 text-primary shrink-0 mt-0.5">
-                    <Calendar className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800 leading-tight">{ev.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                      <span>{ev.date}</span>
-                      <span>·</span>
-                      <Users className="w-3 h-3" />
-                      <span>{ev.slots}</span>
+              {!upcomingEventsData ? (
+                <div className="space-y-2">{[1,2].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
+              ) : upcomingEventsData.length === 0 ? (
+                <p className="text-xs text-center text-muted-foreground py-4">No upcoming events yet</p>
+              ) : upcomingEventsData.map((ev) => (
+                <Link key={ev.id} href="/app/events">
+                  <div className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 text-primary shrink-0 mt-0.5">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800 leading-tight">{ev.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                        <span>{ev.date}</span>
+                        <span>·</span>
+                        <Users className="w-3 h-3" />
+                        <span>{ev.volunteersRegistered?.length ?? 0}/{ev.volunteersNeeded}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

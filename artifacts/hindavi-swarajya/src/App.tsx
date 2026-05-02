@@ -15,6 +15,7 @@ import CreatePost from "@/pages/CreatePost";
 import Events from "@/pages/Events";
 import HelpRequests from "@/pages/HelpRequests";
 import Community from "@/pages/Community";
+import Admin from "@/pages/Admin";
 import SignInPage from "@/pages/SignInPage";
 import SignUpPage from "@/pages/SignUpPage";
 import NotFound from "@/pages/not-found";
@@ -125,6 +126,7 @@ function AppLayout() {
             <Route path="/app/events" component={Events} />
             <Route path="/app/help" component={HelpRequests} />
             <Route path="/app/community" component={Community} />
+            <Route path="/app/admin" component={Admin} />
             <Route component={NotFound} />
           </Switch>
         </div>
