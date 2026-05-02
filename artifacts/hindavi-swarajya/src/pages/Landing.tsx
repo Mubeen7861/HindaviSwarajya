@@ -388,6 +388,43 @@ export default function Landing() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                       {ranks.map((r) => {
                         const idx = SWARAJYA_RANKS.findIndex((x) => x.name === r.name);
+                        if (r.image) {
+                          return (
+                            <div
+                              key={r.name}
+                              className={`group relative rounded-2xl border-2 ${r.border} ${r.bg} p-5 sm:p-6 transition-all hover:shadow-xl hover:-translate-y-1 col-span-2 sm:col-span-3 lg:col-span-2 overflow-hidden`}
+                              title={r.description}
+                            >
+                              {/* radial glow behind coin */}
+                              <div className="absolute inset-0 bg-gradient-radial from-amber-200/40 via-transparent to-transparent pointer-events-none" />
+                              <div className="relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                                <div className="relative shrink-0">
+                                  <div className="absolute inset-0 rounded-full bg-amber-400/30 blur-2xl scale-110" />
+                                  <img
+                                    src={r.image}
+                                    alt={`${r.name} badge`}
+                                    className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full object-cover ring-4 ring-amber-500/50 shadow-2xl drop-shadow-[0_8px_24px_rgba(217,119,6,0.45)] transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0 text-center sm:text-left">
+                                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+                                    <span className={`text-[10px] font-bold ${r.text} opacity-60 tabular-nums`}>#{idx + 1}</span>
+                                    <span className={`text-[10px] font-bold ${r.text} opacity-90 tabular-nums px-2 py-0.5 rounded-full bg-white/70 border border-amber-300/50`}>
+                                      {fmtThreshold(r.threshold)}
+                                    </span>
+                                  </div>
+                                  <p className={`font-extrabold text-2xl sm:text-3xl leading-tight ${r.text} font-serif`}>{r.name}</p>
+                                  <p className={`text-base ${r.text} opacity-80 font-serif leading-tight mt-0.5`} lang="mr">
+                                    {r.devanagari}
+                                  </p>
+                                  <p className={`text-xs sm:text-sm ${r.text} opacity-70 mt-2 italic`}>
+                                    {r.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
                         return (
                           <div
                             key={r.name}
@@ -400,13 +437,6 @@ export default function Landing() {
                                 {fmtThreshold(r.threshold)}
                               </span>
                             </div>
-                            {r.image && (
-                              <img
-                                src={r.image}
-                                alt={`${r.name} badge`}
-                                className="w-12 h-12 mx-auto my-1 rounded-full object-cover ring-2 ring-amber-500/40 shadow-sm"
-                              />
-                            )}
                             <p className={`font-bold text-sm leading-tight ${r.text}`}>{r.name}</p>
                             <p className={`text-[11px] ${r.text} opacity-70 font-serif leading-tight`} lang="mr">
                               {r.devanagari}
