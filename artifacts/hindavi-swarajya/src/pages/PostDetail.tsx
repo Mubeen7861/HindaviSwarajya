@@ -17,7 +17,7 @@ import { ArrowLeft, MessageSquare, Send } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export default function PostDetail() {
-  const [, params] = useRoute("/post/:id");
+  const [, params] = useRoute("/app/post/:id");
   const postId = parseInt(params?.id || "0", 10);
   const queryClient = useQueryClient();
   const currentUserId = useCurrentUserId();
