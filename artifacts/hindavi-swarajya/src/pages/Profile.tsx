@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Users, Heart, ArrowLeft, CalendarDays } from "lucide-react";
+import { MapPin, Users, Heart, ArrowLeft, CalendarDays, Target } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Profile() {

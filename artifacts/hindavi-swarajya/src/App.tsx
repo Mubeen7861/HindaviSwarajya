@@ -2,7 +2,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Navigation } from "@/components/Navigation";
+import { Sidebar } from "@/components/Sidebar";
 import Home from "@/pages/Home";
 import PostDetail from "@/pages/PostDetail";
 import Profile from "@/pages/Profile";
@@ -21,19 +21,26 @@ const queryClient = new QueryClient({
 
 function Router() {
   return (
-    <main className="min-h-[100dvh] flex flex-col bg-background text-foreground pb-20 md:pb-0">
-      <Navigation />
-      <div className="flex-1 w-full relative">
-        <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/post/:id" component={PostDetail} />
-          <Route path="/profile/:id" component={Profile} />
-          <Route path="/leaderboard" component={Leaderboard} />
-          <Route path="/create" component={CreatePost} />
-          <Route component={NotFound} />
-        </Switch>
-      </div>
-    </main>
+    <div className="min-h-[100dvh] flex bg-background text-foreground">
+      <Sidebar />
+
+      {/* Main content — offset for sidebar on desktop, top/bottom bars on mobile */}
+      <main className="flex-1 md:ml-64 flex flex-col min-h-[100dvh] pb-16 md:pb-0 pt-0 md:pt-0">
+        {/* Mobile top bar spacer */}
+        <div className="md:hidden h-14" />
+
+        <div className="flex-1 w-full">
+          <Switch>
+            <Route path="/" component={Home} />
+            <Route path="/post/:id" component={PostDetail} />
+            <Route path="/profile/:id" component={Profile} />
+            <Route path="/leaderboard" component={Leaderboard} />
+            <Route path="/create" component={CreatePost} />
+            <Route component={NotFound} />
+          </Switch>
+        </div>
+      </main>
+    </div>
   );
 }
 
