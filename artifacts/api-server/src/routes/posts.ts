@@ -12,6 +12,7 @@ import {
   ListPostsQueryParams,
   CreatePostBody,
   AddCommentBody,
+  UpdatePostBody,
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 
@@ -75,6 +76,7 @@ async function buildPost(post: typeof postsTable.$inferSelect) {
     image: post.image ?? null,
     timestamp: post.timestamp?.toISOString() ?? new Date().toISOString(),
     location: post.location ?? null,
+    approvalStatus: post.approvalStatus,
   };
 }
 
@@ -215,6 +217,127 @@ router.post("/posts/:id/like", requireAuth, async (req, res) => {
     }
     const result = await buildPost(post);
     res.json(result);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/me/posts (auth required) — returns ALL of the current user's posts
+// regardless of approval status, so they can manage drafts that are still
+// pending or that admins have rejected.
+router.get("/me/posts", requireAuth, async (req, res) => {
+  try {
+    const userId = req.dbUser!.id;
+    const rows = await db
+      .select()
+      .from(postsTable)
+      .where(eq(postsTable.userId, userId))
+      .orderBy(desc(postsTable.timestamp));
+    const result = await Promise.all(rows.map((p) => buildPost(p)));
+    res.json(result);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /api/posts/:id (auth required, author-only)
+router.patch("/posts/:id", requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(String(req.params.id));
+    const userId = req.dbUser!.id;
+
+    const [existing] = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
+    if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+    if (existing.userId !== userId) { res.status(403).json({ error: "Forbidden" }); return; }
+
+    const parsed = UpdatePostBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid body" });
+      return;
+    }
+    // Drop undefined keys so the SET clause only touches fields the client
+    // actually sent. This also keeps zod's coercion (e.g. helpedPeople → number)
+    // from clobbering existing rows with `undefined`.
+    const update: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(parsed.data)) {
+      if (v !== undefined) update[k] = v;
+    }
+    // Reject negative helpedPeople — otherwise a malicious delta could later
+    // inflate totalHelped (subtracting a negative on delete) or skew stats.
+    if ("helpedPeople" in update && (update.helpedPeople as number) < 0) {
+      res.status(400).json({ error: "helpedPeople must be >= 0" });
+      return;
+    }
+    if (Object.keys(update).length === 0) {
+      const result = await buildPost(existing);
+      res.json(result);
+      return;
+    }
+
+    // If post was approved and helpedPeople changed, adjust the user's
+    // totalHelped counter so stats stay accurate. helpedPeople is now
+    // guaranteed to be a non-negative number after zod validation.
+    const helpedDelta =
+      existing.approvalStatus === "approved" &&
+      typeof update.helpedPeople === "number"
+        ? update.helpedPeople - existing.helpedPeople
+        : 0;
+
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx.update(postsTable).set(update).where(eq(postsTable.id, id)).returning();
+      if (helpedDelta !== 0) {
+        await tx
+          .update(usersTable)
+          .set({ totalHelped: sql`GREATEST(${usersTable.totalHelped} + ${helpedDelta}, 0)` })
+          .where(eq(usersTable.id, userId));
+      }
+      return row;
+    });
+
+    const result = await buildPost(updated);
+    res.json(result);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// DELETE /api/posts/:id (auth required, author-only)
+router.delete("/posts/:id", requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(String(req.params.id));
+    const userId = req.dbUser!.id;
+
+    const ok = await db.transaction(async (tx) => {
+      const [post] = await tx.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
+      if (!post) return { notFound: true } as const;
+      if (post.userId !== userId) return { forbidden: true } as const;
+
+      const wasApproved = post.approvalStatus === "approved";
+      await tx.delete(postTagsTable).where(eq(postTagsTable.postId, id));
+      await tx.delete(postLikesTable).where(eq(postLikesTable.postId, id));
+      await tx.delete(commentsTable).where(eq(commentsTable.postId, id));
+      await tx.delete(postsTable).where(eq(postsTable.id, id));
+
+      if (wasApproved) {
+        // Mirror the admin delete logic so totalHelped/postsCount stay
+        // accurate when an author removes a previously approved seva.
+        await tx
+          .update(usersTable)
+          .set({
+            postsCount: sql`GREATEST(${usersTable.postsCount} - 1, 0)`,
+            totalHelped: sql`GREATEST(${usersTable.totalHelped} - ${post.helpedPeople}, 0)`,
+          })
+          .where(eq(usersTable.id, userId));
+      }
+      return { deleted: true } as const;
+    });
+
+    if ("notFound" in ok) { res.status(404).json({ error: "Not found" }); return; }
+    if ("forbidden" in ok) { res.status(403).json({ error: "Forbidden" }); return; }
+    res.json({ deleted: true });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal server error" });

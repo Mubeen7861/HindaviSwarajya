@@ -22,6 +22,7 @@ import type {
   CreateEventBody,
   CreateHelpRequestBody,
   CreatePostBody,
+  DeleteResult,
   FollowResult,
   GetLeaderboardParams,
   GetTrendingTagsParams,
@@ -38,7 +39,10 @@ import type {
   SevaPost,
   StatsSummary,
   TrendingTag,
+  UpdateEventBody,
+  UpdateHelpRequestBody,
   UpdateMeBody,
+  UpdatePostBody,
   User,
   UserProfile,
 } from "./api.schemas";
@@ -276,6 +280,231 @@ export const useUpdateMe = <
 > => {
   return useMutation(getUpdateMeMutationOptions(options));
 };
+
+/**
+ * @summary List the current user's seva posts (all approval statuses)
+ */
+export const getListMyPostsUrl = () => {
+  return `/api/me/posts`;
+};
+
+export const listMyPosts = async (
+  options?: RequestInit,
+): Promise<SevaPost[]> => {
+  return customFetch<SevaPost[]>(getListMyPostsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyPostsQueryKey = () => {
+  return [`/api/me/posts`] as const;
+};
+
+export const getListMyPostsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyPosts>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPosts>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyPostsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyPosts>>> = ({
+    signal,
+  }) => listMyPosts({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPosts>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyPostsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyPosts>>
+>;
+export type ListMyPostsQueryError = ErrorType<void>;
+
+/**
+ * @summary List the current user's seva posts (all approval statuses)
+ */
+
+export function useListMyPosts<
+  TData = Awaited<ReturnType<typeof listMyPosts>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPosts>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyPostsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List events organized by the current user (all approval statuses)
+ */
+export const getListMyEventsUrl = () => {
+  return `/api/me/events`;
+};
+
+export const listMyEvents = async (
+  options?: RequestInit,
+): Promise<SevaEvent[]> => {
+  return customFetch<SevaEvent[]>(getListMyEventsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyEventsQueryKey = () => {
+  return [`/api/me/events`] as const;
+};
+
+export const getListMyEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyEvents>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyEvents>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyEventsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyEvents>>> = ({
+    signal,
+  }) => listMyEvents({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyEvents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyEventsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyEvents>>
+>;
+export type ListMyEventsQueryError = ErrorType<void>;
+
+/**
+ * @summary List events organized by the current user (all approval statuses)
+ */
+
+export function useListMyEvents<
+  TData = Awaited<ReturnType<typeof listMyEvents>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyEvents>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyEventsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List help requests created by the current user (all approval statuses)
+ */
+export const getListMyHelpRequestsUrl = () => {
+  return `/api/me/help-requests`;
+};
+
+export const listMyHelpRequests = async (
+  options?: RequestInit,
+): Promise<HelpRequest[]> => {
+  return customFetch<HelpRequest[]>(getListMyHelpRequestsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyHelpRequestsQueryKey = () => {
+  return [`/api/me/help-requests`] as const;
+};
+
+export const getListMyHelpRequestsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyHelpRequests>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyHelpRequests>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyHelpRequestsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMyHelpRequests>>
+  > = ({ signal }) => listMyHelpRequests({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyHelpRequests>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyHelpRequestsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyHelpRequests>>
+>;
+export type ListMyHelpRequestsQueryError = ErrorType<void>;
+
+/**
+ * @summary List help requests created by the current user (all approval statuses)
+ */
+
+export function useListMyHelpRequests<
+  TData = Awaited<ReturnType<typeof listMyHelpRequests>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyHelpRequests>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyHelpRequestsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary List seva posts
@@ -533,6 +762,177 @@ export function useGetPost<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Update one of your own seva posts (auth required, author-only)
+ */
+export const getUpdatePostUrl = (id: number) => {
+  return `/api/posts/${id}`;
+};
+
+export const updatePost = async (
+  id: number,
+  updatePostBody: UpdatePostBody,
+  options?: RequestInit,
+): Promise<SevaPost> => {
+  return customFetch<SevaPost>(getUpdatePostUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updatePostBody),
+  });
+};
+
+export const getUpdatePostMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePost>>,
+    TError,
+    { id: number; data: BodyType<UpdatePostBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updatePost>>,
+  TError,
+  { id: number; data: BodyType<UpdatePostBody> },
+  TContext
+> => {
+  const mutationKey = ["updatePost"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updatePost>>,
+    { id: number; data: BodyType<UpdatePostBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updatePost(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdatePostMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updatePost>>
+>;
+export type UpdatePostMutationBody = BodyType<UpdatePostBody>;
+export type UpdatePostMutationError = ErrorType<void>;
+
+/**
+ * @summary Update one of your own seva posts (auth required, author-only)
+ */
+export const useUpdatePost = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePost>>,
+    TError,
+    { id: number; data: BodyType<UpdatePostBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updatePost>>,
+  TError,
+  { id: number; data: BodyType<UpdatePostBody> },
+  TContext
+> => {
+  return useMutation(getUpdatePostMutationOptions(options));
+};
+
+/**
+ * @summary Delete one of your own seva posts (auth required, author-only)
+ */
+export const getDeletePostUrl = (id: number) => {
+  return `/api/posts/${id}`;
+};
+
+export const deletePost = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteResult> => {
+  return customFetch<DeleteResult>(getDeletePostUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeletePostMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePost>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deletePost>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deletePost"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deletePost>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deletePost(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeletePostMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deletePost>>
+>;
+
+export type DeletePostMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete one of your own seva posts (auth required, author-only)
+ */
+export const useDeletePost = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePost>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deletePost>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeletePostMutationOptions(options));
+};
 
 /**
  * @summary Toggle like on a post (auth required)
@@ -1576,6 +1976,177 @@ export function useGetEvent<
 }
 
 /**
+ * @summary Update one of your own events (auth required, organizer-only)
+ */
+export const getUpdateEventUrl = (id: number) => {
+  return `/api/events/${id}`;
+};
+
+export const updateEvent = async (
+  id: number,
+  updateEventBody: UpdateEventBody,
+  options?: RequestInit,
+): Promise<SevaEvent> => {
+  return customFetch<SevaEvent>(getUpdateEventUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateEventBody),
+  });
+};
+
+export const getUpdateEventMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEvent>>,
+    TError,
+    { id: number; data: BodyType<UpdateEventBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateEvent>>,
+  TError,
+  { id: number; data: BodyType<UpdateEventBody> },
+  TContext
+> => {
+  const mutationKey = ["updateEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateEvent>>,
+    { id: number; data: BodyType<UpdateEventBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateEvent(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateEvent>>
+>;
+export type UpdateEventMutationBody = BodyType<UpdateEventBody>;
+export type UpdateEventMutationError = ErrorType<void>;
+
+/**
+ * @summary Update one of your own events (auth required, organizer-only)
+ */
+export const useUpdateEvent = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEvent>>,
+    TError,
+    { id: number; data: BodyType<UpdateEventBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateEvent>>,
+  TError,
+  { id: number; data: BodyType<UpdateEventBody> },
+  TContext
+> => {
+  return useMutation(getUpdateEventMutationOptions(options));
+};
+
+/**
+ * @summary Delete one of your own events (auth required, organizer-only)
+ */
+export const getDeleteEventUrl = (id: number) => {
+  return `/api/events/${id}`;
+};
+
+export const deleteEvent = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteResult> => {
+  return customFetch<DeleteResult>(getDeleteEventUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteEventMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEvent>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteEvent>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteEvent>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteEvent(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteEvent>>
+>;
+
+export type DeleteEventMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete one of your own events (auth required, organizer-only)
+ */
+export const useDeleteEvent = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEvent>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteEvent>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteEventMutationOptions(options));
+};
+
+/**
  * @summary Register or unregister for an event (auth required)
  */
 export const getRegisterForEventUrl = (id: number) => {
@@ -1840,6 +2411,264 @@ export const useCreateHelpRequest = <
   TContext
 > => {
   return useMutation(getCreateHelpRequestMutationOptions(options));
+};
+
+/**
+ * @summary Get a help request by ID
+ */
+export const getGetHelpRequestUrl = (id: number) => {
+  return `/api/help-requests/${id}`;
+};
+
+export const getHelpRequest = async (
+  id: number,
+  options?: RequestInit,
+): Promise<HelpRequest> => {
+  return customFetch<HelpRequest>(getGetHelpRequestUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetHelpRequestQueryKey = (id: number) => {
+  return [`/api/help-requests/${id}`] as const;
+};
+
+export const getGetHelpRequestQueryOptions = <
+  TData = Awaited<ReturnType<typeof getHelpRequest>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getHelpRequest>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetHelpRequestQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHelpRequest>>> = ({
+    signal,
+  }) => getHelpRequest(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getHelpRequest>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetHelpRequestQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getHelpRequest>>
+>;
+export type GetHelpRequestQueryError = ErrorType<void>;
+
+/**
+ * @summary Get a help request by ID
+ */
+
+export function useGetHelpRequest<
+  TData = Awaited<ReturnType<typeof getHelpRequest>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getHelpRequest>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetHelpRequestQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update one of your own help requests (auth required, requester-only)
+ */
+export const getUpdateHelpRequestUrl = (id: number) => {
+  return `/api/help-requests/${id}`;
+};
+
+export const updateHelpRequest = async (
+  id: number,
+  updateHelpRequestBody: UpdateHelpRequestBody,
+  options?: RequestInit,
+): Promise<HelpRequest> => {
+  return customFetch<HelpRequest>(getUpdateHelpRequestUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateHelpRequestBody),
+  });
+};
+
+export const getUpdateHelpRequestMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateHelpRequest>>,
+    TError,
+    { id: number; data: BodyType<UpdateHelpRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateHelpRequest>>,
+  TError,
+  { id: number; data: BodyType<UpdateHelpRequestBody> },
+  TContext
+> => {
+  const mutationKey = ["updateHelpRequest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateHelpRequest>>,
+    { id: number; data: BodyType<UpdateHelpRequestBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateHelpRequest(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateHelpRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateHelpRequest>>
+>;
+export type UpdateHelpRequestMutationBody = BodyType<UpdateHelpRequestBody>;
+export type UpdateHelpRequestMutationError = ErrorType<void>;
+
+/**
+ * @summary Update one of your own help requests (auth required, requester-only)
+ */
+export const useUpdateHelpRequest = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateHelpRequest>>,
+    TError,
+    { id: number; data: BodyType<UpdateHelpRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateHelpRequest>>,
+  TError,
+  { id: number; data: BodyType<UpdateHelpRequestBody> },
+  TContext
+> => {
+  return useMutation(getUpdateHelpRequestMutationOptions(options));
+};
+
+/**
+ * @summary Delete one of your own help requests (auth required, requester-only)
+ */
+export const getDeleteHelpRequestUrl = (id: number) => {
+  return `/api/help-requests/${id}`;
+};
+
+export const deleteHelpRequest = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteResult> => {
+  return customFetch<DeleteResult>(getDeleteHelpRequestUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteHelpRequestMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteHelpRequest>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteHelpRequest>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteHelpRequest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteHelpRequest>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteHelpRequest(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteHelpRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteHelpRequest>>
+>;
+
+export type DeleteHelpRequestMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete one of your own help requests (auth required, requester-only)
+ */
+export const useDeleteHelpRequest = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteHelpRequest>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteHelpRequest>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteHelpRequestMutationOptions(options));
 };
 
 /**

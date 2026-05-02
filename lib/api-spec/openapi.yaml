@@ -73,6 +73,57 @@ paths:
         "401":
           description: Not authenticated
 
+  /me/posts:
+    get:
+      operationId: listMyPosts
+      tags: [me]
+      summary: List the current user's seva posts (all approval statuses)
+      responses:
+        "200":
+          description: User's seva posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SevaPost"
+        "401":
+          description: Not authenticated
+
+  /me/events:
+    get:
+      operationId: listMyEvents
+      tags: [me]
+      summary: List events organized by the current user (all approval statuses)
+      responses:
+        "200":
+          description: User's events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SevaEvent"
+        "401":
+          description: Not authenticated
+
+  /me/help-requests:
+    get:
+      operationId: listMyHelpRequests
+      tags: [me]
+      summary: List help requests created by the current user (all approval statuses)
+      responses:
+        "200":
+          description: User's help requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HelpRequest"
+        "401":
+          description: Not authenticated
+
   /posts:
     get:
       operationId: listPosts
@@ -150,6 +201,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SevaPost"
+        "404":
+          description: Not found
+    patch:
+      operationId: updatePost
+      tags: [posts]
+      summary: Update one of your own seva posts (auth required, author-only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePostBody"
+      responses:
+        "200":
+          description: Updated seva post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SevaPost"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Forbidden — not the author
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePost
+      tags: [posts]
+      summary: Delete one of your own seva posts (auth required, author-only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Forbidden — not the author
         "404":
           description: Not found
 
@@ -405,6 +508,58 @@ paths:
                 $ref: "#/components/schemas/SevaEvent"
         "404":
           description: Not found
+    patch:
+      operationId: updateEvent
+      tags: [events]
+      summary: Update one of your own events (auth required, organizer-only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEventBody"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SevaEvent"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Forbidden — not the organizer
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteEvent
+      tags: [events]
+      summary: Delete one of your own events (auth required, organizer-only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Forbidden — not the organizer
+        "404":
+          description: Not found
 
   /events/{id}/register:
     post:
@@ -474,6 +629,79 @@ paths:
                 $ref: "#/components/schemas/HelpRequest"
         "401":
           description: Not authenticated
+
+  /help-requests/{id}:
+    get:
+      operationId: getHelpRequest
+      tags: [help]
+      summary: Get a help request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Help request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HelpRequest"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateHelpRequest
+      tags: [help]
+      summary: Update one of your own help requests (auth required, requester-only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHelpRequestBody"
+      responses:
+        "200":
+          description: Updated help request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HelpRequest"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Forbidden — not the requester
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteHelpRequest
+      tags: [help]
+      summary: Delete one of your own help requests (auth required, requester-only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Forbidden — not the requester
+        "404":
+          description: Not found
 
   /help-requests/{id}/join:
     post:
@@ -626,6 +854,9 @@ components:
         location:
           type: string
           nullable: true
+        approvalStatus:
+          type: string
+          enum: [pending, approved, rejected]
       required:
         - id
         - userId
@@ -796,6 +1027,9 @@ components:
           nullable: true
         createdAt:
           type: string
+        approvalStatus:
+          type: string
+          enum: [pending, approved, rejected]
       required:
         - id
         - title
@@ -910,6 +1144,9 @@ components:
           nullable: true
         createdAt:
           type: string
+        approvalStatus:
+          type: string
+          enum: [pending, approved, rejected]
       required:
         - id
         - title
@@ -966,3 +1203,81 @@ components:
       required:
         - joined
         - helpersJoined
+
+    DeleteResult:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+      required:
+        - deleted
+
+    UpdatePostBody:
+      type: object
+      properties:
+        content:
+          type: string
+        category:
+          $ref: "#/components/schemas/SevaCategory"
+        helpedPeople:
+          type: integer
+        location:
+          type: string
+          nullable: true
+        image:
+          type: string
+          nullable: true
+
+    UpdateEventBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        eventType:
+          type: string
+        category:
+          $ref: "#/components/schemas/SevaCategory"
+        date:
+          type: string
+        time:
+          type: string
+        location:
+          type: string
+        address:
+          type: string
+        volunteersNeeded:
+          type: integer
+        image:
+          type: string
+          nullable: true
+        duration:
+          type: string
+          nullable: true
+        requirements:
+          type: string
+          nullable: true
+
+    UpdateHelpRequestBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: "#/components/schemas/SevaCategory"
+        urgency:
+          type: string
+          enum: [Low, Medium, High, Emergency]
+        location:
+          type: string
+        peopleNeeded:
+          type: integer
+        deadline:
+          type: string
+          nullable: true
+        contactInfo:
+          type: string
+          nullable: true

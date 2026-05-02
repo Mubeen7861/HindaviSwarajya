@@ -64,6 +64,115 @@ export const UpdateMeResponse = zod
   );
 
 /**
+ * @summary List the current user's seva posts (all approval statuses)
+ */
+export const ListMyPostsResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  user: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  content: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  helpedPeople: zod.number(),
+  likes: zod.number(),
+  likedBy: zod.array(zod.number()),
+  comments: zod.array(
+    zod.object({
+      id: zod.number(),
+      postId: zod.number(),
+      userId: zod.number(),
+      userName: zod.string(),
+      userAvatar: zod.string(),
+      content: zod.string(),
+      timestamp: zod.string(),
+    }),
+  ),
+  tags: zod.array(zod.string()),
+  image: zod.string().nullish(),
+  timestamp: zod.string(),
+  location: zod.string().nullish(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+export const ListMyPostsResponse = zod.array(ListMyPostsResponseItem);
+
+/**
+ * @summary List events organized by the current user (all approval statuses)
+ */
+export const ListMyEventsResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  eventType: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  date: zod.string(),
+  time: zod.string(),
+  location: zod.string(),
+  address: zod.string(),
+  organizerId: zod.number(),
+  organizer: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  volunteersNeeded: zod.number(),
+  volunteersRegistered: zod.array(zod.number()),
+  image: zod.string().nullish(),
+  tags: zod.array(zod.string()),
+  status: zod.enum(["upcoming", "ongoing", "completed", "cancelled"]),
+  duration: zod.string().nullish(),
+  requirements: zod.string().nullish(),
+  createdAt: zod.string(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+export const ListMyEventsResponse = zod.array(ListMyEventsResponseItem);
+
+/**
+ * @summary List help requests created by the current user (all approval statuses)
+ */
+export const ListMyHelpRequestsResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  urgency: zod.enum(["Low", "Medium", "High", "Emergency"]),
+  location: zod.string(),
+  requesterId: zod.number(),
+  requester: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  peopleNeeded: zod.number(),
+  helpersJoined: zod.array(zod.number()),
+  status: zod.enum(["open", "in-progress", "completed", "cancelled"]),
+  deadline: zod.string().nullish(),
+  contactInfo: zod.string().nullish(),
+  createdAt: zod.string(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+export const ListMyHelpRequestsResponse = zod.array(
+  ListMyHelpRequestsResponseItem,
+);
+
+/**
  * @summary List seva posts
  */
 export const listPostsQueryLimitDefault = 20;
@@ -112,6 +221,7 @@ export const ListPostsResponseItem = zod.object({
   image: zod.string().nullish(),
   timestamp: zod.string(),
   location: zod.string().nullish(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
 });
 export const ListPostsResponse = zod.array(ListPostsResponseItem);
 
@@ -167,6 +277,71 @@ export const GetPostResponse = zod.object({
   image: zod.string().nullish(),
   timestamp: zod.string(),
   location: zod.string().nullish(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+/**
+ * @summary Update one of your own seva posts (auth required, author-only)
+ */
+export const UpdatePostParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdatePostBody = zod.object({
+  content: zod.string().optional(),
+  category: zod
+    .enum(["Food", "Education", "Health", "Shelter", "Other"])
+    .optional(),
+  helpedPeople: zod.number().optional(),
+  location: zod.string().nullish(),
+  image: zod.string().nullish(),
+});
+
+export const UpdatePostResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  user: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  content: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  helpedPeople: zod.number(),
+  likes: zod.number(),
+  likedBy: zod.array(zod.number()),
+  comments: zod.array(
+    zod.object({
+      id: zod.number(),
+      postId: zod.number(),
+      userId: zod.number(),
+      userName: zod.string(),
+      userAvatar: zod.string(),
+      content: zod.string(),
+      timestamp: zod.string(),
+    }),
+  ),
+  tags: zod.array(zod.string()),
+  image: zod.string().nullish(),
+  timestamp: zod.string(),
+  location: zod.string().nullish(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+/**
+ * @summary Delete one of your own seva posts (auth required, author-only)
+ */
+export const DeletePostParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeletePostResponse = zod.object({
+  deleted: zod.boolean(),
 });
 
 /**
@@ -209,6 +384,7 @@ export const ToggleLikeResponse = zod.object({
   image: zod.string().nullish(),
   timestamp: zod.string(),
   location: zod.string().nullish(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
 });
 
 /**
@@ -320,6 +496,7 @@ export const GetUserPostsResponseItem = zod.object({
   image: zod.string().nullish(),
   timestamp: zod.string(),
   location: zod.string().nullish(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
 });
 export const GetUserPostsResponse = zod.array(GetUserPostsResponseItem);
 
@@ -423,6 +600,7 @@ export const ListEventsResponseItem = zod.object({
   duration: zod.string().nullish(),
   requirements: zod.string().nullish(),
   createdAt: zod.string(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
 });
 export const ListEventsResponse = zod.array(ListEventsResponseItem);
 
@@ -481,6 +659,74 @@ export const GetEventResponse = zod.object({
   duration: zod.string().nullish(),
   requirements: zod.string().nullish(),
   createdAt: zod.string(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+/**
+ * @summary Update one of your own events (auth required, organizer-only)
+ */
+export const UpdateEventParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateEventBody = zod.object({
+  title: zod.string().optional(),
+  description: zod.string().optional(),
+  eventType: zod.string().optional(),
+  category: zod
+    .enum(["Food", "Education", "Health", "Shelter", "Other"])
+    .optional(),
+  date: zod.string().optional(),
+  time: zod.string().optional(),
+  location: zod.string().optional(),
+  address: zod.string().optional(),
+  volunteersNeeded: zod.number().optional(),
+  image: zod.string().nullish(),
+  duration: zod.string().nullish(),
+  requirements: zod.string().nullish(),
+});
+
+export const UpdateEventResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  eventType: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  date: zod.string(),
+  time: zod.string(),
+  location: zod.string(),
+  address: zod.string(),
+  organizerId: zod.number(),
+  organizer: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  volunteersNeeded: zod.number(),
+  volunteersRegistered: zod.array(zod.number()),
+  image: zod.string().nullish(),
+  tags: zod.array(zod.string()),
+  status: zod.enum(["upcoming", "ongoing", "completed", "cancelled"]),
+  duration: zod.string().nullish(),
+  requirements: zod.string().nullish(),
+  createdAt: zod.string(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+/**
+ * @summary Delete one of your own events (auth required, organizer-only)
+ */
+export const DeleteEventParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteEventResponse = zod.object({
+  deleted: zod.boolean(),
 });
 
 /**
@@ -530,6 +776,7 @@ export const ListHelpRequestsResponseItem = zod.object({
   deadline: zod.string().nullish(),
   contactInfo: zod.string().nullish(),
   createdAt: zod.string(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
 });
 export const ListHelpRequestsResponse = zod.array(ListHelpRequestsResponseItem);
 
@@ -545,6 +792,98 @@ export const CreateHelpRequestBody = zod.object({
   peopleNeeded: zod.number(),
   deadline: zod.string().nullish(),
   contactInfo: zod.string().nullish(),
+});
+
+/**
+ * @summary Get a help request by ID
+ */
+export const GetHelpRequestParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetHelpRequestResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  urgency: zod.enum(["Low", "Medium", "High", "Emergency"]),
+  location: zod.string(),
+  requesterId: zod.number(),
+  requester: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  peopleNeeded: zod.number(),
+  helpersJoined: zod.array(zod.number()),
+  status: zod.enum(["open", "in-progress", "completed", "cancelled"]),
+  deadline: zod.string().nullish(),
+  contactInfo: zod.string().nullish(),
+  createdAt: zod.string(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+/**
+ * @summary Update one of your own help requests (auth required, requester-only)
+ */
+export const UpdateHelpRequestParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateHelpRequestBody = zod.object({
+  title: zod.string().optional(),
+  description: zod.string().optional(),
+  category: zod
+    .enum(["Food", "Education", "Health", "Shelter", "Other"])
+    .optional(),
+  urgency: zod.enum(["Low", "Medium", "High", "Emergency"]).optional(),
+  location: zod.string().optional(),
+  peopleNeeded: zod.number().optional(),
+  deadline: zod.string().nullish(),
+  contactInfo: zod.string().nullish(),
+});
+
+export const UpdateHelpRequestResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  urgency: zod.enum(["Low", "Medium", "High", "Emergency"]),
+  location: zod.string(),
+  requesterId: zod.number(),
+  requester: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  peopleNeeded: zod.number(),
+  helpersJoined: zod.array(zod.number()),
+  status: zod.enum(["open", "in-progress", "completed", "cancelled"]),
+  deadline: zod.string().nullish(),
+  contactInfo: zod.string().nullish(),
+  createdAt: zod.string(),
+  approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+/**
+ * @summary Delete one of your own help requests (auth required, requester-only)
+ */
+export const DeleteHelpRequestParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteHelpRequestResponse = zod.object({
+  deleted: zod.boolean(),
 });
 
 /**

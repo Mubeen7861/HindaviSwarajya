@@ -61,6 +61,15 @@ export interface Comment {
   timestamp: string;
 }
 
+export type SevaPostApprovalStatus =
+  (typeof SevaPostApprovalStatus)[keyof typeof SevaPostApprovalStatus];
+
+export const SevaPostApprovalStatus = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+} as const;
+
 export interface SevaPost {
   id: number;
   userId: number;
@@ -75,6 +84,7 @@ export interface SevaPost {
   image?: string | null;
   timestamp: string;
   location?: string | null;
+  approvalStatus?: SevaPostApprovalStatus;
 }
 
 export interface CreatePostBody {
@@ -132,6 +142,15 @@ export const SevaEventStatus = {
   cancelled: "cancelled",
 } as const;
 
+export type SevaEventApprovalStatus =
+  (typeof SevaEventApprovalStatus)[keyof typeof SevaEventApprovalStatus];
+
+export const SevaEventApprovalStatus = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+} as const;
+
 export interface SevaEvent {
   id: number;
   title: string;
@@ -152,6 +171,7 @@ export interface SevaEvent {
   duration?: string | null;
   requirements?: string | null;
   createdAt: string;
+  approvalStatus?: SevaEventApprovalStatus;
 }
 
 export interface CreateEventBody {
@@ -195,6 +215,15 @@ export const HelpRequestStatus = {
   cancelled: "cancelled",
 } as const;
 
+export type HelpRequestApprovalStatus =
+  (typeof HelpRequestApprovalStatus)[keyof typeof HelpRequestApprovalStatus];
+
+export const HelpRequestApprovalStatus = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+} as const;
+
 export interface HelpRequest {
   id: number;
   title: string;
@@ -210,6 +239,7 @@ export interface HelpRequest {
   deadline?: string | null;
   contactInfo?: string | null;
   createdAt: string;
+  approvalStatus?: HelpRequestApprovalStatus;
 }
 
 export type CreateHelpRequestBodyUrgency =
@@ -236,6 +266,54 @@ export interface CreateHelpRequestBody {
 export interface JoinHelpRequestResult {
   joined: boolean;
   helpersJoined: number[];
+}
+
+export interface DeleteResult {
+  deleted: boolean;
+}
+
+export interface UpdatePostBody {
+  content?: string;
+  category?: SevaCategory;
+  helpedPeople?: number;
+  location?: string | null;
+  image?: string | null;
+}
+
+export interface UpdateEventBody {
+  title?: string;
+  description?: string;
+  eventType?: string;
+  category?: SevaCategory;
+  date?: string;
+  time?: string;
+  location?: string;
+  address?: string;
+  volunteersNeeded?: number;
+  image?: string | null;
+  duration?: string | null;
+  requirements?: string | null;
+}
+
+export type UpdateHelpRequestBodyUrgency =
+  (typeof UpdateHelpRequestBodyUrgency)[keyof typeof UpdateHelpRequestBodyUrgency];
+
+export const UpdateHelpRequestBodyUrgency = {
+  Low: "Low",
+  Medium: "Medium",
+  High: "High",
+  Emergency: "Emergency",
+} as const;
+
+export interface UpdateHelpRequestBody {
+  title?: string;
+  description?: string;
+  category?: SevaCategory;
+  urgency?: UpdateHelpRequestBodyUrgency;
+  location?: string;
+  peopleNeeded?: number;
+  deadline?: string | null;
+  contactInfo?: string | null;
 }
 
 export type ListPostsParams = {

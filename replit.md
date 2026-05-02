@@ -71,6 +71,15 @@ Clerk proxy middleware at `artifacts/api-server/src/middlewares/clerkProxyMiddle
 | GET | `/api/posts` | List seva posts (filter, search, sort) |
 | POST | `/api/posts` | Create post |
 | GET | `/api/posts/:id` | Get post with comments |
+| PATCH | `/api/posts/:id` | Update own post (author-only, validated via zod) |
+| DELETE | `/api/posts/:id` | Delete own post (author-only, transactional counter rollback) |
+| GET | `/api/me/posts` | List the current user's own posts (any approval status) |
+| GET | `/api/me/events` | List the current user's own events (any approval status) |
+| GET | `/api/me/help-requests` | List the current user's own help requests (any approval status) |
+| PATCH | `/api/events/:id` | Update own event (organizer-only) |
+| DELETE | `/api/events/:id` | Delete own event (organizer-only) |
+| PATCH | `/api/help-requests/:id` | Update own help request (requester-only) |
+| DELETE | `/api/help-requests/:id` | Delete own help request (requester-only) |
 | POST | `/api/posts/:id/like` | Toggle like |
 | POST | `/api/posts/:id/comments` | Add comment |
 | GET | `/api/users/:id` | Get user profile |

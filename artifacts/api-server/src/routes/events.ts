@@ -7,6 +7,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { eq, desc, sql, and } from "drizzle-orm";
+import { UpdateEventBody } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
@@ -40,6 +41,7 @@ async function buildEvent(event: typeof eventsTable.$inferSelect) {
     duration: event.duration ?? null,
     requirements: event.requirements ?? null,
     createdAt: event.createdAt?.toISOString() ?? new Date().toISOString(),
+    approvalStatus: event.approvalStatus,
   };
 }
 
@@ -92,6 +94,85 @@ router.get("/events/:id", async (req, res) => {
     }
     const result = await buildEvent(event);
     res.json(result);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/me/events (auth required) — all of the current user's events
+router.get("/me/events", requireAuth, async (req, res) => {
+  try {
+    const userId = req.dbUser!.id;
+    const rows = await db
+      .select()
+      .from(eventsTable)
+      .where(eq(eventsTable.organizerId, userId))
+      .orderBy(desc(eventsTable.createdAt));
+    const result = await Promise.all(rows.map(buildEvent));
+    res.json(result);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /api/events/:id (auth required, organizer-only)
+router.patch("/events/:id", requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(String(req.params.id));
+    const userId = req.dbUser!.id;
+
+    const [existing] = await db.select().from(eventsTable).where(eq(eventsTable.id, id)).limit(1);
+    if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+    if (existing.organizerId !== userId) { res.status(403).json({ error: "Forbidden" }); return; }
+
+    const parsed = UpdateEventBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid body" });
+      return;
+    }
+    const update: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(parsed.data)) {
+      if (v !== undefined) update[k] = v;
+    }
+    if ("volunteersNeeded" in update && (update.volunteersNeeded as number) < 1) {
+      res.status(400).json({ error: "volunteersNeeded must be >= 1" });
+      return;
+    }
+    if (Object.keys(update).length === 0) {
+      res.json(await buildEvent(existing));
+      return;
+    }
+
+    const [row] = await db.update(eventsTable).set(update).where(eq(eventsTable.id, id)).returning();
+    res.json(await buildEvent(row));
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// DELETE /api/events/:id (auth required, organizer-only)
+router.delete("/events/:id", requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(String(req.params.id));
+    const userId = req.dbUser!.id;
+
+    const result = await db.transaction(async (tx) => {
+      const [event] = await tx.select().from(eventsTable).where(eq(eventsTable.id, id)).limit(1);
+      if (!event) return { notFound: true } as const;
+      if (event.organizerId !== userId) return { forbidden: true } as const;
+
+      await tx.delete(eventTagsTable).where(eq(eventTagsTable.eventId, id));
+      await tx.delete(eventRegistrationsTable).where(eq(eventRegistrationsTable.eventId, id));
+      await tx.delete(eventsTable).where(eq(eventsTable.id, id));
+      return { deleted: true } as const;
+    });
+
+    if ("notFound" in result) { res.status(404).json({ error: "Not found" }); return; }
+    if ("forbidden" in result) { res.status(403).json({ error: "Forbidden" }); return; }
+    res.json({ deleted: true });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal server error" });
