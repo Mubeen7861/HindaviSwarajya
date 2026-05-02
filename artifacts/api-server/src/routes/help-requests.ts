@@ -6,7 +6,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
-import { UpdateHelpRequestBody } from "@workspace/api-zod";
+import { CreateHelpRequestBody, UpdateHelpRequestBody } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
@@ -59,9 +59,16 @@ router.get("/help-requests", async (req, res) => {
 // POST /api/help-requests (auth required)
 router.post("/help-requests", requireAuth, async (req, res) => {
   try {
+    const parsed = CreateHelpRequestBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid body" });
+      return;
+    }
+    // Whitelist: only fields validated by the schema flow through; server
+    // owns requesterId and (implicitly via DB defaults) approvalStatus/status.
     const [helpReq] = await db
       .insert(helpRequestsTable)
-      .values({ ...req.body, requesterId: req.dbUser!.id })
+      .values({ ...parsed.data, requesterId: req.dbUser!.id })
       .returning();
     const result = await buildHelpRequest(helpReq);
     res.status(201).json(result);

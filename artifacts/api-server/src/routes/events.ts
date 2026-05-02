@@ -7,7 +7,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { eq, desc, sql, and } from "drizzle-orm";
-import { UpdateEventBody } from "@workspace/api-zod";
+import { CreateEventBody, UpdateEventBody } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
@@ -69,8 +69,18 @@ router.get("/events", async (req, res) => {
 // POST /api/events (auth required)
 router.post("/events", requireAuth, async (req, res) => {
   try {
-    const { tags, ...rest } = req.body ?? {};
-    const [event] = await db.insert(eventsTable).values({ ...rest, organizerId: req.dbUser!.id }).returning();
+    const parsed = CreateEventBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid body" });
+      return;
+    }
+    // Whitelist: only schema-validated fields; server owns organizerId and
+    // (implicitly via DB defaults) approvalStatus/status.
+    const { tags, ...rest } = parsed.data;
+    const [event] = await db
+      .insert(eventsTable)
+      .values({ ...rest, organizerId: req.dbUser!.id })
+      .returning();
 
     if (tags && tags.length > 0) {
       await db.insert(eventTagsTable).values(tags.map((tag: string) => ({ eventId: event.id, tag })));
