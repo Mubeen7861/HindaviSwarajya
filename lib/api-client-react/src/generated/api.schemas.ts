@@ -126,6 +126,132 @@ export interface TrendingTag {
   count: number;
 }
 
+export type SevaEventStatus =
+  (typeof SevaEventStatus)[keyof typeof SevaEventStatus];
+
+export const SevaEventStatus = {
+  upcoming: "upcoming",
+  ongoing: "ongoing",
+  completed: "completed",
+  cancelled: "cancelled",
+} as const;
+
+export interface SevaEvent {
+  id: number;
+  title: string;
+  description: string;
+  eventType: string;
+  category: SevaCategory;
+  date: string;
+  time: string;
+  location: string;
+  address: string;
+  organizerId: number;
+  organizer: User;
+  volunteersNeeded: number;
+  volunteersRegistered: number[];
+  image?: string | null;
+  tags: string[];
+  status: SevaEventStatus;
+  duration?: string | null;
+  requirements?: string | null;
+  createdAt: string;
+}
+
+export interface CreateEventBody {
+  title: string;
+  description: string;
+  eventType: string;
+  category: SevaCategory;
+  date: string;
+  time: string;
+  location: string;
+  address: string;
+  organizerId: number;
+  volunteersNeeded: number;
+  image?: string | null;
+  tags: string[];
+  duration?: string | null;
+  requirements?: string | null;
+}
+
+export interface RegisterEventBody {
+  userId: number;
+}
+
+export interface RegisterEventResult {
+  registered: boolean;
+  volunteersRegistered: number[];
+}
+
+export type HelpRequestUrgency =
+  (typeof HelpRequestUrgency)[keyof typeof HelpRequestUrgency];
+
+export const HelpRequestUrgency = {
+  Low: "Low",
+  Medium: "Medium",
+  High: "High",
+  Emergency: "Emergency",
+} as const;
+
+export type HelpRequestStatus =
+  (typeof HelpRequestStatus)[keyof typeof HelpRequestStatus];
+
+export const HelpRequestStatus = {
+  open: "open",
+  "in-progress": "in-progress",
+  completed: "completed",
+  cancelled: "cancelled",
+} as const;
+
+export interface HelpRequest {
+  id: number;
+  title: string;
+  description: string;
+  category: SevaCategory;
+  urgency: HelpRequestUrgency;
+  location: string;
+  requesterId: number;
+  requester: User;
+  peopleNeeded: number;
+  helpersJoined: number[];
+  status: HelpRequestStatus;
+  deadline?: string | null;
+  contactInfo?: string | null;
+  createdAt: string;
+}
+
+export type CreateHelpRequestBodyUrgency =
+  (typeof CreateHelpRequestBodyUrgency)[keyof typeof CreateHelpRequestBodyUrgency];
+
+export const CreateHelpRequestBodyUrgency = {
+  Low: "Low",
+  Medium: "Medium",
+  High: "High",
+  Emergency: "Emergency",
+} as const;
+
+export interface CreateHelpRequestBody {
+  title: string;
+  description: string;
+  category: SevaCategory;
+  urgency: CreateHelpRequestBodyUrgency;
+  location: string;
+  requesterId: number;
+  peopleNeeded: number;
+  deadline?: string | null;
+  contactInfo?: string | null;
+}
+
+export interface JoinHelpRequestBody {
+  userId: number;
+}
+
+export interface JoinHelpRequestResult {
+  joined: boolean;
+  helpersJoined: number[];
+}
+
 export type ListPostsParams = {
   search?: string;
   category?: ListPostsCategory;
@@ -164,5 +290,26 @@ export type GetLeaderboardParams = {
 };
 
 export type GetTrendingTagsParams = {
+  limit?: number;
+};
+
+export type ListEventsParams = {
+  status?: ListEventsStatus;
+  limit?: number;
+};
+
+export type ListEventsStatus =
+  (typeof ListEventsStatus)[keyof typeof ListEventsStatus];
+
+export const ListEventsStatus = {
+  upcoming: "upcoming",
+  ongoing: "ongoing",
+  completed: "completed",
+  cancelled: "cancelled",
+} as const;
+
+export type ListHelpRequestsParams = {
+  category?: string;
+  urgency?: string;
   limit?: number;
 };

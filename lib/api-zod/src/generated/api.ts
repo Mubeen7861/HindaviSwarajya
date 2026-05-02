@@ -343,3 +343,190 @@ export const GetTrendingTagsResponseItem = zod.object({
   count: zod.number(),
 });
 export const GetTrendingTagsResponse = zod.array(GetTrendingTagsResponseItem);
+
+/**
+ * @summary List seva events
+ */
+export const listEventsQueryLimitDefault = 20;
+
+export const ListEventsQueryParams = zod.object({
+  status: zod
+    .enum(["upcoming", "ongoing", "completed", "cancelled"])
+    .optional(),
+  limit: zod.coerce.number().default(listEventsQueryLimitDefault),
+});
+
+export const ListEventsResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  eventType: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  date: zod.string(),
+  time: zod.string(),
+  location: zod.string(),
+  address: zod.string(),
+  organizerId: zod.number(),
+  organizer: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  volunteersNeeded: zod.number(),
+  volunteersRegistered: zod.array(zod.number()),
+  image: zod.string().nullish(),
+  tags: zod.array(zod.string()),
+  status: zod.enum(["upcoming", "ongoing", "completed", "cancelled"]),
+  duration: zod.string().nullish(),
+  requirements: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const ListEventsResponse = zod.array(ListEventsResponseItem);
+
+/**
+ * @summary Create a seva event
+ */
+export const CreateEventBody = zod.object({
+  title: zod.string(),
+  description: zod.string(),
+  eventType: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  date: zod.string(),
+  time: zod.string(),
+  location: zod.string(),
+  address: zod.string(),
+  organizerId: zod.number(),
+  volunteersNeeded: zod.number(),
+  image: zod.string().nullish(),
+  tags: zod.array(zod.string()),
+  duration: zod.string().nullish(),
+  requirements: zod.string().nullish(),
+});
+
+/**
+ * @summary Get event by ID
+ */
+export const GetEventParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetEventResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  eventType: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  date: zod.string(),
+  time: zod.string(),
+  location: zod.string(),
+  address: zod.string(),
+  organizerId: zod.number(),
+  organizer: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  volunteersNeeded: zod.number(),
+  volunteersRegistered: zod.array(zod.number()),
+  image: zod.string().nullish(),
+  tags: zod.array(zod.string()),
+  status: zod.enum(["upcoming", "ongoing", "completed", "cancelled"]),
+  duration: zod.string().nullish(),
+  requirements: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Register or unregister for an event
+ */
+export const RegisterForEventParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RegisterForEventBody = zod.object({
+  userId: zod.number(),
+});
+
+export const RegisterForEventResponse = zod.object({
+  registered: zod.boolean(),
+  volunteersRegistered: zod.array(zod.number()),
+});
+
+/**
+ * @summary List help requests
+ */
+export const listHelpRequestsQueryLimitDefault = 20;
+
+export const ListHelpRequestsQueryParams = zod.object({
+  category: zod.coerce.string().optional(),
+  urgency: zod.coerce.string().optional(),
+  limit: zod.coerce.number().default(listHelpRequestsQueryLimitDefault),
+});
+
+export const ListHelpRequestsResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  urgency: zod.enum(["Low", "Medium", "High", "Emergency"]),
+  location: zod.string(),
+  requesterId: zod.number(),
+  requester: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  }),
+  peopleNeeded: zod.number(),
+  helpersJoined: zod.array(zod.number()),
+  status: zod.enum(["open", "in-progress", "completed", "cancelled"]),
+  deadline: zod.string().nullish(),
+  contactInfo: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const ListHelpRequestsResponse = zod.array(ListHelpRequestsResponseItem);
+
+/**
+ * @summary Create a help request
+ */
+export const CreateHelpRequestBody = zod.object({
+  title: zod.string(),
+  description: zod.string(),
+  category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
+  urgency: zod.enum(["Low", "Medium", "High", "Emergency"]),
+  location: zod.string(),
+  requesterId: zod.number(),
+  peopleNeeded: zod.number(),
+  deadline: zod.string().nullish(),
+  contactInfo: zod.string().nullish(),
+});
+
+/**
+ * @summary Join or leave a help request
+ */
+export const JoinHelpRequestParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const JoinHelpRequestBody = zod.object({
+  userId: zod.number(),
+});
+
+export const JoinHelpRequestResponse = zod.object({
+  joined: zod.boolean(),
+  helpersJoined: zod.array(zod.number()),
+});

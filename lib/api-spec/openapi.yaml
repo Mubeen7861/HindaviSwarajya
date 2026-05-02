@@ -304,6 +304,166 @@ paths:
                 items:
                   $ref: "#/components/schemas/TrendingTag"
 
+  /events:
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List seva events
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [upcoming, ongoing, completed, cancelled]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SevaEvent"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create a seva event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEventBody"
+      responses:
+        "201":
+          description: Created event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SevaEvent"
+
+  /events/{id}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get event by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SevaEvent"
+        "404":
+          description: Not found
+
+  /events/{id}/register:
+    post:
+      operationId: registerForEvent
+      tags: [events]
+      summary: Register or unregister for an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterEventBody"
+      responses:
+        "200":
+          description: Registration status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterEventResult"
+
+  /help-requests:
+    get:
+      operationId: listHelpRequests
+      tags: [help]
+      summary: List help requests
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: urgency
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of help requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HelpRequest"
+    post:
+      operationId: createHelpRequest
+      tags: [help]
+      summary: Create a help request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHelpRequestBody"
+      responses:
+        "201":
+          description: Created help request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HelpRequest"
+
+  /help-requests/{id}/join:
+    post:
+      operationId: joinHelpRequest
+      tags: [help]
+      summary: Join or leave a help request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinHelpRequestBody"
+      responses:
+        "200":
+          description: Join status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinHelpRequestResult"
+
 components:
   schemas:
     HealthStatus:
@@ -566,3 +726,245 @@ components:
       required:
         - tag
         - count
+
+    SevaEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        eventType:
+          type: string
+        category:
+          $ref: "#/components/schemas/SevaCategory"
+        date:
+          type: string
+        time:
+          type: string
+        location:
+          type: string
+        address:
+          type: string
+        organizerId:
+          type: integer
+        organizer:
+          $ref: "#/components/schemas/User"
+        volunteersNeeded:
+          type: integer
+        volunteersRegistered:
+          type: array
+          items:
+            type: integer
+        image:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [upcoming, ongoing, completed, cancelled]
+        duration:
+          type: string
+          nullable: true
+        requirements:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - description
+        - eventType
+        - category
+        - date
+        - time
+        - location
+        - address
+        - organizerId
+        - organizer
+        - volunteersNeeded
+        - volunteersRegistered
+        - tags
+        - status
+        - createdAt
+
+    CreateEventBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        eventType:
+          type: string
+        category:
+          $ref: "#/components/schemas/SevaCategory"
+        date:
+          type: string
+        time:
+          type: string
+        location:
+          type: string
+        address:
+          type: string
+        organizerId:
+          type: integer
+        volunteersNeeded:
+          type: integer
+        image:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        duration:
+          type: string
+          nullable: true
+        requirements:
+          type: string
+          nullable: true
+      required:
+        - title
+        - description
+        - eventType
+        - category
+        - date
+        - time
+        - location
+        - address
+        - organizerId
+        - volunteersNeeded
+        - tags
+
+    RegisterEventBody:
+      type: object
+      properties:
+        userId:
+          type: integer
+      required:
+        - userId
+
+    RegisterEventResult:
+      type: object
+      properties:
+        registered:
+          type: boolean
+        volunteersRegistered:
+          type: array
+          items:
+            type: integer
+      required:
+        - registered
+        - volunteersRegistered
+
+    HelpRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: "#/components/schemas/SevaCategory"
+        urgency:
+          type: string
+          enum: [Low, Medium, High, Emergency]
+        location:
+          type: string
+        requesterId:
+          type: integer
+        requester:
+          $ref: "#/components/schemas/User"
+        peopleNeeded:
+          type: integer
+        helpersJoined:
+          type: array
+          items:
+            type: integer
+        status:
+          type: string
+          enum: [open, in-progress, completed, cancelled]
+        deadline:
+          type: string
+          nullable: true
+        contactInfo:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - description
+        - category
+        - urgency
+        - location
+        - requesterId
+        - requester
+        - peopleNeeded
+        - helpersJoined
+        - status
+        - createdAt
+
+    CreateHelpRequestBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: "#/components/schemas/SevaCategory"
+        urgency:
+          type: string
+          enum: [Low, Medium, High, Emergency]
+        location:
+          type: string
+        requesterId:
+          type: integer
+        peopleNeeded:
+          type: integer
+        deadline:
+          type: string
+          nullable: true
+        contactInfo:
+          type: string
+          nullable: true
+      required:
+        - title
+        - description
+        - category
+        - urgency
+        - location
+        - requesterId
+        - peopleNeeded
+
+    JoinHelpRequestBody:
+      type: object
+      properties:
+        userId:
+          type: integer
+      required:
+        - userId
+
+    JoinHelpRequestResult:
+      type: object
+      properties:
+        joined:
+          type: boolean
+        helpersJoined:
+          type: array
+          items:
+            type: integer
+      required:
+        - joined
+        - helpersJoined

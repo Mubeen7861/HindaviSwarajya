@@ -19,16 +19,26 @@ import type {
 import type {
   AddCommentBody,
   Comment,
+  CreateEventBody,
+  CreateHelpRequestBody,
   CreatePostBody,
   FollowBody,
   FollowResult,
   GetLeaderboardParams,
   GetTrendingTagsParams,
   HealthStatus,
+  HelpRequest,
+  JoinHelpRequestBody,
+  JoinHelpRequestResult,
   LeaderboardEntry,
   LikeBody,
+  ListEventsParams,
+  ListHelpRequestsParams,
   ListPostsParams,
   ListUsersParams,
+  RegisterEventBody,
+  RegisterEventResult,
+  SevaEvent,
   SevaPost,
   StatsSummary,
   TrendingTag,
@@ -1159,3 +1169,625 @@ export function useGetTrendingTags<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List seva events
+ */
+export const getListEventsUrl = (params?: ListEventsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/events?${stringifiedParams}`
+    : `/api/events`;
+};
+
+export const listEvents = async (
+  params?: ListEventsParams,
+  options?: RequestInit,
+): Promise<SevaEvent[]> => {
+  return customFetch<SevaEvent[]>(getListEventsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEventsQueryKey = (params?: ListEventsParams) => {
+  return [`/api/events`, ...(params ? [params] : [])] as const;
+};
+
+export const getListEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEventsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listEvents>>> = ({
+    signal,
+  }) => listEvents(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEvents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEventsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEvents>>
+>;
+export type ListEventsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List seva events
+ */
+
+export function useListEvents<
+  TData = Awaited<ReturnType<typeof listEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEventsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a seva event
+ */
+export const getCreateEventUrl = () => {
+  return `/api/events`;
+};
+
+export const createEvent = async (
+  createEventBody: CreateEventBody,
+  options?: RequestInit,
+): Promise<SevaEvent> => {
+  return customFetch<SevaEvent>(getCreateEventUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createEventBody),
+  });
+};
+
+export const getCreateEventMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEvent>>,
+    TError,
+    { data: BodyType<CreateEventBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createEvent>>,
+  TError,
+  { data: BodyType<CreateEventBody> },
+  TContext
+> => {
+  const mutationKey = ["createEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createEvent>>,
+    { data: BodyType<CreateEventBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createEvent(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createEvent>>
+>;
+export type CreateEventMutationBody = BodyType<CreateEventBody>;
+export type CreateEventMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a seva event
+ */
+export const useCreateEvent = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEvent>>,
+    TError,
+    { data: BodyType<CreateEventBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createEvent>>,
+  TError,
+  { data: BodyType<CreateEventBody> },
+  TContext
+> => {
+  return useMutation(getCreateEventMutationOptions(options));
+};
+
+/**
+ * @summary Get event by ID
+ */
+export const getGetEventUrl = (id: number) => {
+  return `/api/events/${id}`;
+};
+
+export const getEvent = async (
+  id: number,
+  options?: RequestInit,
+): Promise<SevaEvent> => {
+  return customFetch<SevaEvent>(getGetEventUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetEventQueryKey = (id: number) => {
+  return [`/api/events/${id}`] as const;
+};
+
+export const getGetEventQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEvent>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getEvent>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetEventQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getEvent>>> = ({
+    signal,
+  }) => getEvent(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getEvent>>, TError, TData> & {
+    queryKey: QueryKey;
+  };
+};
+
+export type GetEventQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getEvent>>
+>;
+export type GetEventQueryError = ErrorType<void>;
+
+/**
+ * @summary Get event by ID
+ */
+
+export function useGetEvent<
+  TData = Awaited<ReturnType<typeof getEvent>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getEvent>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetEventQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Register or unregister for an event
+ */
+export const getRegisterForEventUrl = (id: number) => {
+  return `/api/events/${id}/register`;
+};
+
+export const registerForEvent = async (
+  id: number,
+  registerEventBody: RegisterEventBody,
+  options?: RequestInit,
+): Promise<RegisterEventResult> => {
+  return customFetch<RegisterEventResult>(getRegisterForEventUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(registerEventBody),
+  });
+};
+
+export const getRegisterForEventMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof registerForEvent>>,
+    TError,
+    { id: number; data: BodyType<RegisterEventBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof registerForEvent>>,
+  TError,
+  { id: number; data: BodyType<RegisterEventBody> },
+  TContext
+> => {
+  const mutationKey = ["registerForEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof registerForEvent>>,
+    { id: number; data: BodyType<RegisterEventBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return registerForEvent(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RegisterForEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof registerForEvent>>
+>;
+export type RegisterForEventMutationBody = BodyType<RegisterEventBody>;
+export type RegisterForEventMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Register or unregister for an event
+ */
+export const useRegisterForEvent = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof registerForEvent>>,
+    TError,
+    { id: number; data: BodyType<RegisterEventBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof registerForEvent>>,
+  TError,
+  { id: number; data: BodyType<RegisterEventBody> },
+  TContext
+> => {
+  return useMutation(getRegisterForEventMutationOptions(options));
+};
+
+/**
+ * @summary List help requests
+ */
+export const getListHelpRequestsUrl = (params?: ListHelpRequestsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/help-requests?${stringifiedParams}`
+    : `/api/help-requests`;
+};
+
+export const listHelpRequests = async (
+  params?: ListHelpRequestsParams,
+  options?: RequestInit,
+): Promise<HelpRequest[]> => {
+  return customFetch<HelpRequest[]>(getListHelpRequestsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListHelpRequestsQueryKey = (
+  params?: ListHelpRequestsParams,
+) => {
+  return [`/api/help-requests`, ...(params ? [params] : [])] as const;
+};
+
+export const getListHelpRequestsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listHelpRequests>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListHelpRequestsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listHelpRequests>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListHelpRequestsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listHelpRequests>>
+  > = ({ signal }) => listHelpRequests(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listHelpRequests>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListHelpRequestsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listHelpRequests>>
+>;
+export type ListHelpRequestsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List help requests
+ */
+
+export function useListHelpRequests<
+  TData = Awaited<ReturnType<typeof listHelpRequests>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListHelpRequestsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listHelpRequests>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListHelpRequestsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a help request
+ */
+export const getCreateHelpRequestUrl = () => {
+  return `/api/help-requests`;
+};
+
+export const createHelpRequest = async (
+  createHelpRequestBody: CreateHelpRequestBody,
+  options?: RequestInit,
+): Promise<HelpRequest> => {
+  return customFetch<HelpRequest>(getCreateHelpRequestUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createHelpRequestBody),
+  });
+};
+
+export const getCreateHelpRequestMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createHelpRequest>>,
+    TError,
+    { data: BodyType<CreateHelpRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createHelpRequest>>,
+  TError,
+  { data: BodyType<CreateHelpRequestBody> },
+  TContext
+> => {
+  const mutationKey = ["createHelpRequest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createHelpRequest>>,
+    { data: BodyType<CreateHelpRequestBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createHelpRequest(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateHelpRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createHelpRequest>>
+>;
+export type CreateHelpRequestMutationBody = BodyType<CreateHelpRequestBody>;
+export type CreateHelpRequestMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a help request
+ */
+export const useCreateHelpRequest = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createHelpRequest>>,
+    TError,
+    { data: BodyType<CreateHelpRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createHelpRequest>>,
+  TError,
+  { data: BodyType<CreateHelpRequestBody> },
+  TContext
+> => {
+  return useMutation(getCreateHelpRequestMutationOptions(options));
+};
+
+/**
+ * @summary Join or leave a help request
+ */
+export const getJoinHelpRequestUrl = (id: number) => {
+  return `/api/help-requests/${id}/join`;
+};
+
+export const joinHelpRequest = async (
+  id: number,
+  joinHelpRequestBody: JoinHelpRequestBody,
+  options?: RequestInit,
+): Promise<JoinHelpRequestResult> => {
+  return customFetch<JoinHelpRequestResult>(getJoinHelpRequestUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(joinHelpRequestBody),
+  });
+};
+
+export const getJoinHelpRequestMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof joinHelpRequest>>,
+    TError,
+    { id: number; data: BodyType<JoinHelpRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof joinHelpRequest>>,
+  TError,
+  { id: number; data: BodyType<JoinHelpRequestBody> },
+  TContext
+> => {
+  const mutationKey = ["joinHelpRequest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof joinHelpRequest>>,
+    { id: number; data: BodyType<JoinHelpRequestBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return joinHelpRequest(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type JoinHelpRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof joinHelpRequest>>
+>;
+export type JoinHelpRequestMutationBody = BodyType<JoinHelpRequestBody>;
+export type JoinHelpRequestMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Join or leave a help request
+ */
+export const useJoinHelpRequest = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof joinHelpRequest>>,
+    TError,
+    { id: number; data: BodyType<JoinHelpRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof joinHelpRequest>>,
+  TError,
+  { id: number; data: BodyType<JoinHelpRequestBody> },
+  TContext
+> => {
+  return useMutation(getJoinHelpRequestMutationOptions(options));
+};

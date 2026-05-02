@@ -4,3 +4,6 @@ export * from "./post_tags";
 export * from "./post_likes";
 export * from "./comments";
 export * from "./follows";
+export * from "./events";
+export * from "./event_tags";
+export * from "./help_requests";

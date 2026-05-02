@@ -148,7 +148,7 @@ export default function Home() {
                   </span>
                 ))}
               </div>
-              <Link href="/create">
+              <Link href="/events">
                 <button className="w-full flex items-center justify-center gap-2 bg-white text-primary font-semibold text-sm py-2.5 rounded-xl hover:bg-orange-50 transition-colors">
                   <Calendar className="w-4 h-4" />
                   Create Event
