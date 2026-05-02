@@ -166,7 +166,9 @@ router.get("/posts/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const [post] = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
-    if (!post) {
+    // Treat un-approved posts as non-existent for the public API so admins
+    // remain the only ones who can see pending or rejected content.
+    if (!post || post.approvalStatus !== "approved") {
       res.status(404).json({ error: "Not found" });
       return;
     }

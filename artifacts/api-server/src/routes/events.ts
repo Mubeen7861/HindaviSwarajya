@@ -85,7 +85,11 @@ router.get("/events/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const [event] = await db.select().from(eventsTable).where(eq(eventsTable.id, id)).limit(1);
-    if (!event) { res.status(404).json({ error: "Not found" }); return; }
+    // Hide pending / rejected events from the public API.
+    if (!event || event.approvalStatus !== "approved") {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
     const result = await buildEvent(event);
     res.json(result);
   } catch (err) {
