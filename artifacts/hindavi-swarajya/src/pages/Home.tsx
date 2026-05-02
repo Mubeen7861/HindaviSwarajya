@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useListPosts,
   useGetStatsSummary,
@@ -25,6 +26,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
@@ -62,59 +64,66 @@ export default function Home() {
   return (
     <div className="flex flex-col h-full">
       {/* ── Page header ── */}
-      <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
-        <div>
-          <h1 className="text-2xl font-bold text-primary font-serif leading-tight">Seva Feed</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Latest community service activities</p>
+      <div className="flex items-end justify-between px-5 sm:px-6 pt-5 pb-4 border-b border-border/50 bg-background">
+        <div className="min-w-0">
+          <h1 className="text-[22px] sm:text-2xl font-semibold text-foreground leading-tight tracking-tight">
+            {t("home.title")}
+          </h1>
+          <p className="text-[12.5px] text-muted-foreground mt-0.5">{t("home.subtitle")}</p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Seva</p>
-          <p className="text-xl font-bold text-primary">{stats?.totalHelped?.toLocaleString() ?? "—"} <span className="text-sm font-semibold text-muted-foreground">helps</span></p>
+          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-[0.1em]">
+            {t("home.totalSeva")}
+          </p>
+          <p className="text-lg font-semibold text-primary tabular-nums">
+            {stats?.totalHelped?.toLocaleString() ?? "—"}
+            <span className="text-[11px] font-medium text-muted-foreground ml-1">{t("home.helps")}</span>
+          </p>
         </div>
       </div>
 
       {/* ── Body ── */}
       <div className="flex flex-1 min-h-0">
         {/* ── Center Feed ── */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-w-0">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 min-w-0">
 
           {/* Search + filter row */}
           <div className="flex gap-2 items-center">
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.85} />
               <Input
-                placeholder="Search seva posts, users, tags..."
-                className="pl-10 bg-gray-50 border-gray-200 rounded-xl h-10 text-sm focus-visible:ring-primary/30"
+                placeholder={t("home.searchPlaceholder")}
+                className="pl-10 bg-foreground/[0.04] border-transparent rounded-full h-10 text-[13.5px] focus-visible:ring-primary/30 focus-visible:bg-background"
                 value={search}
                 onChange={handleSearchChange}
                 data-testid="input-search-feed"
               />
             </div>
-            <button className="flex items-center gap-2 px-3.5 h-10 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors shrink-0">
-              <SlidersHorizontal className="w-4 h-4" />
-              Advanced
+            <button className="inline-flex items-center gap-1.5 px-3.5 h-10 rounded-full border border-border/60 bg-background text-[12.5px] font-medium text-foreground/70 hover:bg-foreground/5 transition-colors shrink-0 tap-none">
+              <SlidersHorizontal className="w-3.5 h-3.5" strokeWidth={1.85} />
+              {t("home.advanced")}
             </button>
           </div>
 
           {/* Sort row */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 -mx-1 px-1 overflow-x-auto no-scrollbar">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[150px] h-9 rounded-lg text-sm bg-white border-gray-200" data-testid="select-sort-by">
-                <SelectValue placeholder="Sort By" />
+              <SelectTrigger className="w-auto min-w-[140px] h-9 rounded-full text-[12.5px] border-border/60 bg-background" data-testid="select-sort-by">
+                <SelectValue placeholder={t("common.sortBy")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ListPostsSortBy.recent}>Most Recent</SelectItem>
-                <SelectItem value={ListPostsSortBy.impact}>Highest Impact</SelectItem>
-                <SelectItem value={ListPostsSortBy.likes}>Most Liked</SelectItem>
-                <SelectItem value={ListPostsSortBy.comments}>Most Discussed</SelectItem>
+                <SelectItem value={ListPostsSortBy.recent}>{t("home.sortRecent")}</SelectItem>
+                <SelectItem value={ListPostsSortBy.impact}>{t("home.sortImpact")}</SelectItem>
+                <SelectItem value={ListPostsSortBy.likes}>{t("home.sortLikes")}</SelectItem>
+                <SelectItem value={ListPostsSortBy.comments}>{t("home.sortComments")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-[120px] h-9 rounded-lg text-sm bg-white border-gray-200" data-testid="select-filter-category">
-                <SelectValue placeholder="Category" />
+              <SelectTrigger className="w-auto min-w-[120px] h-9 rounded-full text-[12.5px] border-border/60 bg-background" data-testid="select-filter-category">
+                <SelectValue placeholder={t("common.category")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="all">{t("home.catAll")}</SelectItem>
                 <SelectItem value={ListPostsCategory.Food}>Food</SelectItem>
                 <SelectItem value={ListPostsCategory.Education}>Education</SelectItem>
                 <SelectItem value={ListPostsCategory.Health}>Health</SelectItem>
@@ -124,36 +133,26 @@ export default function Home() {
             </Select>
           </div>
 
-          {/* ── Featured banner ── */}
-          <div className="rounded-2xl bg-gradient-to-br from-primary to-orange-500 p-5 relative overflow-hidden shadow-[0_4px_20px_rgba(255,111,0,0.25)]">
-            <div className="absolute right-4 top-3 opacity-10">
-              <Flame className="w-24 h-24 text-white" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="bg-white/20 rounded-lg p-1.5">
-                  <Star className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-base leading-tight">Organize a Seva Event</h3>
-                  <p className="text-orange-100 text-xs">Create impact at scale</p>
-                </div>
+          {/* ── Featured banner — minimal premium ── */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-orange-600 px-5 py-5 sm:px-6 sm:py-6">
+            <Flame className="absolute -right-4 -top-4 w-32 h-32 text-white/10" strokeWidth={1.25} />
+            <div className="relative z-10 max-w-md">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm mb-3">
+                <Star className="w-3 h-3 text-white" strokeWidth={2} />
+                <span className="text-[10.5px] uppercase tracking-[0.1em] font-semibold text-white">
+                  {t("home.bannerSubtitle")}
+                </span>
               </div>
-              <p className="text-white/90 text-sm mt-2 mb-4 leading-relaxed max-w-md">
-                Plan seminars, cleaning drives, food distribution, medical camps, and more. Bring your community together for greater impact!
+              <h3 className="text-white font-semibold text-lg leading-tight tracking-tight">
+                {t("home.bannerTitle")}
+              </h3>
+              <p className="text-white/85 text-[13px] mt-1.5 leading-relaxed">
+                {t("home.bannerBody")}
               </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {["Schedule Events", "Recruit Volunteers", "Track Impact"].map((label) => (
-                  <span key={label} className="flex items-center gap-1 bg-white/15 hover:bg-white/25 text-white text-xs font-medium px-3 py-1.5 rounded-full cursor-pointer transition-colors border border-white/20">
-                    <Calendar className="w-3 h-3" />
-                    {label}
-                  </span>
-                ))}
-              </div>
               <Link href="/app/events">
-                <button className="w-full flex items-center justify-center gap-2 bg-white text-primary font-semibold text-sm py-2.5 rounded-xl hover:bg-orange-50 transition-colors">
-                  <Calendar className="w-4 h-4" />
-                  Create Event
+                <button className="mt-4 inline-flex items-center gap-2 bg-white text-primary font-semibold text-[13px] px-4 py-2.5 rounded-full hover:bg-orange-50 transition-colors tap-none">
+                  <Calendar className="w-3.5 h-3.5" strokeWidth={2.25} />
+                  {t("home.bannerCta")}
                 </button>
               </Link>
             </div>

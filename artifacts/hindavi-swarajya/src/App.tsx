@@ -125,8 +125,8 @@ function AppLayout() {
     <div className="min-h-[100dvh] flex bg-background text-foreground">
       <EnsureUserProvisioned />
       <Sidebar />
-      <main className="flex-1 md:ml-72 flex flex-col min-h-[100dvh] pb-16 md:pb-0">
-        <div className="md:hidden h-14" />
+      <main className="flex-1 md:ml-72 flex flex-col min-h-[100dvh] pb-[calc(60px+env(safe-area-inset-bottom,0))] md:pb-0">
+        <div className="md:hidden h-[calc(56px+env(safe-area-inset-top,0))]" />
         <div className="flex-1 w-full">
           <Switch>
             <Route path="/app" component={Home} />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useRoute, Link, useLocation } from "wouter";
 import {
   useGetUser, useGetUserPosts, useToggleFollow,
@@ -104,6 +105,7 @@ function StatusBadge({ status }: { status?: string | null }) {
 }
 
 export default function Profile() {
+  const { t } = useTranslation();
   const [, params] = useRoute("/app/profile/:id");
   const [, navigate] = useLocation();
   const currentUserId = useCurrentUserId();
@@ -376,7 +378,7 @@ export default function Profile() {
               <>
                 <Button variant="outline" size="sm" onClick={openEdit} className="gap-1.5 h-9 rounded-xl text-sm" data-testid="button-edit-profile">
                   <Edit2 className="w-3.5 h-3.5" />
-                  Edit Profile
+                  {t("profile.editProfile")}
                 </Button>
                 <Button
                   variant="outline"
@@ -386,7 +388,7 @@ export default function Profile() {
                   data-testid="button-logout"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  Log out
+                  {t("profile.logout")}
                 </Button>
               </>
             ) : (
@@ -925,19 +927,19 @@ export default function Profile() {
       <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Log out of HindaviSwarajya?</AlertDialogTitle>
+            <AlertDialogTitle>{t("profile.logoutConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              You'll be returned to the landing page and need to sign in again to continue your seva.
+              {t("profile.logoutConfirmBody")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleLogout}
               className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white"
               data-testid="button-confirm-logout"
             >
-              Log out
+              {t("profile.confirmLogout")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

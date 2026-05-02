@@ -1,85 +1,115 @@
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import {
-  Home, Calendar, Plus, AlertCircle, Users, TrendingUp, User as UserIcon, Flame
+  Home, Calendar, Plus, AlertCircle, Users, TrendingUp,
+  User as UserIcon, Flame,
 } from "lucide-react";
-import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-client-react";
-import { Card } from "@/components/ui/card";
+import {
+  useGetStatsSummary, getGetStatsSummaryQueryKey,
+} from "@workspace/api-client-react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 
-const tabs = [
-  { href: "/app", id: "home", icon: Home, label: "Home", description: "Latest seva activities" },
-  { href: "/app/events", id: "events", icon: Calendar, label: "Events", description: "Join seva events" },
-  { href: "/app/create", id: "create", icon: Plus, label: "Share Seva", description: "Post your service" },
-  { href: "/app/help", id: "help-request", icon: AlertCircle, label: "Help Requests", description: "Find or offer help" },
-  { href: "/app/community", id: "community", icon: Users, label: "Community", description: "Connect with sevaks" },
-  { href: "/app/leaderboard", id: "leaderboard", icon: TrendingUp, label: "Leaderboard", description: "Top contributors" },
-  { href: "/app/profile/me", id: "profile", icon: UserIcon, label: "Profile", description: "Your seva journey" },
+type TabId =
+  | "home" | "events" | "create" | "help-request"
+  | "community" | "leaderboard" | "profile";
+
+type Tab = {
+  href: string;
+  id: TabId;
+  icon: typeof Home;
+  labelKey: string;
+  descKey: string;
+};
+
+const TABS: Tab[] = [
+  { href: "/app",            id: "home",         icon: Home,        labelKey: "nav.home",        descKey: "nav.homeDesc" },
+  { href: "/app/events",     id: "events",       icon: Calendar,    labelKey: "nav.events",      descKey: "nav.eventsDesc" },
+  { href: "/app/create",     id: "create",       icon: Plus,        labelKey: "nav.create",      descKey: "nav.createDesc" },
+  { href: "/app/help",       id: "help-request", icon: AlertCircle, labelKey: "nav.help",        descKey: "nav.helpDesc" },
+  { href: "/app/community",  id: "community",    icon: Users,       labelKey: "nav.community",   descKey: "nav.communityDesc" },
+  { href: "/app/leaderboard",id: "leaderboard",  icon: TrendingUp,  labelKey: "nav.leaderboard", descKey: "nav.leaderboardDesc" },
+  { href: "/app/profile/me", id: "profile",      icon: UserIcon,    labelKey: "nav.profile",     descKey: "nav.profileDesc" },
 ];
+
+const MOBILE_TABS: TabId[] = ["home", "events", "create", "help-request", "profile"];
+
+function isTabActive(href: string, location: string) {
+  if (href === "/app") return location === "/app" || location === "/app/";
+  return location.startsWith(href);
+}
 
 export function Sidebar() {
   const [location] = useLocation();
-  const { data: stats } = useGetStatsSummary({ query: { queryKey: getGetStatsSummaryQueryKey(), staleTime: 30_000 } });
+  const { t } = useTranslation();
+  const { data: stats } = useGetStatsSummary({
+    query: { queryKey: getGetStatsSummaryQueryKey(), staleTime: 30_000 },
+  });
 
   return (
     <>
       {/* ─── Desktop Sidebar ─── */}
-      <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-72 bg-white border-r border-gray-200 z-40">
+      <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-72 bg-card border-r border-border/60 z-40">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200 shrink-0">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#FF6F00] shadow-[0_2px_10px_rgba(255,111,0,0.35)] group-hover:shadow-[0_4px_18px_rgba(255,111,0,0.45)] transition-all shrink-0">
-              <Flame className="w-5 h-5 text-white" />
+        <div className="px-6 py-5 border-b border-border/50 shrink-0">
+          <Link href="/" className="flex items-center gap-3 group tap-none">
+            <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-primary text-primary-foreground shrink-0 transition-transform group-hover:scale-105">
+              <Flame className="w-5 h-5" strokeWidth={2.25} />
             </div>
-            <div>
-              <p className="text-sm font-bold text-[#FF6F00] font-serif leading-tight" data-testid="nav-brand">
-                Hindavi Swarajya
+            <div className="min-w-0">
+              <p
+                className="text-[15px] font-semibold text-foreground leading-tight tracking-tight truncate"
+                data-testid="nav-brand"
+              >
+                {t("brand.name")}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5 leading-tight">
-                "महाराजांचे स्वप्न, आमचे कर्तव्य"
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight truncate">
+                {t("brand.tagline")}
               </p>
             </div>
           </Link>
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 p-4 space-y-1.5 overflow-y-auto">
-          {tabs.map((tab) => {
+        <div className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          {TABS.map((tab) => {
             const Icon = tab.icon;
             const isCreate = tab.id === "create";
-            const isActive = !isCreate && (
-              tab.href === "/app" ? location === "/app" || location === "/app/" : location.startsWith(tab.href)
-            );
+            const isActive = !isCreate && isTabActive(tab.href, location);
 
             return (
               <Link key={tab.id} href={tab.href}>
                 <div
                   data-testid={`nav-${tab.id}`}
                   className={cn(
-                    "w-full p-3.5 rounded-xl transition-all duration-200 text-left cursor-pointer",
+                    "w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left cursor-pointer tap-none",
                     isCreate
-                      ? "bg-gradient-to-r from-[#FF6F00] to-[#E65100] text-white shadow-lg hover:shadow-xl"
+                      ? "mt-2 mb-3 bg-primary text-primary-foreground hover:bg-primary/90"
                       : isActive
-                        ? "bg-[#FFF3E0] text-[#FF6F00] border border-[#FF6F00]/20"
-                        : "text-gray-600 hover:bg-gray-50"
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground",
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className={cn(
-                      "w-5 h-5 shrink-0",
-                      isCreate ? "text-white" : isActive ? "text-[#FF6F00]" : "text-gray-500"
-                    )} />
-                    <div>
+                    <Icon
+                      className={cn(
+                        "w-[18px] h-[18px] shrink-0",
+                        isCreate ? "text-primary-foreground" : isActive ? "text-primary" : "text-foreground/60",
+                      )}
+                      strokeWidth={isActive || isCreate ? 2.25 : 1.75}
+                    />
+                    <div className="min-w-0">
                       <p className={cn(
-                        "font-medium text-sm leading-tight",
-                        isCreate ? "text-white" : isActive ? "text-[#FF6F00]" : "text-gray-900"
+                        "text-[13.5px] font-medium leading-tight truncate",
+                        isCreate ? "text-primary-foreground" : "",
                       )}>
-                        {tab.label}
+                        {t(tab.labelKey)}
                       </p>
                       <p className={cn(
-                        "text-xs mt-0.5",
-                        isCreate ? "text-orange-100" : isActive ? "text-[#FF6F00]/70" : "text-gray-500"
+                        "text-[11px] mt-0.5 leading-tight truncate",
+                        isCreate ? "text-primary-foreground/80" : "text-muted-foreground",
                       )}>
-                        {tab.description}
+                        {t(tab.descKey)}
                       </p>
                     </div>
                   </div>
@@ -89,72 +119,118 @@ export function Sidebar() {
           })}
         </div>
 
-        {/* Community Impact Card */}
+        {/* Community Impact — minimal stat block */}
         <div className="px-4 pb-3 shrink-0">
-          <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-none">
-            <div className="flex items-center gap-2 mb-2.5">
-              <TrendingUp className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-semibold text-blue-800">Community Impact</span>
+          <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] uppercase tracking-[0.08em] font-semibold text-foreground/80">
+                {t("nav.impact")}
+              </span>
             </div>
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-blue-700">Total Seva Acts</span>
-                <span className="font-semibold text-blue-800">{stats?.totalPosts?.toLocaleString() ?? "—"}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-blue-700">People Helped</span>
-                <span className="font-semibold text-blue-800">{stats?.totalHelped?.toLocaleString() ?? "—"}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-blue-700">Active Sevaks</span>
-                <span className="font-semibold text-blue-800">{stats?.totalUsers?.toLocaleString() ?? "—"}</span>
-              </div>
+            <div className="space-y-2">
+              {[
+                { label: t("nav.impactPosts"),  value: stats?.totalPosts },
+                { label: t("nav.impactHelped"), value: stats?.totalHelped },
+                { label: t("nav.impactSevaks"), value: stats?.totalUsers  },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-baseline justify-between">
+                  <span className="text-[12px] text-muted-foreground">{label}</span>
+                  <span className="text-[13px] font-semibold text-foreground tabular-nums">
+                    {value?.toLocaleString() ?? "—"}
+                  </span>
+                </div>
+              ))}
             </div>
-          </Card>
+          </div>
         </div>
 
-        {/* Daily Quote */}
-        <div className="px-6 py-4 border-t border-gray-200 shrink-0 text-center">
-          <p className="text-xs text-[#FF6F00] font-medium mb-0.5">
-            "स्वराज्य हा माझा जन्मसिद्ध हक्क आहे"
-          </p>
-          <p className="text-xs text-gray-500">Daily inspiration from Maharaj</p>
+        {/* Footer: language + quote */}
+        <div className="px-4 pb-4 shrink-0 border-t border-border/50 pt-3 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[11px] text-primary font-medium truncate" lang="mr">
+              {t("brand.quote")}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {t("nav.dailyInspiration")}
+            </p>
+          </div>
+          <LanguageSwitcher variant="icon" />
         </div>
       </aside>
 
       {/* ─── Mobile Top Bar ─── */}
-      <header className="md:hidden sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-sm shadow-sm">
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 glass-bar border-b border-border/50 pt-safe">
         <div className="flex items-center justify-between px-4 h-14">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#FF6F00] shadow-[0_2px_6px_rgba(255,111,0,0.4)]">
-              <Flame className="w-4 h-4 text-white" />
+          <Link href="/" className="flex items-center gap-2.5 tap-none">
+            <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-primary text-primary-foreground">
+              <Flame className="w-4 h-4" strokeWidth={2.25} />
             </div>
-            <span className="text-base font-bold text-[#FF6F00] font-serif">हिंदवी स्वराज्य</span>
-          </Link>
-          <Link href="/app/create">
-            <div className="flex items-center gap-1.5 bg-[#FF6F00] text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm">
-              <Plus className="w-3.5 h-3.5" />
-              Share Seva
+            <div className="leading-tight">
+              <span className="block text-[15px] font-semibold text-foreground tracking-tight">
+                {t("brand.name")}
+              </span>
             </div>
           </Link>
+          <div className="flex items-center gap-1">
+            <LanguageSwitcher variant="icon" />
+          </div>
         </div>
       </header>
 
-      {/* ─── Mobile Bottom Nav ─── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-100 bg-white flex justify-around items-center h-16 z-50 pb-safe">
-        {tabs.filter(t => ["home","leaderboard","create","profile"].includes(t.id)).map(({ href, id, icon: Icon }) => {
-          const isActive = href === "/" ? location === "/" : location.startsWith(href);
-          return (
-            <Link key={id} href={href}>
-              <div className={cn(
-                "flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all",
-                isActive ? "text-[#FF6F00]" : "text-gray-400"
-              )}>
-                <Icon className="w-5 h-5" />
-              </div>
-            </Link>
-          );
-        })}
+      {/* ─── Mobile Bottom Nav (app-style) ─── */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-bar border-t border-border/50 pb-safe"
+        aria-label="Primary"
+      >
+        <div className="flex justify-around items-center h-[60px] px-2 max-w-md mx-auto">
+          {TABS.filter((t) => MOBILE_TABS.includes(t.id)).map((tab) => {
+            const Icon = tab.icon;
+            const isCreate = tab.id === "create";
+            const isActive = !isCreate && isTabActive(tab.href, location);
+
+            if (isCreate) {
+              return (
+                <Link key={tab.id} href={tab.href}>
+                  <div
+                    data-testid={`nav-${tab.id}`}
+                    className="flex items-center justify-center w-12 h-12 -mt-5 rounded-2xl bg-primary text-primary-foreground shadow-md tap-none active:scale-95 transition-transform"
+                    aria-label={t(tab.labelKey)}
+                  >
+                    <Icon className="w-5 h-5" strokeWidth={2.5} />
+                  </div>
+                </Link>
+              );
+            }
+
+            return (
+              <Link key={tab.id} href={tab.href}>
+                <div
+                  data-testid={`nav-${tab.id}`}
+                  className={cn(
+                    "flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-colors tap-none",
+                    isActive ? "text-primary" : "text-foreground/45",
+                  )}
+                  aria-label={t(tab.labelKey)}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon
+                    className="w-[22px] h-[22px]"
+                    strokeWidth={isActive ? 2.25 : 1.85}
+                  />
+                  <span
+                    className={cn(
+                      "text-[10px] mt-0.5 leading-none font-medium truncate max-w-[64px]",
+                      isActive ? "text-primary" : "text-foreground/55",
+                    )}
+                  >
+                    {t(tab.labelKey)}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     </>
   );

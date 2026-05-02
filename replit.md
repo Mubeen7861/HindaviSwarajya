@@ -17,6 +17,8 @@ Full-stack community seva (service) social platform built as a pnpm workspace mo
 - **API codegen**: Orval (from OpenAPI spec → React Query hooks + Zod schemas)
 - **Build**: esbuild (CJS bundle)
 - **UI**: Tailwind CSS + shadcn/ui + Framer Motion
+- **Typography**: `@fontsource/metropolis` (300–800) for English; `Mukta` + `Tiro Devanagari Marathi` (Google Fonts) for Devanagari script
+- **i18n**: `i18next` + `react-i18next` + `i18next-browser-languagedetector` (English + Marathi)
 
 ## Key Commands
 
@@ -118,6 +120,23 @@ The Orval custom-fetch (`lib/api-client-react/src/custom-fetch.ts`) defaults `cr
 There is no global hardcoded current-user constant. No mutating endpoint trusts user IDs from the request body — they are always derived from `req.dbUser.id`.
 
 To guarantee that the DB row is provisioned the moment a user reaches the app (not just when they call a mutating endpoint), `App.tsx`'s `AppLayout` mounts an `EnsureUserProvisioned` component that calls `useCurrentUser()` unconditionally. The first `GET /api/me` triggers `requireAuth.resolveOrProvisionUser` which inserts the user row.
+
+## Internationalization (i18n)
+
+The frontend supports **English** and **Marathi (मराठी)**.
+
+- Setup: `artifacts/hindavi-swarajya/src/i18n/index.ts` — initialises i18next with `LanguageDetector` (localStorage key `hs.lang`, then `navigator`, then `htmlTag`). Exports `SUPPORTED_LANGUAGES` and a `LanguageCode` type. On every language change, sets `<html lang>` and `<html data-lang>` so CSS can react.
+- Locales: `src/i18n/locales/en.ts` is the **source of truth** — its inferred type `Translation` is exported and `mr.ts` is typed as `Translation`, guaranteeing key parity at build time. Namespaces: `brand`, `common`, `nav`, `home`, `post`, `profile`, `auth`.
+- Switcher: `src/components/LanguageSwitcher.tsx` — Radix DropdownMenu with variants `icon` / `compact` / `pill`. Mounted in the Sidebar (desktop footer + mobile top bar).
+- Devanagari font fallback: `src/index.css` defines `--app-font-sans: 'Metropolis', 'Mukta', ...`; the selector `:lang(mr), [data-lang="mr"]` flips the stack to `'Mukta'`-first so Marathi text gets a font that actually contains Devanagari glyphs. Latin text always picks Metropolis first.
+- Adding a string: add the key to `en.ts`, mirror it in `mr.ts` (TypeScript will fail the build otherwise), then call `t("namespace.key")`.
+
+## Mobile / Native-feel UI
+
+- `index.html` sets `viewport-fit=cover`, `theme-color=#FF6F00`, and `apple-mobile-web-app-capable=yes` for an installed-app feel.
+- `src/index.css` adds safe-area utilities `.pt-safe`, `.pb-safe`, `.pl-safe`, `.pr-safe` (using `env(safe-area-inset-*)`), `.glass-bar` (translucent backdrop-blur for fixed bars), `.no-scrollbar`, `.tap-none` (kills the iOS tap-highlight), `.surface` (premium card surface), `.tabular-nums`.
+- `Sidebar.tsx` renders three layouts: a desktop sidebar (md+), a glass top bar with brand + language switcher (mobile), and a glass bottom nav with five items including a floating create-FAB (mobile). The bottom nav uses `aria-current="page"` and `aria-label` per item.
+- `App.tsx` reserves space with `pb-[calc(60px+env(safe-area-inset-bottom,0))]` and `h-[calc(56px+env(safe-area-inset-top,0))]` so content never sits under the fixed bars.
 
 ## Codegen Notes
 
