@@ -239,6 +239,9 @@ importers:
       '@clerk/themes':
         specifier: ^2.4.57
         version: 2.4.57(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@fontsource/anek-devanagari':
+        specifier: ^5.2.7
+        version: 5.2.7
     devDependencies:
       '@fontsource/metropolis':
         specifier: ^5.2.5
@@ -868,6 +871,9 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@fontsource/anek-devanagari@5.2.7':
+    resolution: {integrity: sha512-4K8J+kNJqHzpAPJQJesrxBRwCFE+ik66ZBv9ujNLZJTM3CW+Y3mD1VGtNaGJ7RTm+E1zMZyhlnvWfwUBeykK1Q==}
 
   '@fontsource/metropolis@5.2.5':
     resolution: {integrity: sha512-zAz6XS1ZXVXZadcqsOnToiePAKEiEywxOwILEaE4sRl+pVOFQI/30xMiKvjQae1NRK3TbeKxJAmt+yFkPguXJw==}
@@ -3975,6 +3981,8 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@fontsource/anek-devanagari@5.2.7': {}
 
   '@fontsource/metropolis@5.2.5': {}
 
