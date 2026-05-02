@@ -9,15 +9,15 @@ import subhedarBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_26_AM_1_1777
 import deshmukhBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_31_AM_1_1777758956663.png";
 import deshpandeBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_37_AM_1_1777758956664.png";
 import sardarBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_43_AM_1_1777758956664.png";
-import sevakBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_34_AM_1_1777759249866.png";
-import mavlaBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_43_AM_1_1777759249866.png";
-import bargirBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_49_AM_1_1777759249866.png";
-import shiledarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_56_AM_1_1777759249867.png";
+import panchHazariBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_34_AM_1_1777759249866.png";
+import hazariBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_43_AM_1_1777759249866.png";
+import jumledarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_49_AM_1_1777759249866.png";
+import havaldarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_56_AM_1_1777759249867.png";
 import naikBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_02_AM_1_1777759249867.png";
-import havaldarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_10_AM_1_1777759249867.png";
-import jumledarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_16_AM_1_1777759249867.png";
-import hazariBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_22_AM_1_1777759249868.png";
-import panchHazariBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_28_AM_1_1777759249868.png";
+import shiledarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_10_AM_1_1777759249867.png";
+import bargirBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_16_AM_1_1777759249867.png";
+import mavlaBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_22_AM_1_1777759249868.png";
+import sevakBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_28_AM_1_1777759249868.png";
 import killedarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_32_08_AM_1_1777759373177.png";
 
 export const MUDRA_PER_HELP = 10;
