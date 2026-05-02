@@ -19,6 +19,7 @@ import bargirBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_16_AM_1_177775
 import mavlaBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_22_AM_1_1777759249868.png";
 import sevakBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_28_AM_1_1777759249868.png";
 import killedarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_32_08_AM_1_1777759373177.png";
+import chhavaBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_43_08_AM_1_1777760047764.png";
 
 export const MUDRA_PER_HELP = 10;
 
@@ -105,6 +106,7 @@ export const CHHAVA_RANK: RankDef = {
   border: "border-amber-600",
   ring: "ring-amber-700",
   gradient: "from-amber-500 via-orange-600 to-red-700",
+  image: chhavaBadge,
 };
 
 export const RANK_NAMES = SWARAJYA_RANKS.map((r) => r.name);

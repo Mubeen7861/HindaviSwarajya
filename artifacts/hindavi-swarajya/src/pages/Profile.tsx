@@ -770,9 +770,18 @@ export default function Profile() {
                 className={`rounded-2xl border p-5 ${CHHAVA_RANK.bg} ${CHHAVA_RANK.border} text-white shadow-lg`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center ring-2 ring-white/30">
-                    <Crown className="w-7 h-7 text-white" />
-                  </div>
+                  {CHHAVA_RANK.image ? (
+                    <img
+                      src={CHHAVA_RANK.image}
+                      alt="Chhava coin"
+                      className="w-16 h-16 object-contain drop-shadow-lg"
+                      data-testid="badge-coin-chhava-profile"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center ring-2 ring-white/30">
+                      <Crown className="w-7 h-7 text-white" />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-90">Honorary Rank</p>
                     <p className="text-2xl font-bold">Chhava <span className="opacity-80 text-base font-semibold">· छावा</span></p>

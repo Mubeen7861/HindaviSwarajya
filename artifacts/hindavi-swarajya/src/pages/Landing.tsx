@@ -347,15 +347,23 @@ export default function Landing() {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.25),transparent_60%)]" />
               <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full border-4 border-white/15" />
 
-              <div className="relative p-7 text-white h-full flex flex-col">
-                <div className="flex items-center gap-2 mb-3">
+              <div className="relative p-7 text-white h-full flex flex-col items-center text-center">
+                <div className="flex items-center gap-2 mb-4">
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur text-[10px] font-bold tracking-widest uppercase">
                     <Crown className="w-3 h-3" /> Honorary
                   </span>
                 </div>
-                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center mb-3 shadow-inner">
-                  <Crown className="w-8 h-8" />
-                </div>
+                {CHHAVA_RANK.image && (
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 bg-white/30 blur-2xl rounded-full" />
+                    <img
+                      src={CHHAVA_RANK.image}
+                      alt={`${CHHAVA_RANK.name} coin`}
+                      className="relative w-36 h-36 sm:w-40 sm:h-40 object-contain drop-shadow-2xl transition-transform duration-500 hover:rotate-6 hover:scale-110"
+                      data-testid="badge-coin-chhava"
+                    />
+                  </div>
+                )}
                 <h3 className="text-3xl font-bold font-serif leading-none">{CHHAVA_RANK.name}</h3>
                 <p className="text-base opacity-90 mt-1 font-serif" lang="mr">{CHHAVA_RANK.devanagari}</p>
                 <p className="text-sm opacity-90 mt-3 leading-relaxed flex-1">
