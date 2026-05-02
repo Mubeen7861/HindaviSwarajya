@@ -3,7 +3,7 @@ import {
   Home, Calendar, Plus, AlertCircle, Users, TrendingUp, User as UserIcon, Flame
 } from "lucide-react";
 import { CURRENT_USER_ID } from "@/lib/constants";
-import { useGetStatsSummary } from "@workspace/api-client-react";
+import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-client-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +19,7 @@ const tabs = [
 
 export function Sidebar() {
   const [location] = useLocation();
-  const { data: stats } = useGetStatsSummary({ query: { staleTime: 30_000 } });
+  const { data: stats } = useGetStatsSummary({ query: { queryKey: getGetStatsSummaryQueryKey(), staleTime: 30_000 } });
 
   return (
     <>
