@@ -236,6 +236,9 @@ importers:
       '@clerk/react':
         specifier: ^6.4.7
         version: 6.4.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@clerk/shared':
+        specifier: ^4.8.7
+        version: 4.8.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@clerk/themes':
         specifier: ^2.4.57
         version: 2.4.57(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
