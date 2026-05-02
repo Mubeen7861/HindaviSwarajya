@@ -4,6 +4,11 @@
 
 import ashtaPradhanBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_20_AM_1_1777758780381.png";
 import sarnobatBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_15_AM_1_1777758780381.png";
+import sarSenapatiBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_51_46_AM_1_1777758956663.png";
+import subhedarBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_26_AM_1_1777758956663.png";
+import deshmukhBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_31_AM_1_1777758956663.png";
+import deshpandeBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_37_AM_1_1777758956664.png";
+import sardarBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_43_AM_1_1777758956664.png";
 
 export const MUDRA_PER_HELP = 10;
 
@@ -45,15 +50,19 @@ export const SWARAJYA_RANKS: RankDef[] = [
   { name: "Panch Hazari",  devanagari: "पंच हजारी",       threshold: 2000,   tier: "elite",   description: "Commander of five thousand",
     bg: "bg-purple-100",   text: "text-purple-800",  border: "border-purple-300",  ring: "ring-purple-400",  gradient: "from-purple-200 to-purple-100" },
   { name: "Sardar",        devanagari: "सरदार",           threshold: 4000,   tier: "elite",   description: "Noble general of the realm",
-    bg: "bg-indigo-100",   text: "text-indigo-800",  border: "border-indigo-300",  ring: "ring-indigo-400",  gradient: "from-indigo-200 to-indigo-100" },
+    bg: "bg-indigo-100",   text: "text-indigo-800",  border: "border-indigo-300",  ring: "ring-indigo-400",  gradient: "from-indigo-200 to-indigo-100",
+    image: sardarBadge },
   { name: "Killedar",      devanagari: "किल्लेदार",        threshold: 7000,   tier: "command", description: "Guardian of a fort and its people",
     bg: "bg-blue-100",     text: "text-blue-800",    border: "border-blue-300",    ring: "ring-blue-400",    gradient: "from-blue-200 to-blue-100" },
   { name: "Deshpande",     devanagari: "देशपांडे",         threshold: 10000,  tier: "command", description: "Steward of a land and its records",
-    bg: "bg-cyan-100",     text: "text-cyan-800",    border: "border-cyan-300",    ring: "ring-cyan-400",    gradient: "from-cyan-200 to-cyan-100" },
+    bg: "bg-cyan-100",     text: "text-cyan-800",    border: "border-cyan-300",    ring: "ring-cyan-400",    gradient: "from-cyan-200 to-cyan-100",
+    image: deshpandeBadge },
   { name: "Deshmukh",      devanagari: "देशमुख",          threshold: 15000,  tier: "command", description: "Hereditary chief of a region",
-    bg: "bg-teal-100",     text: "text-teal-800",    border: "border-teal-300",    ring: "ring-teal-400",    gradient: "from-teal-200 to-teal-100" },
+    bg: "bg-teal-100",     text: "text-teal-800",    border: "border-teal-300",    ring: "ring-teal-400",    gradient: "from-teal-200 to-teal-100",
+    image: deshmukhBadge },
   { name: "Subhedar",      devanagari: "सुभेदार",          threshold: 22000,  tier: "command", description: "Governor of a province",
-    bg: "bg-emerald-100",  text: "text-emerald-800", border: "border-emerald-300", ring: "ring-emerald-400", gradient: "from-emerald-200 to-emerald-100" },
+    bg: "bg-emerald-100",  text: "text-emerald-800", border: "border-emerald-300", ring: "ring-emerald-400", gradient: "from-emerald-200 to-emerald-100",
+    image: subhedarBadge },
   { name: "Ashta Pradhan", devanagari: "अष्ट प्रधान",      threshold: 35000,  tier: "supreme", description: "One of the eight royal ministers",
     bg: "bg-yellow-100",   text: "text-yellow-800",  border: "border-yellow-400",  ring: "ring-yellow-500",  gradient: "from-yellow-200 to-amber-100",
     image: ashtaPradhanBadge },
@@ -61,7 +70,8 @@ export const SWARAJYA_RANKS: RankDef[] = [
     bg: "bg-amber-200",    text: "text-amber-900",   border: "border-amber-500",   ring: "ring-amber-600",   gradient: "from-amber-300 to-yellow-200",
     image: sarnobatBadge },
   { name: "Sar Senapati",  devanagari: "सरसेनापती",       threshold: 100000, tier: "supreme", description: "Supreme commander — the highest rank",
-    bg: "bg-gradient-to-br from-amber-300 to-orange-400", text: "text-white", border: "border-amber-500", ring: "ring-amber-600", gradient: "from-amber-400 via-orange-500 to-red-500" },
+    bg: "bg-gradient-to-br from-amber-300 to-orange-400", text: "text-white", border: "border-amber-500", ring: "ring-amber-600", gradient: "from-amber-400 via-orange-500 to-red-500",
+    image: sarSenapatiBadge },
 ];
 
 export const CHHAVA_RANK: RankDef = {

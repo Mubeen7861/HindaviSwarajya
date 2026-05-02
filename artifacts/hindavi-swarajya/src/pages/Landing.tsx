@@ -308,10 +308,21 @@ export default function Landing() {
                     <Sparkles className="w-3 h-3" /> Pinnacle · #17
                   </span>
                 </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0 shadow-inner">
-                    <Crown className="w-8 h-8" />
-                  </div>
+                <div className="flex items-center gap-5 sm:gap-6">
+                  {PINNACLE.image ? (
+                    <div className="relative shrink-0">
+                      <div className="absolute inset-0 rounded-full bg-white/40 blur-2xl scale-110" />
+                      <img
+                        src={PINNACLE.image}
+                        alt={`${PINNACLE.name} badge`}
+                        className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover ring-4 ring-white/60 shadow-2xl drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0 shadow-inner">
+                      <Crown className="w-8 h-8" />
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <h3 className="text-3xl sm:text-4xl font-bold font-serif leading-none">{PINNACLE.name}</h3>
                     <p className="text-base opacity-90 mt-1 font-serif" lang="mr">{PINNACLE.devanagari}</p>
