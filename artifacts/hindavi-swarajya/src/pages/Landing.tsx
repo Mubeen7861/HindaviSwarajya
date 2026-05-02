@@ -5,6 +5,7 @@ import {
   Heart, Users, Calendar, Trophy, ArrowRight,
   Shield, Globe, CheckCircle, ChevronRight,
   Flame, Crown, Sparkles, Sword, Shield as ShieldIcon, Mountain,
+  HandHeart, Share2, Link2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-client-react";
@@ -471,6 +472,150 @@ export default function Landing() {
           <p className="text-center text-xs text-gray-400 mt-8 max-w-md mx-auto">
             Hover any rank to see its meaning. Ranks are inspired by the actual structure of Chhatrapati Shivaji Maharaj's Maratha Empire.
           </p>
+        </div>
+      </section>
+
+      {/* ── How It Works ── */}
+      <section className="py-20 px-4 sm:px-6 bg-gradient-to-b from-white via-orange-50/40 to-white relative overflow-hidden">
+        {/* subtle saffron accent */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#FF6F00]/5 blur-3xl pointer-events-none" />
+
+        <div className="relative max-w-6xl mx-auto">
+          {/* Section header */}
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white border border-orange-200 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-[#FF6F00]" />
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-[#FF6F00]">
+                Your Journey in Swarajya
+              </span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 font-serif mb-3 tracking-tight">
+              How It <span className="bg-gradient-to-r from-amber-600 via-[#FF6F00] to-[#E65100] bg-clip-text text-transparent">Works</span>
+            </h2>
+            <p className="text-lg sm:text-xl font-semibold text-[#FF6F00] font-serif" lang="mr">
+              स्वराज्य कसे घडते
+            </p>
+            <p className="mt-4 text-gray-600 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">
+              Five simple steps. One powerful movement. Start with action, rise with respect.
+            </p>
+          </div>
+
+          {/* Steps */}
+          {(() => {
+            const STEPS = [
+              {
+                icon: HandHeart,
+                title: "Do Seva",
+                tagline: "Start with action.",
+                desc: "Help someone in real life — food, education, health, or any meaningful support.",
+                accent: "from-rose-500 to-red-600",
+              },
+              {
+                icon: Share2,
+                title: "Share Your Impact",
+                tagline: "Inspire others.",
+                desc: "Post your seva on Instagram and tag us to spread the movement.",
+                accent: "from-amber-500 to-orange-500",
+              },
+              {
+                icon: Link2,
+                title: "Submit Proof",
+                tagline: "Make it count.",
+                desc: "Paste your post link on our platform and submit your contribution.",
+                accent: "from-[#FF6F00] to-[#E65100]",
+              },
+              {
+                icon: CheckCircle,
+                title: "Get Verified",
+                tagline: "Earn trust.",
+                desc: "Our team reviews your submission to ensure genuine impact.",
+                accent: "from-emerald-500 to-teal-600",
+              },
+              {
+                icon: Crown,
+                title: "Rise in Swarajya",
+                tagline: "Earn respect, not just points.",
+                desc: "Gain Mudra, unlock ranks like Mavla and Sardar, and become part of something bigger.",
+                accent: "from-indigo-500 to-purple-600",
+              },
+            ];
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-3">
+                {STEPS.map((step, i) => {
+                  const Icon = step.icon;
+                  const isLast = i === STEPS.length - 1;
+                  return (
+                    <div key={step.title} className="relative group">
+                      <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.08 }}
+                        className="relative h-full rounded-2xl bg-white border border-gray-100 shadow-sm p-5 sm:p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-orange-200"
+                      >
+                        {/* Step number */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${step.accent} flex items-center justify-center text-white shadow-md group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
+                            <Icon className="w-6 h-6" strokeWidth={2.2} />
+                          </div>
+                          <span className="text-3xl font-extrabold text-gray-200 tabular-nums leading-none font-serif select-none">
+                            0{i + 1}
+                          </span>
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-serif leading-tight mb-1">
+                          {step.title}
+                        </h3>
+                        <p className={`text-sm font-bold bg-gradient-to-r ${step.accent} bg-clip-text text-transparent mb-2`}>
+                          {step.tagline}
+                        </p>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          {step.desc}
+                        </p>
+                      </motion.div>
+
+                      {/* Arrow flow between cards (lg only) */}
+                      {!isLast && (
+                        <div className="hidden lg:flex absolute top-1/2 -right-2 -translate-y-1/2 z-10 pointer-events-none">
+                          <motion.div
+                            initial={{ opacity: 0, x: -4 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: i * 0.08 + 0.2 }}
+                            className="w-7 h-7 rounded-full bg-white border border-orange-200 shadow-sm flex items-center justify-center text-[#FF6F00] group-hover:translate-x-1 transition-transform duration-300"
+                          >
+                            <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
+                          </motion.div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* Closing line */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="mt-14 max-w-3xl mx-auto text-center"
+          >
+            <div className="relative inline-block px-6 sm:px-10 py-6 rounded-2xl bg-gradient-to-br from-[#FF6F00] to-[#E65100] text-white shadow-xl shadow-orange-300/40 overflow-hidden">
+              <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full border-4 border-white/15" />
+              <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full border-4 border-white/10" />
+              <Flame className="w-7 h-7 text-white/90 mx-auto mb-3" />
+              <p className="text-xl sm:text-2xl font-bold font-serif leading-snug">
+                This is not just a platform.<br />
+                <span className="text-amber-100">This is a movement built on seva.</span>
+              </p>
+              <p className="mt-3 text-base sm:text-lg font-semibold opacity-95 font-serif" lang="mr">
+                हे फक्त प्लॅटफॉर्म नाही… हे स्वराज्य आहे.
+              </p>
+            </div>
+          </motion.div>
         </div>
       </section>
 
