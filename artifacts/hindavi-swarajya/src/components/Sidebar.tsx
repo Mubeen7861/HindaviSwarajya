@@ -8,13 +8,13 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { href: "/", id: "home", icon: Home, label: "Home", description: "Latest seva activities" },
-  { href: "/events", id: "events", icon: Calendar, label: "Events", description: "Join seva events" },
-  { href: "/create", id: "create", icon: Plus, label: "Share Seva", description: "Post your service" },
-  { href: "/help", id: "help-request", icon: AlertCircle, label: "Help Requests", description: "Find or offer help" },
-  { href: "/community", id: "community", icon: Users, label: "Community", description: "Connect with sevaks" },
-  { href: "/leaderboard", id: "leaderboard", icon: TrendingUp, label: "Leaderboard", description: "Top contributors" },
-  { href: `/profile/${CURRENT_USER_ID}`, id: "profile", icon: UserIcon, label: "Profile", description: "Your seva journey" },
+  { href: "/app", id: "home", icon: Home, label: "Home", description: "Latest seva activities" },
+  { href: "/app/events", id: "events", icon: Calendar, label: "Events", description: "Join seva events" },
+  { href: "/app/create", id: "create", icon: Plus, label: "Share Seva", description: "Post your service" },
+  { href: "/app/help", id: "help-request", icon: AlertCircle, label: "Help Requests", description: "Find or offer help" },
+  { href: "/app/community", id: "community", icon: Users, label: "Community", description: "Connect with sevaks" },
+  { href: "/app/leaderboard", id: "leaderboard", icon: TrendingUp, label: "Leaderboard", description: "Top contributors" },
+  { href: `/app/profile/${CURRENT_USER_ID}`, id: "profile", icon: UserIcon, label: "Profile", description: "Your seva journey" },
 ];
 
 export function Sidebar() {
@@ -48,7 +48,7 @@ export function Sidebar() {
             const Icon = tab.icon;
             const isCreate = tab.id === "create";
             const isActive = !isCreate && (
-              tab.href === "/" ? location === "/" : location.startsWith(tab.href)
+              tab.href === "/app" ? location === "/app" || location === "/app/" : location.startsWith(tab.href)
             );
 
             return (
@@ -132,7 +132,7 @@ export function Sidebar() {
             </div>
             <span className="text-base font-bold text-[#FF6F00] font-serif">हिंदवी स्वराज्य</span>
           </Link>
-          <Link href="/create">
+          <Link href="/app/create">
             <div className="flex items-center gap-1.5 bg-[#FF6F00] text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm">
               <Plus className="w-3.5 h-3.5" />
               Share Seva

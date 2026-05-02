@@ -31,18 +31,31 @@ Full-stack community seva (service) social platform built as a pnpm workspace mo
 | `hindavi-swarajya` | `/` | React frontend |
 | `api-server` | `/api` | Express backend |
 
+## Authentication
+
+Clerk auth (development keys). Env vars set:
+- `CLERK_PUBLISHABLE_KEY` — Clerk publishable key (secret)
+- `CLERK_SECRET_KEY` — Clerk secret key (secret)
+- `VITE_CLERK_PUBLISHABLE_KEY` is injected at build time via vite.config.ts `define` from `CLERK_PUBLISHABLE_KEY`
+- `SESSION_SECRET` — Express session secret
+
+Clerk proxy middleware at `artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts`.
+
 ## Pages & Routes
 
-| Route | Component | Description |
-|---|---|---|
-| `/` | `Home.tsx` | Seva Feed — post feed, leaderboard, trending tags |
-| `/create` | `CreatePost.tsx` | Create a seva post |
-| `/post/:id` | `PostDetail.tsx` | Post detail with comments |
-| `/events` | `Events.tsx` | Seva events — browse, register, create |
-| `/help` | `HelpRequests.tsx` | Help requests — emergency + normal, join/create |
-| `/community` | `Community.tsx` | Discussions, teachings, Top Sevaks leaderboard |
-| `/leaderboard` | `Leaderboard.tsx` | Full leaderboard |
-| `/profile/:id` | `Profile.tsx` | User profile |
+| Route | Component | Auth | Description |
+|---|---|---|---|
+| `/` | `Landing.tsx` | Public (guests) | Marketing landing page; signed-in users → `/app` |
+| `/sign-in/*?` | `SignInPage.tsx` | Public | Clerk sign-in |
+| `/sign-up/*?` | `SignUpPage.tsx` | Public | Clerk sign-up |
+| `/app` | `Home.tsx` | Protected | Seva Feed — post feed, leaderboard, trending tags |
+| `/app/create` | `CreatePost.tsx` | Protected | Create a seva post |
+| `/app/post/:id` | `PostDetail.tsx` | Protected | Post detail with comments |
+| `/app/events` | `Events.tsx` | Protected | Seva events — browse, register, create |
+| `/app/help` | `HelpRequests.tsx` | Protected | Help requests — emergency + normal, join/create |
+| `/app/community` | `Community.tsx` | Protected | Discussions, teachings, Top Sevaks leaderboard |
+| `/app/leaderboard` | `Leaderboard.tsx` | Protected | Full leaderboard |
+| `/app/profile/:id` | `Profile.tsx` | Protected | User profile |
 
 ## API Endpoints
 

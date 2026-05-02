@@ -132,7 +132,7 @@ export default function PostDetail() {
             ) : (
               post.comments.map(comment => (
                 <div key={comment.id} className="p-4 flex gap-3 hover:bg-muted/30 transition-colors">
-                  <Link href={`/profile/${comment.userId}`}>
+                  <Link href={`/app/profile/${comment.userId}`}>
                     <Avatar className="w-8 h-8 cursor-pointer">
                       <AvatarImage src={comment.userAvatar} alt={comment.userName} />
                       <AvatarFallback>{comment.userName.substring(0, 2)}</AvatarFallback>
@@ -140,7 +140,7 @@ export default function PostDetail() {
                   </Link>
                   <div className="flex-1">
                     <div className="flex justify-between items-baseline mb-1">
-                      <Link href={`/profile/${comment.userId}`}>
+                      <Link href={`/app/profile/${comment.userId}`}>
                         <span className="font-semibold text-sm cursor-pointer hover:underline" data-testid={`comment-user-${comment.id}`}>
                           {comment.userName}
                         </span>

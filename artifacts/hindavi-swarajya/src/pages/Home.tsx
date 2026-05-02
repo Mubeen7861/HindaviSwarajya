@@ -148,7 +148,7 @@ export default function Home() {
                   </span>
                 ))}
               </div>
-              <Link href="/events">
+              <Link href="/app/events">
                 <button className="w-full flex items-center justify-center gap-2 bg-white text-primary font-semibold text-sm py-2.5 rounded-xl hover:bg-orange-50 transition-colors">
                   <Calendar className="w-4 h-4" />
                   Create Event
@@ -179,7 +179,7 @@ export default function Home() {
               <Target className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-base font-semibold text-gray-700 mb-1">No sevas found</h3>
               <p className="text-sm text-muted-foreground">Try adjusting your filters or be the first to post!</p>
-              <Link href="/create" className="text-primary mt-3 inline-block hover:underline font-medium text-sm">
+              <Link href="/app/create" className="text-primary mt-3 inline-block hover:underline font-medium text-sm">
                 Share a Seva
               </Link>
             </div>
@@ -272,13 +272,13 @@ export default function Home() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
               <h3 className="text-sm font-bold text-gray-800">Top Helpers This Week</h3>
-              <Link href="/leaderboard">
+              <Link href="/app/leaderboard">
                 <ArrowUpRight className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer" />
               </Link>
             </div>
             <div className="p-3 space-y-2">
               {leaderboard?.slice(0, 5).map((entry, i) => (
-                <Link key={entry.user.id} href={`/profile/${entry.user.id}`}>
+                <Link key={entry.user.id} href={`/app/profile/${entry.user.id}`}>
                   <div className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
                     <span className={`text-xs font-bold w-5 text-center shrink-0 ${i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : i === 2 ? "text-orange-400" : "text-gray-300"}`}>
                       #{i + 1}

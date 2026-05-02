@@ -198,7 +198,7 @@ export default function Profile() {
                 {isCurrentUser ? "Start your journey by sharing your first act of seva." : `${user.name} hasn't posted any sevas yet.`}
               </p>
               {isCurrentUser && (
-                <Link href="/create" className="text-primary mt-4 inline-block hover:underline font-medium">
+                <Link href="/app/create" className="text-primary mt-4 inline-block hover:underline font-medium">
                   Share a Seva
                 </Link>
               )}

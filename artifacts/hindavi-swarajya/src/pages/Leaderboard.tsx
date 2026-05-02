@@ -66,7 +66,7 @@ export default function Leaderboard() {
                     #{entry.rank}
                   </div>
                   
-                  <Link href={`/profile/${entry.user.id}`}>
+                  <Link href={`/app/profile/${entry.user.id}`}>
                     <Avatar className={`w-10 h-10 sm:w-12 sm:h-12 cursor-pointer border-2 ${
                       index === 0 ? 'border-yellow-400' :
                       index === 1 ? 'border-gray-400' :
@@ -79,7 +79,7 @@ export default function Leaderboard() {
                   </Link>
 
                   <div className="flex-1 min-w-0">
-                    <Link href={`/profile/${entry.user.id}`}>
+                    <Link href={`/app/profile/${entry.user.id}`}>
                       <h3 className="font-semibold text-sm sm:text-base truncate cursor-pointer hover:underline" data-testid={`leaderboard-name-${entry.user.id}`}>
                         {entry.user.name}
                       </h3>

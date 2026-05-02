@@ -221,7 +221,7 @@ export default function Community() {
               ) : (
                 <div className="divide-y divide-gray-50">
                   {leaderboard.map((entry, i) => (
-                    <Link key={entry.user.id} href={`/profile/${entry.user.id}`}>
+                    <Link key={entry.user.id} href={`/app/profile/${entry.user.id}`}>
                       <div className={`flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors cursor-pointer ${i < 3 ? "bg-orange-50/30" : ""}`}>
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? "bg-yellow-100 text-yellow-700" : i === 1 ? "bg-gray-200 text-gray-700" : i === 2 ? "bg-orange-100 text-orange-700" : "text-gray-400"}`}>
                           {i === 0 ? <Crown className="w-4 h-4" /> : i === 1 ? <Medal className="w-4 h-4" /> : i === 2 ? <Award className="w-4 h-4" /> : `#${entry.rank}`}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6F00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E65100;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#grad)"/>
+  <!-- Lotus petals (seva/dharma symbol) -->
+  <circle cx="100" cy="100" r="28" fill="white" opacity="0.95"/>
+  <!-- Petals around -->
+  <ellipse cx="100" cy="62" rx="10" ry="22" fill="white" opacity="0.85"/>
+  <ellipse cx="100" cy="138" rx="10" ry="22" fill="white" opacity="0.85"/>
+  <ellipse cx="62" cy="100" rx="22" ry="10" fill="white" opacity="0.85"/>
+  <ellipse cx="138" cy="100" rx="22" ry="10" fill="white" opacity="0.85"/>
+  <ellipse cx="74" cy="74" rx="10" ry="22" fill="white" opacity="0.7" transform="rotate(-45 74 74)"/>
+  <ellipse cx="126" cy="74" rx="10" ry="22" fill="white" opacity="0.7" transform="rotate(45 126 74)"/>
+  <ellipse cx="74" cy="126" rx="10" ry="22" fill="white" opacity="0.7" transform="rotate(45 74 126)"/>
+  <ellipse cx="126" cy="126" rx="10" ry="22" fill="white" opacity="0.7" transform="rotate(-45 126 126)"/>
+  <!-- Center dot -->
+  <circle cx="100" cy="100" r="10" fill="#FF6F00"/>
+</svg>

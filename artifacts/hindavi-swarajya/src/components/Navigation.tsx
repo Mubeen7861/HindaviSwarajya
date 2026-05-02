@@ -19,9 +19,9 @@ export function Navigation() {
         </Link>
 
         <nav className="flex items-center gap-1 md:gap-2">
-          <Link href="/">
+          <Link href="/app">
             <Button
-              variant={location === "/" ? "default" : "ghost"}
+              variant={location === "/app" ? "default" : "ghost"}
               size="sm"
               className="hidden md:flex gap-2"
               data-testid="nav-home"
@@ -29,9 +29,9 @@ export function Navigation() {
               <Home className="w-4 h-4" /> Feed
             </Button>
           </Link>
-          <Link href="/leaderboard">
+          <Link href="/app/leaderboard">
             <Button
-              variant={location === "/leaderboard" ? "default" : "ghost"}
+              variant={location === "/app/leaderboard" ? "default" : "ghost"}
               size="sm"
               className="hidden md:flex gap-2"
               data-testid="nav-leaderboard"
@@ -39,9 +39,9 @@ export function Navigation() {
               <Trophy className="w-4 h-4" /> Leaderboard
             </Button>
           </Link>
-          <Link href="/create">
+          <Link href="/app/create">
             <Button
-              variant={location === "/create" ? "default" : "ghost"}
+              variant={location === "/app/create" ? "default" : "ghost"}
               size="sm"
               className="gap-2"
               data-testid="nav-create"
@@ -49,9 +49,9 @@ export function Navigation() {
               <PlusCircle className="w-4 h-4" /> <span className="hidden sm:inline">Create Seva</span>
             </Button>
           </Link>
-          <Link href={`/profile/${CURRENT_USER_ID}`}>
+          <Link href={`/app/profile/${CURRENT_USER_ID}`}>
             <Button
-              variant={location === `/profile/${CURRENT_USER_ID}` ? "default" : "ghost"}
+              variant={location === `/app/profile/${CURRENT_USER_ID}` ? "default" : "ghost"}
               size="sm"
               className="gap-2"
               data-testid="nav-profile"
@@ -64,18 +64,18 @@ export function Navigation() {
       
       {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background flex justify-around p-2 z-50 pb-safe">
-        <Link href="/">
-          <Button variant={location === "/" ? "default" : "ghost"} size="icon" className="w-12 h-12 rounded-full">
+        <Link href="/app">
+          <Button variant={location === "/app" ? "default" : "ghost"} size="icon" className="w-12 h-12 rounded-full">
             <Home className="w-5 h-5" />
           </Button>
         </Link>
-        <Link href="/leaderboard">
-          <Button variant={location === "/leaderboard" ? "default" : "ghost"} size="icon" className="w-12 h-12 rounded-full">
+        <Link href="/app/leaderboard">
+          <Button variant={location === "/app/leaderboard" ? "default" : "ghost"} size="icon" className="w-12 h-12 rounded-full">
             <Trophy className="w-5 h-5" />
           </Button>
         </Link>
-        <Link href={`/profile/${CURRENT_USER_ID}`}>
-          <Button variant={location === `/profile/${CURRENT_USER_ID}` ? "default" : "ghost"} size="icon" className="w-12 h-12 rounded-full">
+        <Link href={`/app/profile/${CURRENT_USER_ID}`}>
+          <Button variant={location === `/app/profile/${CURRENT_USER_ID}` ? "default" : "ghost"} size="icon" className="w-12 h-12 rounded-full">
             <UserIcon className="w-5 h-5" />
           </Button>
         </Link>

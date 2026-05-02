@@ -65,7 +65,7 @@ export function PostCard({ post }: { post: SevaPost }) {
         {/* User Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <Link href={`/profile/${post.user.id}`}>
+            <Link href={`/app/profile/${post.user.id}`}>
               <Avatar className="w-12 h-12 lg:w-14 lg:h-14 cursor-pointer shrink-0 border border-gray-100">
                 <AvatarImage src={post.user.avatar} alt={post.user.name} />
                 <AvatarFallback className="bg-orange-50 text-[#FF6F00] font-semibold">
@@ -75,7 +75,7 @@ export function PostCard({ post }: { post: SevaPost }) {
             </Link>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Link href={`/profile/${post.user.id}`}>
+                <Link href={`/app/profile/${post.user.id}`}>
                   <span
                     className="font-semibold text-gray-900 hover:text-[#FF6F00] cursor-pointer transition-colors"
                     data-testid={`text-post-user-${post.id}`}
@@ -113,7 +113,7 @@ export function PostCard({ post }: { post: SevaPost }) {
         </div>
 
         {/* Content */}
-        <Link href={`/post/${post.id}`}>
+        <Link href={`/app/post/${post.id}`}>
           <p
             className="text-gray-800 leading-relaxed mb-3 cursor-pointer hover:text-gray-900 transition-colors"
             data-testid={`text-post-content-${post.id}`}
@@ -145,7 +145,7 @@ export function PostCard({ post }: { post: SevaPost }) {
 
         {/* Image */}
         {post.image && (
-          <Link href={`/post/${post.id}`}>
+          <Link href={`/app/post/${post.id}`}>
             <div className="mb-3 rounded-xl overflow-hidden cursor-pointer">
               <img
                 src={post.image}
@@ -231,7 +231,7 @@ export function PostCard({ post }: { post: SevaPost }) {
                 </div>
               ))}
               {post.comments.length > 3 && (
-                <Link href={`/post/${post.id}`}>
+                <Link href={`/app/post/${post.id}`}>
                   <span className="text-xs text-[#FF6F00] hover:underline cursor-pointer">
                     View all {post.comments.length} comments
                   </span>
