@@ -343,8 +343,8 @@ export default function Landing() {
                                 </div>
                                 <div className="flex-1 min-w-0 text-center sm:text-left">
                                   <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
-                                    <span className={`text-[10px] font-bold ${r.text} opacity-60 tabular-nums`}>#{idx + 1}</span>
-                                    <span className={`text-[10px] font-bold ${r.text} opacity-90 tabular-nums px-2 py-0.5 rounded-full bg-white/70 border border-amber-300/50`}>
+                                    <span className={`text-xs font-bold ${r.text} opacity-60 tabular-nums`}>#{idx + 1}</span>
+                                    <span className={`text-base sm:text-lg font-extrabold ${r.text} tabular-nums px-3 py-1 rounded-full bg-white/80 border border-amber-300/60 shadow-sm`}>
                                       {fmtThreshold(r.threshold)}
                                     </span>
                                   </div>
@@ -363,13 +363,13 @@ export default function Landing() {
                             className={`group relative rounded-xl border ${r.border} ${r.bg} p-3 transition-all hover:shadow-md hover:-translate-y-0.5`}
                             title={r.description}
                           >
-                            <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center justify-between mb-1.5">
                               <span className={`text-[10px] font-bold ${r.text} opacity-60 tabular-nums`}>#{idx + 1}</span>
-                              <span className={`text-[10px] font-bold ${r.text} opacity-80 tabular-nums px-1.5 py-0.5 rounded bg-white/60`}>
-                                {fmtThreshold(r.threshold)}
-                              </span>
                             </div>
                             <p className={`font-bold text-sm leading-tight ${r.text}`}>{r.name}</p>
+                            <p className={`mt-1 text-sm sm:text-base font-extrabold ${r.text} tabular-nums`}>
+                              {fmtThreshold(r.threshold)}
+                            </p>
                             <p className={`text-[11px] ${r.text} opacity-70 font-serif leading-tight`} lang="mr">
                               {r.devanagari}
                             </p>
@@ -422,7 +422,7 @@ export default function Landing() {
                     <p className="text-base opacity-90 mt-1 font-serif" lang="mr">{PINNACLE.devanagari}</p>
                     <p className="text-sm opacity-85 mt-3 leading-relaxed">{PINNACLE.description}</p>
                     <div className="flex items-center gap-3 mt-4">
-                      <span className="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur text-xs font-bold tabular-nums">
+                      <span className="px-3 py-1.5 rounded-lg bg-white/20 backdrop-blur text-base sm:text-lg font-extrabold tabular-nums shadow-sm">
                         {fmtThreshold(PINNACLE.threshold)}
                       </span>
                       <span className="text-xs opacity-80">Supreme commander of all forces</span>
