@@ -1,20 +1,30 @@
 import { useState } from "react";
-import { 
-  useListPosts, 
-  useGetStatsSummary, 
+import {
+  useListPosts,
+  useGetStatsSummary,
   useGetTrendingTags,
+  useGetLeaderboard,
   getListPostsQueryKey,
   getGetStatsSummaryQueryKey,
-  getGetTrendingTagsQueryKey
+  getGetTrendingTagsQueryKey,
+  getGetLeaderboardQueryKey
 } from "@workspace/api-client-react";
 import { ListPostsCategory, ListPostsSortBy } from "@workspace/api-client-react";
 import { PostCard } from "@/components/PostCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Flame, Target, Quote, MessageSquare } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Search, SlidersHorizontal, Calendar, Users, Heart,
+  Target, Flame, ArrowUpRight, Star
+} from "lucide-react";
 import { Link } from "wouter";
+
+const upcomingEvents = [
+  { title: "Health Awareness Seminar", date: "May 15", slots: "2/20" },
+  { title: "Food Distribution Drive", date: "May 20", slots: "2/30" },
+];
 
 export default function Home() {
   const [search, setSearch] = useState("");
@@ -22,205 +32,284 @@ export default function Home() {
   const [category, setCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
 
-  // Add simple debouncing
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    // Real implementation would use a proper debounce hook
-    setTimeout(() => setDebouncedSearch(e.target.value), 500);
+    setTimeout(() => setDebouncedSearch(e.target.value), 400);
   };
 
   const queryParams = {
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(category !== "all" ? { category: category as ListPostsCategory } : {}),
     ...(sortBy ? { sortBy: sortBy as ListPostsSortBy } : {}),
-    limit: 20
+    limit: 20,
   };
 
   const { data: posts, isLoading: postsLoading } = useListPosts(queryParams, {
-    query: {
-      queryKey: getListPostsQueryKey(queryParams)
-    }
+    query: { queryKey: getListPostsQueryKey(queryParams) },
   });
-
   const { data: stats } = useGetStatsSummary({
-    query: {
-      queryKey: getGetStatsSummaryQueryKey()
-    }
+    query: { queryKey: getGetStatsSummaryQueryKey() },
   });
-
-  const { data: trendingTags } = useGetTrendingTags({ limit: 10 }, {
-    query: {
-      queryKey: getGetTrendingTagsQueryKey({ limit: 10 })
-    }
+  const { data: trendingTags } = useGetTrendingTags({ limit: 8 }, {
+    query: { queryKey: getGetTrendingTagsQueryKey({ limit: 8 }) },
+  });
+  const { data: leaderboard } = useGetLeaderboard({ limit: 5 }, {
+    query: { queryKey: getGetLeaderboardQueryKey({ limit: 5 }) },
   });
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Main Feed */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Filters Bar */}
-          <Card className="border-orange-100 dark:border-orange-900/30">
-            <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-center">
-              <div className="relative flex-1 w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search sevas..." 
-                  className="pl-9"
-                  value={search}
-                  onChange={handleSearchChange}
-                  data-testid="input-search-feed"
-                />
-              </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="w-full sm:w-[140px]" data-testid="select-filter-category">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value={ListPostsCategory.Food}>Food</SelectItem>
-                    <SelectItem value={ListPostsCategory.Education}>Education</SelectItem>
-                    <SelectItem value={ListPostsCategory.Health}>Health</SelectItem>
-                    <SelectItem value={ListPostsCategory.Shelter}>Shelter</SelectItem>
-                    <SelectItem value={ListPostsCategory.Other}>Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-full sm:w-[140px]" data-testid="select-sort-by">
-                    <SelectValue placeholder="Sort By" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ListPostsSortBy.recent}>Recent</SelectItem>
-                    <SelectItem value={ListPostsSortBy.impact}>Highest Impact</SelectItem>
-                    <SelectItem value={ListPostsSortBy.likes}>Most Liked</SelectItem>
-                    <SelectItem value={ListPostsSortBy.comments}>Most Discussed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="flex flex-col h-full">
+      {/* ── Page header ── */}
+      <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
+        <div>
+          <h1 className="text-2xl font-bold text-primary font-serif leading-tight">Seva Feed</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Latest community service activities</p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Seva</p>
+          <p className="text-xl font-bold text-primary">{stats?.totalHelped?.toLocaleString() ?? "—"} <span className="text-sm font-semibold text-muted-foreground">helps</span></p>
+        </div>
+      </div>
 
-          {/* Feed Content */}
-          <div>
-            {postsLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="p-4">
-                    <div className="flex gap-4 mb-4">
-                      <Skeleton className="w-10 h-10 rounded-full" />
-                      <div className="space-y-2 flex-1">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-20" />
-                      </div>
-                    </div>
-                    <Skeleton className="h-20 w-full mb-4" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </Card>
-                ))}
-              </div>
-            ) : posts?.length === 0 ? (
-              <div className="text-center py-12 bg-muted/20 rounded-lg border border-dashed border-border">
-                <Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-1">No sevas found</h3>
-                <p className="text-muted-foreground">Try adjusting your filters or be the first to post!</p>
-                <Link href="/create" className="text-primary mt-4 inline-block hover:underline font-medium">
-                  Share a Seva
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {posts?.map(post => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
-            )}
+      {/* ── Body ── */}
+      <div className="flex flex-1 min-h-0">
+        {/* ── Center Feed ── */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-w-0">
+
+          {/* Search + filter row */}
+          <div className="flex gap-2 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search seva posts, users, tags..."
+                className="pl-10 bg-gray-50 border-gray-200 rounded-xl h-10 text-sm focus-visible:ring-primary/30"
+                value={search}
+                onChange={handleSearchChange}
+                data-testid="input-search-feed"
+              />
+            </div>
+            <button className="flex items-center gap-2 px-3.5 h-10 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors shrink-0">
+              <SlidersHorizontal className="w-4 h-4" />
+              Advanced
+            </button>
           </div>
+
+          {/* Sort row */}
+          <div className="flex gap-2">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[150px] h-9 rounded-lg text-sm bg-white border-gray-200" data-testid="select-sort-by">
+                <SelectValue placeholder="Sort By" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ListPostsSortBy.recent}>Most Recent</SelectItem>
+                <SelectItem value={ListPostsSortBy.impact}>Highest Impact</SelectItem>
+                <SelectItem value={ListPostsSortBy.likes}>Most Liked</SelectItem>
+                <SelectItem value={ListPostsSortBy.comments}>Most Discussed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="w-[120px] h-9 rounded-lg text-sm bg-white border-gray-200" data-testid="select-filter-category">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value={ListPostsCategory.Food}>Food</SelectItem>
+                <SelectItem value={ListPostsCategory.Education}>Education</SelectItem>
+                <SelectItem value={ListPostsCategory.Health}>Health</SelectItem>
+                <SelectItem value={ListPostsCategory.Shelter}>Shelter</SelectItem>
+                <SelectItem value={ListPostsCategory.Other}>Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* ── Featured banner ── */}
+          <div className="rounded-2xl bg-gradient-to-br from-primary to-orange-500 p-5 relative overflow-hidden shadow-[0_4px_20px_rgba(255,111,0,0.25)]">
+            <div className="absolute right-4 top-3 opacity-10">
+              <Flame className="w-24 h-24 text-white" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="bg-white/20 rounded-lg p-1.5">
+                  <Star className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-base leading-tight">Organize a Seva Event</h3>
+                  <p className="text-orange-100 text-xs">Create impact at scale</p>
+                </div>
+              </div>
+              <p className="text-white/90 text-sm mt-2 mb-4 leading-relaxed max-w-md">
+                Plan seminars, cleaning drives, food distribution, medical camps, and more. Bring your community together for greater impact!
+              </p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {["Schedule Events", "Recruit Volunteers", "Track Impact"].map((label) => (
+                  <span key={label} className="flex items-center gap-1 bg-white/15 hover:bg-white/25 text-white text-xs font-medium px-3 py-1.5 rounded-full cursor-pointer transition-colors border border-white/20">
+                    <Calendar className="w-3 h-3" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+              <Link href="/create">
+                <button className="w-full flex items-center justify-center gap-2 bg-white text-primary font-semibold text-sm py-2.5 rounded-xl hover:bg-orange-50 transition-colors">
+                  <Calendar className="w-4 h-4" />
+                  Create Event
+                </button>
+              </Link>
+            </div>
+          </div>
+
+          {/* ── Feed ── */}
+          {postsLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                  <div className="flex gap-3 mb-3">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-16 w-full mb-3" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+              ))}
+            </div>
+          ) : posts?.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+              <Target className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-gray-700 mb-1">No sevas found</h3>
+              <p className="text-sm text-muted-foreground">Try adjusting your filters or be the first to post!</p>
+              <Link href="/create" className="text-primary mt-3 inline-block hover:underline font-medium text-sm">
+                Share a Seva
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {posts?.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quote Card */}
-          <Card className="bg-primary text-primary-foreground border-none overflow-hidden relative">
-            <div className="absolute right-[-20px] top-[-20px] opacity-10">
-              <Quote className="w-24 h-24" />
-            </div>
-            <CardContent className="p-6 relative z-10 text-center">
-              <p className="text-xl font-serif font-bold mb-2 leading-relaxed text-white">
-                "गवार राज्यापेक्षा स्वराज्य बरे"
-              </p>
-              <p className="text-primary-foreground/80 text-sm">
-                Self-rule is better than foreign rule.
-              </p>
-            </CardContent>
-          </Card>
+        {/* ── Right Sidebar ── */}
+        <div className="hidden lg:flex flex-col w-72 shrink-0 border-l border-gray-100 overflow-y-auto px-4 py-5 space-y-4 bg-gray-50/50">
 
-          {/* Stats Card */}
-          <Card className="border-orange-100 dark:border-orange-900/30">
-            <CardHeader className="bg-primary/5 pb-4 border-b">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
-                Our Collective Impact
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {stats ? (
-                <div className="divide-y divide-border">
-                  <div className="p-4 flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/30">
-                    <span className="font-semibold text-emerald-800 dark:text-emerald-300">People Helped</span>
-                    <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{stats.totalHelped.toLocaleString()}</span>
+          {/* Today's Impact */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-50">
+              <h3 className="text-sm font-bold text-gray-800">Today's Impact</h3>
+            </div>
+            <div className="p-4 space-y-2.5">
+              {[
+                { label: "New Seva Posts", value: stats?.totalPosts ?? "—", accent: false },
+                { label: "People Helped", value: stats?.totalHelped?.toLocaleString() ?? "—", accent: true },
+                { label: "Active Sevaks", value: stats?.totalUsers ?? "—", accent: false },
+              ].map(({ label, value, accent }) => (
+                <div key={label} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">{label}</span>
+                  <span className={`text-sm font-bold ${accent ? "text-primary" : "text-gray-800"}`}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Upcoming Events */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-800">Upcoming Events</h3>
+              <span className="text-xs text-primary font-semibold cursor-pointer hover:underline">View All</span>
+            </div>
+            <div className="p-3 space-y-2.5">
+              {upcomingEvents.map((ev) => (
+                <div key={ev.title} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 text-primary shrink-0 mt-0.5">
+                    <Calendar className="w-4 h-4" />
                   </div>
-                  <div className="p-4 flex justify-between items-center">
-                    <span className="text-muted-foreground">Acts of Seva</span>
-                    <span className="font-bold">{stats.totalPosts.toLocaleString()}</span>
-                  </div>
-                  <div className="p-4 flex justify-between items-center">
-                    <span className="text-muted-foreground">Volunteers</span>
-                    <span className="font-bold">{stats.totalUsers.toLocaleString()}</span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 leading-tight">{ev.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                      <span>{ev.date}</span>
+                      <span>·</span>
+                      <Users className="w-3 h-3" />
+                      <span>{ev.slots}</span>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="p-4 space-y-4">
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          </div>
 
           {/* Trending Tags */}
-          <Card className="border-orange-100 dark:border-orange-900/30">
-            <CardHeader className="bg-primary/5 pb-4 border-b">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Flame className="w-5 h-5 text-orange-500" />
-                Trending Causes
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-50">
+              <h3 className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                <Flame className="w-4 h-4 text-primary" />
+                Trending Tags
+              </h3>
+            </div>
+            <div className="p-3">
               {trendingTags ? (
-                <div className="flex flex-wrap gap-2">
-                  {trendingTags.map(tag => (
-                    <div key={tag.tag} className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1 hover:bg-primary/10 transition-colors cursor-pointer border border-border">
-                      <span className="text-xs font-semibold text-primary">#{tag.tag}</span>
-                      <span className="text-[10px] text-muted-foreground">{tag.count}</span>
-                    </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {trendingTags.map((t) => (
+                    <span
+                      key={t.tag}
+                      className="text-xs font-medium text-primary bg-orange-50 border border-orange-100 hover:bg-primary hover:text-white transition-colors cursor-pointer px-2.5 py-1 rounded-full"
+                    >
+                      #{t.tag}
+                    </span>
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <Skeleton key={i} className="h-6 w-16 rounded-full" />
-                  ))}
+                <div className="flex flex-wrap gap-1.5">
+                  {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-6 w-20 rounded-full" />)}
                 </div>
               )}
-            </CardContent>
-          </Card>
-          
-          <div className="text-center text-xs text-muted-foreground/60 pb-8">
-            <p>HindaviSwarajya Seva Platform &copy; 2025</p>
+            </div>
           </div>
+
+          {/* Top Helpers This Week */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-800">Top Helpers This Week</h3>
+              <Link href="/leaderboard">
+                <ArrowUpRight className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer" />
+              </Link>
+            </div>
+            <div className="p-3 space-y-2">
+              {leaderboard?.slice(0, 5).map((entry, i) => (
+                <Link key={entry.user.id} href={`/profile/${entry.user.id}`}>
+                  <div className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+                    <span className={`text-xs font-bold w-5 text-center shrink-0 ${i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : i === 2 ? "text-orange-400" : "text-gray-300"}`}>
+                      #{i + 1}
+                    </span>
+                    <Avatar className="w-7 h-7 shrink-0">
+                      <AvatarImage src={entry.user.avatar} alt={entry.user.name} />
+                      <AvatarFallback className="text-xs">{entry.user.name.substring(0, 2)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold truncate text-gray-800">{entry.user.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{entry.totalHelped} helped</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
+                      <Heart className="w-3 h-3" />
+                      {entry.totalLikes}
+                    </div>
+                  </div>
+                </Link>
+              )) ?? [1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-2.5 p-1.5">
+                  <Skeleton className="w-7 h-7 rounded-full" />
+                  <div className="flex-1 space-y-1">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-2 w-14" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-center text-[10px] text-gray-300 pb-2">HindaviSwarajya &copy; 2025</p>
         </div>
       </div>
     </div>
