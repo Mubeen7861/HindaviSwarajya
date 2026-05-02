@@ -376,6 +376,9 @@ export const ListPostsResponse = zod.array(ListPostsResponseItem);
 /**
  * @summary Create a seva post (auth required)
  */
+export const createPostBodyImagesItemRegExp = new RegExp(
+  "^\/api\/storage\/objects\/[A-Za-z0-9._\/-]+$",
+);
 export const createPostBodyImagesMax = 3;
 
 export const CreatePostBody = zod.object({
@@ -383,7 +386,10 @@ export const CreatePostBody = zod.object({
   category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
   helpedPeople: zod.number(),
   tags: zod.array(zod.string()),
-  images: zod.array(zod.string()).max(createPostBodyImagesMax).optional(),
+  images: zod
+    .array(zod.string().regex(createPostBodyImagesItemRegExp))
+    .max(createPostBodyImagesMax)
+    .optional(),
   location: zod.string().nullish(),
 });
 
@@ -463,6 +469,9 @@ export const UpdatePostParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const updatePostBodyImagesItemRegExp = new RegExp(
+  "^\/api\/storage\/objects\/[A-Za-z0-9._\/-]+$",
+);
 export const updatePostBodyImagesMax = 3;
 
 export const UpdatePostBody = zod.object({
@@ -472,7 +481,10 @@ export const UpdatePostBody = zod.object({
     .optional(),
   helpedPeople: zod.number().optional(),
   location: zod.string().nullish(),
-  images: zod.array(zod.string()).max(updatePostBodyImagesMax).optional(),
+  images: zod
+    .array(zod.string().regex(updatePostBodyImagesItemRegExp))
+    .max(updatePostBodyImagesMax)
+    .optional(),
 });
 
 export const updatePostResponseImagesMax = 3;
@@ -1368,4 +1380,44 @@ export const JoinHelpRequestParams = zod.object({
 export const JoinHelpRequestResponse = zod.object({
   joined: zod.boolean(),
   helpersJoined: zod.array(zod.number()),
+});
+
+/**
+ * Returns a presigned GCS URL. The client sends JSON metadata here, then
+uploads the file bytes directly to the returned URL via PUT.
+
+ * @summary Request a presigned URL for direct-to-GCS file upload
+ */
+export const requestUploadUrlBodyNameMax = 255;
+
+export const requestUploadUrlBodySizeMax = 2097152;
+
+export const requestUploadUrlBodyContentTypeRegExp = new RegExp("^image");
+
+export const RequestUploadUrlBody = zod.object({
+  name: zod.string().min(1).max(requestUploadUrlBodyNameMax),
+  size: zod.number().min(1).max(requestUploadUrlBodySizeMax),
+  contentType: zod.string().regex(requestUploadUrlBodyContentTypeRegExp),
+});
+
+export const requestUploadUrlResponseMetadataNameMax = 255;
+
+export const requestUploadUrlResponseMetadataSizeMax = 2097152;
+
+export const requestUploadUrlResponseMetadataContentTypeRegExp = new RegExp(
+  "^image",
+);
+
+export const RequestUploadUrlResponse = zod.object({
+  uploadURL: zod.string().url(),
+  objectPath: zod.string(),
+  metadata: zod
+    .object({
+      name: zod.string().min(1).max(requestUploadUrlResponseMetadataNameMax),
+      size: zod.number().min(1).max(requestUploadUrlResponseMetadataSizeMax),
+      contentType: zod
+        .string()
+        .regex(requestUploadUrlResponseMetadataContentTypeRegExp),
+    })
+    .optional(),
 });

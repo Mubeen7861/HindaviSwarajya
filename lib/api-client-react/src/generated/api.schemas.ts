@@ -335,6 +335,27 @@ export interface UpdateHelpRequestBody {
   contactInfo?: string | null;
 }
 
+export interface UploadUrlRequest {
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /**
+   * @minimum 1
+   * @maximum 2097152
+   */
+  size: number;
+  /** @pattern ^image/ */
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata?: UploadUrlRequest;
+}
+
 export type ListPostsParams = {
   search?: string;
   category?: ListPostsCategory;

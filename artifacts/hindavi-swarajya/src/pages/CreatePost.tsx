@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useCreatePost, getListPostsQueryKey, SevaCategory } from "@workspace/api-client-react";
+import { useUpload } from "@workspace/object-storage-web";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUserId } from "@/hooks/useCurrentUser";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -13,9 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Send, Users, MapPin, ImageIcon, Tag, Sparkles, Plus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Send, Users, MapPin, Tag, Sparkles, Plus, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { pickSevaThought } from "@/lib/sevaThoughts";
+
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB
 
 const formSchema = z.object({
   content: z.string().min(10, "Description must be at least 10 characters").max(500, "Max 500 characters"),
@@ -24,8 +27,12 @@ const formSchema = z.object({
   // Tags: keep as raw string in form state so the controlled <Input> never receives an array.
   tags: z.string().default(""),
   location: z.string().optional(),
+  // Stored as serving URLs (e.g. "/api/storage/objects/uploads/<uuid>") returned
+  // after a successful direct-to-GCS upload. Constrained to our storage path
+  // prefix so a tampered client can't slip a `javascript:` / `data:` URI into
+  // the post and have it rendered inside <img src> on the feed.
   images: z
-    .array(z.string().url("Must be a valid URL"))
+    .array(z.string().regex(/^\/api\/storage\/objects\/[A-Za-z0-9._/-]+$/))
     .max(3, "You can add up to 3 photos")
     .default([]),
 });
@@ -69,6 +76,44 @@ export default function CreatePost() {
       },
     },
   });
+
+  // Direct-to-GCS upload via presigned URL. We never POST file bytes through
+  // our own server — only the small JSON metadata that asks for a signed URL.
+  const { uploadFile, isUploading } = useUpload({
+    onError: (err) =>
+      toast({
+        title: t("share.uploadFailed"),
+        description: err.message,
+        variant: "destructive",
+      }),
+  });
+
+  const handlePickImage = async (
+    e: ChangeEvent<HTMLInputElement>,
+    currentImages: string[],
+    onChange: (next: string[]) => void,
+  ) => {
+    const file = e.target.files?.[0];
+    // Reset value so picking the same file again still fires onChange.
+    e.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: t("share.notAnImage"), variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast({ title: t("share.fileTooLarge"), variant: "destructive" });
+      return;
+    }
+
+    const result = await uploadFile(file);
+    if (result?.objectPath) {
+      // Store the relative serving URL — <img src> resolves it against current
+      // origin and the api-server returns the bytes via the proxy.
+      onChange([...currentImages, `/api/storage${result.objectPath}`].slice(0, 3));
+    }
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -336,55 +381,67 @@ export default function CreatePost() {
                           {t("share.imageLabel")}
                         </FormLabel>
                         <div className="space-y-2.5">
-                          {imgs.map((url, idx) => (
-                            <div key={idx} className="space-y-2">
-                              <div className="relative">
-                                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <Input
-                                  value={url}
-                                  onChange={(e) => {
-                                    const next = [...imgs];
-                                    next[idx] = e.target.value;
-                                    setImgs(next);
-                                  }}
-                                  placeholder={t("share.imagePlaceholder")}
-                                  className="pl-9 pr-10 bg-gray-50 border-gray-200"
-                                  data-testid={`input-image-${idx}`}
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => setImgs(imgs.filter((_, i) => i !== idx))}
-                                  aria-label={t("share.removePhoto")}
-                                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 inline-flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
-                                  data-testid={`button-remove-image-${idx}`}
+                          {(imgs.length > 0 || isUploading) && (
+                            <div className="grid grid-cols-3 gap-2">
+                              {imgs.map((url, idx) => (
+                                <div
+                                  key={`${url}-${idx}`}
+                                  className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 bg-gray-50"
+                                  data-testid={`preview-image-${idx}`}
                                 >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                              {/^https?:\/\//i.test(url) && (
-                                <div className="rounded-xl border border-gray-100 overflow-hidden">
                                   <img
                                     src={url}
                                     alt={`preview-${idx + 1}`}
-                                    className="w-full h-32 object-cover"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).style.display = "none";
-                                    }}
+                                    className="w-full h-full object-cover"
                                   />
+                                  <button
+                                    type="button"
+                                    onClick={() => setImgs(imgs.filter((_, i) => i !== idx))}
+                                    aria-label={t("share.removePhoto")}
+                                    className="absolute top-1.5 right-1.5 w-6 h-6 inline-flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition"
+                                    data-testid={`button-remove-image-${idx}`}
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                              {isUploading && (
+                                <div className="aspect-square rounded-xl border-2 border-dashed border-orange-200 bg-orange-50/50 flex items-center justify-center text-orange-500">
+                                  <Loader2 className="w-5 h-5 animate-spin" />
                                 </div>
                               )}
                             </div>
-                          ))}
+                          )}
                           {imgs.length < 3 && (
-                            <button
-                              type="button"
-                              onClick={() => setImgs([...imgs, ""])}
-                              className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-lg border-2 border-dashed border-orange-200 text-orange-600 hover:bg-orange-50 transition text-[13.5px] font-medium"
+                            <label
+                              className={cn(
+                                "w-full inline-flex items-center justify-center gap-2 h-10 rounded-lg border-2 border-dashed transition text-[13.5px] font-medium",
+                                isUploading
+                                  ? "border-orange-100 text-orange-300 cursor-wait"
+                                  : "border-orange-200 text-orange-600 hover:bg-orange-50 cursor-pointer",
+                              )}
                               data-testid="button-add-image"
                             >
-                              <Plus className="w-4 h-4" />
-                              {t("share.addPhoto", { current: imgs.length, max: 3 })}
-                            </button>
+                              {isUploading ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  {t("share.uploading")}
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="w-4 h-4" />
+                                  {t("share.addPhoto", { current: imgs.length, max: 3 })}
+                                </>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                disabled={isUploading}
+                                onChange={(e) => handlePickImage(e, imgs, setImgs)}
+                                data-testid="input-image-file"
+                              />
+                            </label>
                           )}
                           <p className="text-[11.5px] text-gray-500">
                             {t("share.imagesHint")}
