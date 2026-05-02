@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "HindaviSwarajya"
+version = "1.0.0"
+id = "artifacts/hindavi-swarajya"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22709
+
+[services.development]
+run = "pnpm --filter @workspace/hindavi-swarajya run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hindavi-swarajya", "run", "build" ]
+publicDir = "artifacts/hindavi-swarajya/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22709"
+BASE_PATH = "/"

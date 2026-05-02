@@ -1,0 +1,642 @@
+import { useState } from "react";
+import { Heart, MessageCircle, Share, MapPin, Clock, MoreVertical, Filter, Search, Bookmark, Flag, UserPlus, TrendingUp, Zap } from "lucide-react";
+import { ImageWithFallback } from "./figma/ImageWithFallback";
+import RankBadge from "./RankBadge";
+import { Card } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Badge } from "./ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { useScreenSize } from "./ui/use-screen-size";
+import { useApp, SevaPost } from "./AppContext";
+import { toast } from "sonner";
+const categoryColors = {
+  Food: "bg-green-100 text-green-800",
+  Education: "bg-blue-100 text-blue-800", 
+  Health: "bg-red-100 text-red-800",
+  Shelter: "bg-purple-100 text-purple-800",
+  Other: "bg-gray-100 text-gray-800"
+};
+
+const timeFilters = ["All Time", "Today", "This Week", "This Month"];
+const categoryFilters = ["All", "Food", "Education", "Health", "Shelter", "Other"];
+
+export default function HomeScreen() {
+  const { isDesktop, isMobile } = useScreenSize();
+  const { state, likePost, addComment } = useApp();
+  const { posts, currentUser } = state;
+  
+  const [commentInputs, setCommentInputs] = useState<{[key: string]: string}>({});
+  const [showComments, setShowComments] = useState<{[key: string]: boolean}>({});
+  const [selectedPost, setSelectedPost] = useState<SevaPost | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [timeFilter, setTimeFilter] = useState("All Time");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("recent");
+  const [savedPosts, setSavedPosts] = useState<string[]>([]);
+  const [followedUsers, setFollowedUsers] = useState<string[]>([]);
+
+  // Filter and sort posts
+  const filteredPosts = posts.filter(post => {
+    const matchesSearch = searchTerm === "" || 
+      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesCategory = categoryFilter === "All" || post.category === categoryFilter;
+    
+    return matchesSearch && matchesCategory;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case "likes":
+        return b.likes - a.likes;
+      case "impact":
+        return b.helpedPeople - a.helpedPeople;
+      case "comments":
+        return b.comments.length - a.comments.length;
+      default:
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    }
+  });
+
+  const handleLike = (postId: string) => {
+    likePost(postId);
+    const post = posts.find(p => p.id === postId);
+    if (post && !post.likedBy.includes(currentUser.id)) {
+      toast.success("Post liked! ❤️");
+    }
+  };
+
+  const handleComment = (postId: string) => {
+    const content = commentInputs[postId]?.trim();
+    if (content) {
+      addComment(postId, content);
+      setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+    }
+  };
+
+  const handleShare = (post: SevaPost) => {
+    const shareText = `Check out this amazing seva by ${post.user.name}!\n\n"${post.content}"\n\n${post.helpedPeople} people helped 🙏\n\nJoin HindaviSwarajya to share your seva too!`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'Amazing Seva - HindaviSwarajya',
+        text: shareText,
+        url: window.location.href
+      });
+    } else {
+      navigator.clipboard.writeText(shareText);
+      toast.success('Post details copied to clipboard!');
+    }
+  };
+
+  const handleSavePost = (postId: string) => {
+    setSavedPosts(prev => 
+      prev.includes(postId) 
+        ? prev.filter(id => id !== postId)
+        : [...prev, postId]
+    );
+    toast.success(savedPosts.includes(postId) ? "Post removed from saved" : "Post saved!");
+  };
+
+  const handleFollowUser = (userId: string) => {
+    setFollowedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+    const user = posts.find(p => p.userId === userId)?.user;
+    toast.success(followedUsers.includes(userId) ? `Unfollowed ${user?.name}` : `Following ${user?.name}!`);
+  };
+
+  const toggleComments = (postId: string) => {
+    setShowComments(prev => ({ ...prev, [postId]: !prev[postId] }));
+  };
+
+  const PostDetailDialog = ({ post }: { post: SevaPost }) => (
+    <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Seva Details</DialogTitle>
+          <DialogDescription>
+            View detailed information about this seva activity including comments and interactions.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          {/* User Header */}
+          <div className="flex items-center gap-3">
+            <ImageWithFallback
+              src={post.user.avatar}
+              alt={post.user.name}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium">{post.user.name}</h3>
+                <RankBadge rank={post.user.rank} size="sm" showLabel={true} />
+              </div>
+              <p className="text-sm text-gray-600">{post.user.location}</p>
+            </div>
+            <Button
+              className="text-xs"
+              onClick={() => handleFollowUser(post.userId)}
+            >
+              <UserPlus className="w-4 h-4 mr-1" />
+              {followedUsers.includes(post.userId) ? "Following" : "Follow"}
+            </Button>
+          </div>
+
+          {/* Content */}
+          <div>
+            <p className="leading-relaxed mb-3">{post.content}</p>
+            
+            <div className="flex items-center gap-2 mb-3">
+              <Badge className={categoryColors[post.category]}>{post.category}</Badge>
+              <Badge className="text-[#FF6F00] border border-[#FF6F00] bg-transparent">
+                {post.helpedPeople} people helped
+              </Badge>
+            </div>
+
+            {post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {post.tags.map((tag, index) => (
+                  <span key={index} className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Image */}
+          {post.image && (
+            <div className="rounded-lg overflow-hidden">
+              <img
+                src={post.image}
+                alt="Seva activity"
+                className="w-full max-h-96 object-cover"
+              />
+            </div>
+          )}
+
+          {/* Stats */}
+          <div className="flex items-center gap-6 py-3 border-y border-gray-100">
+            <div className="flex items-center gap-1">
+              <Heart className="w-5 h-5 text-red-500" />
+              <span>{post.likes} likes</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <MessageCircle className="w-5 h-5 text-blue-500" />
+              <span>{post.comments.length} comments</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <TrendingUp className="w-5 h-5 text-green-500" />
+              <span>{post.helpedPeople} impact</span>
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div className="space-y-3">
+            <h4 className="font-medium">Comments</h4>
+            {post.comments.map((comment) => (
+              <div key={comment.id} className="flex gap-2">
+                <ImageWithFallback
+                  src={comment.userAvatar}
+                  alt={comment.userName}
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium">{comment.userName}</span>
+                      <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                    </div>
+                    <p className="text-sm">{comment.content}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Add Comment */}
+            <div className="flex gap-2">
+              <ImageWithFallback
+                src={currentUser.avatar}
+                alt={currentUser.name}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <div className="flex-1 flex gap-2">
+                <Input
+                  placeholder="Add a comment..."
+                  value={commentInputs[post.id] || ''}
+                  onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                  onKeyPress={(e) => e.key === 'Enter' && handleComment(post.id)}
+                />
+                <Button 
+                  onClick={() => handleComment(post.id)}
+                  disabled={!commentInputs[post.id]?.trim()}
+                  className="bg-[#FF6F00] hover:bg-[#E65100]"
+                >
+                  Post
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  const SidebarWidget = () => (
+    <div className="space-y-4">
+      {/* Quick Stats */}
+      <Card className="p-4">
+        <h3 className="font-medium mb-3 text-[#FF6F00]">Today's Impact</h3>
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">New Seva Posts</span>
+            <span className="font-medium text-[#FF6F00]">{posts.length}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">People Helped</span>
+            <span className="font-medium text-[#FF6F00]">{posts.reduce((sum, post) => sum + post.helpedPeople, 0)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Active Sevaks</span>
+            <span className="font-medium text-[#FF6F00]">{state.users.length}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Total Likes</span>
+            <span className="font-medium text-[#FF6F00]">{posts.reduce((sum, post) => sum + post.likes, 0)}</span>
+          </div>
+        </div>
+      </Card>
+
+      {/* Trending Tags */}
+      <Card className="p-4">
+        <h3 className="font-medium mb-3 text-[#FF6F00]">Trending Tags</h3>
+        <div className="flex flex-wrap gap-2">
+          {Array.from(new Set(posts.flatMap(post => post.tags))).slice(0, 8).map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setSearchTerm(`#${tag}`)}
+              className="text-xs bg-[#FFF3E0] text-[#FF6F00] px-2 py-1 rounded-full hover:bg-[#FFE0B2] transition-colors"
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* Top Helpers */}
+      <Card className="p-4">
+        <h3 className="font-medium mb-3 text-[#FF6F00]">Top Helpers This Week</h3>
+        <div className="space-y-3">
+          {posts.slice(0, 3).map((post, index) => (
+            <div key={post.id} className="flex items-center gap-2">
+              <div className="text-xs font-medium text-[#FF6F00] w-4">#{index + 1}</div>
+              <ImageWithFallback
+                src={post.user.avatar}
+                alt={post.user.name}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{post.user.name}</p>
+                <p className="text-xs text-gray-500">{post.helpedPeople} helped</p>
+              </div>
+              <RankBadge rank={post.user.rank} size="sm" showLabel={false} />
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Inspirational Quote */}
+      <Card className="p-4 bg-gradient-to-br from-[#FFF3E0] to-orange-50 border-[#FF6F00]/20">
+        <h3 className="font-medium mb-2 text-[#FF6F00]">Daily Inspiration</h3>
+        <blockquote className="text-sm text-gray-700 leading-relaxed">
+          "गवार राज्यापेक्षा स्वराज्य बरे"
+        </blockquote>
+        <p className="text-xs text-gray-500 mt-1">Self-rule is better than foreign rule</p>
+      </Card>
+    </div>
+  );
+
+  return (
+    <div className={`${isMobile ? 'pb-20' : ''} bg-gray-50 min-h-screen`}>
+      {/* Header */}
+      <div className={`bg-white border-b border-gray-200 px-4 lg:px-6 py-4 ${isDesktop ? '' : 'sticky top-0 z-30'}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className={`${isDesktop ? 'text-2xl' : 'text-xl'} text-[#FF6F00]`}>
+              {isMobile ? 'हिंदवी स्वराज्य' : 'Seva Feed'}
+            </h1>
+            <p className="text-sm text-gray-600">
+              {isMobile ? 'Seva Feed' : 'Latest community service activities'}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-600">Total Seva</p>
+            <p className={`${isDesktop ? 'text-xl' : 'text-lg'} text-[#FF6F00]`}>
+              {posts.reduce((sum, post) => sum + post.helpedPeople, 0)} helps
+            </p>
+          </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input 
+                placeholder="Search seva posts, users, tags..." 
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            {isDesktop && (
+              <Button>
+                <Filter className="w-4 h-4 mr-2" />
+                Advanced
+              </Button>
+            )}
+          </div>
+
+          {isDesktop && (
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Most Recent</SelectItem>
+                  <SelectItem value="likes">Most Liked</SelectItem>
+                  <SelectItem value="impact">Highest Impact</SelectItem>
+                  <SelectItem value="comments">Most Discussed</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryFilters.map((filter) => (
+                    <SelectItem key={filter} value={filter}>{filter}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={timeFilter} onValueChange={setTimeFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeFilters.map((filter) => (
+                    <SelectItem key={filter} value={filter}>{filter}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Filter Tabs for Mobile */}
+      {isMobile && (
+        <div className="bg-white px-4 py-3 border-b border-gray-200">
+          <Tabs value={sortBy} onValueChange={setSortBy}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="recent" className="text-xs">Recent</TabsTrigger>
+              <TabsTrigger value="likes" className="text-xs">Popular</TabsTrigger>
+              <TabsTrigger value="impact" className="text-xs">Impact</TabsTrigger>
+              <TabsTrigger value="comments" className="text-xs">Discussed</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className={isDesktop ? "flex gap-6 px-6 py-6" : "px-4 py-4"}>
+        {/* Posts Feed */}
+        <div className={isDesktop ? "flex-1 max-w-2xl" : "space-y-4"}>
+          {filteredPosts.length === 0 ? (
+            <Card className="p-8 text-center">
+              <Zap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="font-medium mb-2">
+                {searchTerm ? "No posts found" : "No seva posts yet"}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {searchTerm 
+                  ? "Try different keywords or check your spelling"
+                  : "Be the first to share your seva and inspire others!"
+                }
+              </p>
+              {!searchTerm && (
+                <Button className="bg-[#FF6F00] hover:bg-[#E65100]">
+                  Share Your Seva
+                </Button>
+              )}
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {filteredPosts.map((post) => (
+                <Card key={post.id} className={`p-4 lg:p-6 bg-white ${isDesktop ? 'hover:shadow-md transition-shadow' : ''}`}>
+                  {/* User Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <ImageWithFallback
+                        src={post.user.avatar}
+                        alt={post.user.name}
+                        className={`${isDesktop ? 'w-14 h-14' : 'w-12 h-12'} rounded-full object-cover`}
+                      />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className={`${isDesktop ? 'text-lg' : ''} font-medium cursor-pointer hover:text-[#FF6F00]`}>
+                            {post.user.name}
+                          </h3>
+                          <RankBadge rank={post.user.rank} size="sm" showLabel={false} />
+                          {followedUsers.includes(post.userId) && (
+                            <Badge className="text-xs bg-gray-200 text-gray-700">Following</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <MapPin className="w-3 h-3" />
+                          <span>{post.user.location}</span>
+                          <span>•</span>
+                          <Clock className="w-3 h-3" />
+                          <span>{post.timestamp}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => handleSavePost(post.id)}
+                        className="p-1 bg-transparent hover:bg-gray-100"
+                      >
+                        <Bookmark className={`w-4 h-4 ${savedPosts.includes(post.id) ? 'fill-[#FF6F00] text-[#FF6F00]' : 'text-gray-400'}`} />
+                      </Button>
+                      <MoreVertical className="w-5 h-5 text-gray-400 cursor-pointer" />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <p className={`mb-3 leading-relaxed ${isDesktop ? 'text-base' : ''} cursor-pointer`} 
+                     onClick={() => setSelectedPost(post)}>
+                    {post.content}
+                  </p>
+
+                  {/* Category Tag */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`px-2 py-1 rounded-full text-xs ${categoryColors[post.category]}`}>
+                      {post.category}
+                    </span>
+                    <span className="text-xs text-[#FF6F00] font-medium">
+                      {post.helpedPeople} people helped
+                    </span>
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="flex gap-1">
+                        {post.tags.slice(0, 2).map((tag, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setSearchTerm(`#${tag}`)}
+                            className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded hover:bg-[#FFF3E0] hover:text-[#FF6F00] transition-colors"
+                          >
+                            #{tag}
+                          </button>
+                        ))}
+                        {post.tags.length > 2 && (
+                          <span className="text-xs text-gray-500">+{post.tags.length - 2}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Image */}
+                  {post.image && (
+                    <div className="mb-3 rounded-lg overflow-hidden cursor-pointer" 
+                         onClick={() => setSelectedPost(post)}>
+                      <ImageWithFallback
+                        src={post.image}
+                        alt="Seva activity"
+                        className={`w-full ${isDesktop ? 'h-64' : 'h-48'} object-cover hover:scale-105 transition-transform`}
+                      />
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <div className="flex items-center gap-6">
+                      <button 
+                        onClick={() => handleLike(post.id)}
+                        className="flex items-center gap-1 text-gray-600 hover:text-[#FF6F00] transition-colors"
+                      >
+                        <Heart className={`w-5 h-5 ${post.likedBy.includes(currentUser.id) ? "fill-[#FF6F00] text-[#FF6F00]" : ""}`} />
+                        <span className="text-sm">{post.likes}</span>
+                      </button>
+                      <button 
+                        onClick={() => toggleComments(post.id)}
+                        className="flex items-center gap-1 text-gray-600 hover:text-[#FF6F00] transition-colors"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        <span className="text-sm">{post.comments.length}</span>
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => handleFollowUser(post.userId)}
+                        className="text-xs bg-transparent hover:bg-gray-100"
+                      >
+                        <UserPlus className="w-4 h-4 mr-1" />
+                        {followedUsers.includes(post.userId) ? "Following" : "Follow"}
+                      </Button>
+                      <button 
+                        onClick={() => handleShare(post)}
+                        className="flex items-center gap-1 text-gray-600 hover:text-[#FF6F00] transition-colors"
+                      >
+                        <Share className="w-5 h-5" />
+                        <span className="text-sm">Share</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Comments Section */}
+                  {showComments[post.id] && (
+                    <div className="mt-4 border-t border-gray-100 pt-4">
+                      {/* Comment Input */}
+                      <div className="flex gap-2 mb-3">
+                        <ImageWithFallback
+                          src={currentUser.avatar}
+                          alt={currentUser.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <div className="flex-1 flex gap-2">
+                          <Input
+                            placeholder="Add a comment..."
+                            value={commentInputs[post.id] || ''}
+                            onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                            onKeyPress={(e) => e.key === 'Enter' && handleComment(post.id)}
+                            className="flex-1"
+                          />
+                          <Button 
+                            onClick={() => handleComment(post.id)}
+                            disabled={!commentInputs[post.id]?.trim()}
+                            className="bg-[#FF6F00] hover:bg-[#E65100]"
+                          >
+                            Post
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Comments List */}
+                      <div className="space-y-3">
+                        {post.comments.slice(0, 3).map((comment) => (
+                          <div key={comment.id} className="flex gap-2">
+                            <ImageWithFallback
+                              src={comment.userAvatar}
+                              alt={comment.userName}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                            <div className="flex-1">
+                              <div className="bg-gray-50 rounded-lg p-2">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-sm font-medium">{comment.userName}</span>
+                                  <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                                </div>
+                                <p className="text-sm">{comment.content}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {post.comments.length > 3 && (
+                          <button 
+                            onClick={() => setSelectedPost(post)}
+                            className="text-sm text-[#FF6F00] hover:underline"
+                          >
+                            View all {post.comments.length} comments
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Sidebar */}
+        {isDesktop && (
+          <div className="w-80">
+            <SidebarWidget />
+          </div>
+        )}
+      </div>
+
+      {/* Post Detail Dialog */}
+      {selectedPost && <PostDetailDialog post={selectedPost} />}
+    </div>
+  );
+}
