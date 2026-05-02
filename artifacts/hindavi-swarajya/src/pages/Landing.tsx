@@ -11,13 +11,13 @@ import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-c
 import { Skeleton } from "@/components/ui/skeleton";
 import { SWARAJYA_RANKS, CHHAVA_RANK, type RankDef, type RankTier } from "@/lib/ranks";
 
-// Tier metadata for the premium rank ladder. Order matters: pinnacle first.
+// Tier metadata for the premium rank ladder. Order matters: foundation first, ascending to pinnacle.
 const RANK_TIERS: { id: RankTier; label: string; subtitle: string; icon: typeof Crown; accent: string; ring: string }[] = [
-  { id: "supreme",  label: "Supreme",  subtitle: "The royal council",         icon: Crown,      accent: "from-amber-500 to-orange-600",   ring: "ring-amber-300/60" },
-  { id: "command",  label: "Command",  subtitle: "Governors of the realm",    icon: Mountain,   accent: "from-emerald-500 to-teal-600",   ring: "ring-emerald-300/60" },
-  { id: "elite",    label: "Elite",    subtitle: "Marshals & nobles",         icon: ShieldIcon, accent: "from-indigo-500 to-purple-600",  ring: "ring-indigo-300/60" },
-  { id: "core",     label: "Core",     subtitle: "Captains of the army",      icon: Sword,      accent: "from-rose-500 to-red-600",       ring: "ring-rose-300/60" },
   { id: "starter",  label: "Foundation", subtitle: "Where every sevak begins", icon: Heart,    accent: "from-stone-500 to-stone-700",    ring: "ring-stone-300/60" },
+  { id: "core",     label: "Core",     subtitle: "Captains of the army",      icon: Sword,      accent: "from-rose-500 to-red-600",       ring: "ring-rose-300/60" },
+  { id: "elite",    label: "Elite",    subtitle: "Marshals & nobles",         icon: ShieldIcon, accent: "from-indigo-500 to-purple-600",  ring: "ring-indigo-300/60" },
+  { id: "command",  label: "Command",  subtitle: "Governors of the realm",    icon: Mountain,   accent: "from-emerald-500 to-teal-600",   ring: "ring-emerald-300/60" },
+  { id: "supreme",  label: "Supreme",  subtitle: "The royal council",         icon: Crown,      accent: "from-amber-500 to-orange-600",   ring: "ring-amber-300/60" },
 ];
 
 const PINNACLE: RankDef = SWARAJYA_RANKS[SWARAJYA_RANKS.length - 1]; // Sar Senapati
@@ -289,7 +289,101 @@ export default function Landing() {
             </p>
           </div>
 
-          {/* Pinnacle + Chhava — top honors row */}
+          {/* Tier-grouped ladder — Foundation up to Supreme */}
+          <div className="space-y-6">
+            {RANK_TIERS.map((tier, tIdx) => {
+              const ranks = RANKS_BY_TIER[tier.id] ?? [];
+              if (ranks.length === 0) return null;
+              const TIcon = tier.icon;
+              return (
+                <motion.div
+                  key={tier.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: tIdx * 0.05 }}
+                  className="relative rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden"
+                >
+                  {/* Tier header strip */}
+                  <div className={`relative bg-gradient-to-r ${tier.accent} px-5 py-3 text-white flex items-center justify-between`}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+                        <TIcon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold tracking-widest uppercase opacity-80">Tier {tIdx + 1}</p>
+                        <p className="text-base font-bold font-serif leading-none">{tier.label}</p>
+                      </div>
+                    </div>
+                    <p className="text-[11px] sm:text-xs opacity-90 hidden sm:block">{tier.subtitle}</p>
+                  </div>
+
+                  {/* Ranks within the tier */}
+                  <div className="p-4 sm:p-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {ranks.map((r) => {
+                        const idx = SWARAJYA_RANKS.findIndex((x) => x.name === r.name);
+                        if (r.image) {
+                          return (
+                            <div
+                              key={r.name}
+                              className={`group relative rounded-2xl border-2 ${r.border} ${r.bg} p-5 sm:p-6 transition-all hover:shadow-xl hover:-translate-y-1 col-span-2 sm:col-span-3 lg:col-span-2 overflow-hidden`}
+                              title={r.description}
+                            >
+                              {/* radial glow behind coin */}
+                              <div className="absolute inset-0 bg-gradient-radial from-amber-200/40 via-transparent to-transparent pointer-events-none" />
+                              <div className="relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                                <div className="relative shrink-0">
+                                  <div className="absolute inset-0 rounded-full bg-amber-400/30 blur-2xl scale-110" />
+                                  <img
+                                    src={r.image}
+                                    alt={`${r.name} badge`}
+                                    className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full object-cover ring-4 ring-amber-500/50 shadow-2xl drop-shadow-[0_8px_24px_rgba(217,119,6,0.45)] transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0 text-center sm:text-left">
+                                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+                                    <span className={`text-[10px] font-bold ${r.text} opacity-60 tabular-nums`}>#{idx + 1}</span>
+                                    <span className={`text-[10px] font-bold ${r.text} opacity-90 tabular-nums px-2 py-0.5 rounded-full bg-white/70 border border-amber-300/50`}>
+                                      {fmtThreshold(r.threshold)}
+                                    </span>
+                                  </div>
+                                  <p className={`font-extrabold text-2xl sm:text-3xl leading-tight ${r.text} font-serif`}>{r.name}</p>
+                                  <p className={`text-base ${r.text} opacity-80 font-serif leading-tight mt-0.5`} lang="mr">
+                                    {r.devanagari}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div
+                            key={r.name}
+                            className={`group relative rounded-xl border ${r.border} ${r.bg} p-3 transition-all hover:shadow-md hover:-translate-y-0.5`}
+                            title={r.description}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={`text-[10px] font-bold ${r.text} opacity-60 tabular-nums`}>#{idx + 1}</span>
+                              <span className={`text-[10px] font-bold ${r.text} opacity-80 tabular-nums px-1.5 py-0.5 rounded bg-white/60`}>
+                                {fmtThreshold(r.threshold)}
+                              </span>
+                            </div>
+                            <p className={`font-bold text-sm leading-tight ${r.text}`}>{r.name}</p>
+                            <p className={`text-[11px] ${r.text} opacity-70 font-serif leading-tight`} lang="mr">
+                              {r.devanagari}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Pinnacle + Chhava — crowning honors (above Sar Senapati) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-12">
             {/* Sar Senapati — pinnacle (spans 2 cols on lg) */}
             <motion.div
@@ -371,100 +465,6 @@ export default function Landing() {
                 </p>
               </div>
             </motion.div>
-          </div>
-
-          {/* Tier-grouped ladder — Supreme down to Foundation */}
-          <div className="space-y-6">
-            {RANK_TIERS.map((tier, tIdx) => {
-              const ranks = RANKS_BY_TIER[tier.id] ?? [];
-              if (ranks.length === 0) return null;
-              const TIcon = tier.icon;
-              return (
-                <motion.div
-                  key={tier.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: tIdx * 0.05 }}
-                  className="relative rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden"
-                >
-                  {/* Tier header strip */}
-                  <div className={`relative bg-gradient-to-r ${tier.accent} px-5 py-3 text-white flex items-center justify-between`}>
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
-                        <TIcon className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold tracking-widest uppercase opacity-80">Tier {RANK_TIERS.length - tIdx}</p>
-                        <p className="text-base font-bold font-serif leading-none">{tier.label}</p>
-                      </div>
-                    </div>
-                    <p className="text-[11px] sm:text-xs opacity-90 hidden sm:block">{tier.subtitle}</p>
-                  </div>
-
-                  {/* Ranks within the tier */}
-                  <div className="p-4 sm:p-5">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {ranks.map((r) => {
-                        const idx = SWARAJYA_RANKS.findIndex((x) => x.name === r.name);
-                        if (r.image) {
-                          return (
-                            <div
-                              key={r.name}
-                              className={`group relative rounded-2xl border-2 ${r.border} ${r.bg} p-5 sm:p-6 transition-all hover:shadow-xl hover:-translate-y-1 col-span-2 sm:col-span-3 lg:col-span-2 overflow-hidden`}
-                              title={r.description}
-                            >
-                              {/* radial glow behind coin */}
-                              <div className="absolute inset-0 bg-gradient-radial from-amber-200/40 via-transparent to-transparent pointer-events-none" />
-                              <div className="relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                                <div className="relative shrink-0">
-                                  <div className="absolute inset-0 rounded-full bg-amber-400/30 blur-2xl scale-110" />
-                                  <img
-                                    src={r.image}
-                                    alt={`${r.name} badge`}
-                                    className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full object-cover ring-4 ring-amber-500/50 shadow-2xl drop-shadow-[0_8px_24px_rgba(217,119,6,0.45)] transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3"
-                                  />
-                                </div>
-                                <div className="flex-1 min-w-0 text-center sm:text-left">
-                                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
-                                    <span className={`text-[10px] font-bold ${r.text} opacity-60 tabular-nums`}>#{idx + 1}</span>
-                                    <span className={`text-[10px] font-bold ${r.text} opacity-90 tabular-nums px-2 py-0.5 rounded-full bg-white/70 border border-amber-300/50`}>
-                                      {fmtThreshold(r.threshold)}
-                                    </span>
-                                  </div>
-                                  <p className={`font-extrabold text-2xl sm:text-3xl leading-tight ${r.text} font-serif`}>{r.name}</p>
-                                  <p className={`text-base ${r.text} opacity-80 font-serif leading-tight mt-0.5`} lang="mr">
-                                    {r.devanagari}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return (
-                          <div
-                            key={r.name}
-                            className={`group relative rounded-xl border ${r.border} ${r.bg} p-3 transition-all hover:shadow-md hover:-translate-y-0.5`}
-                            title={r.description}
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className={`text-[10px] font-bold ${r.text} opacity-60 tabular-nums`}>#{idx + 1}</span>
-                              <span className={`text-[10px] font-bold ${r.text} opacity-80 tabular-nums px-1.5 py-0.5 rounded bg-white/60`}>
-                                {fmtThreshold(r.threshold)}
-                              </span>
-                            </div>
-                            <p className={`font-bold text-sm leading-tight ${r.text}`}>{r.name}</p>
-                            <p className={`text-[11px] ${r.text} opacity-70 font-serif leading-tight`} lang="mr">
-                              {r.devanagari}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
           </div>
 
           {/* Footer note */}
