@@ -25,7 +25,7 @@ function Router() {
       <Sidebar />
 
       {/* Main content — offset for sidebar on desktop, top/bottom bars on mobile */}
-      <main className="flex-1 md:ml-64 flex flex-col min-h-[100dvh] pb-16 md:pb-0 pt-0 md:pt-0">
+      <main className="flex-1 md:ml-72 flex flex-col min-h-[100dvh] pb-16 md:pb-0 pt-0 md:pt-0">
         {/* Mobile top bar spacer */}
         <div className="md:hidden h-14" />
 
