@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Send, Users, MapPin, ImageIcon, Tag, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { pickSevaThought } from "@/lib/sevaThoughts";
 
 const formSchema = z.object({
   content: z.string().min(10, "Description must be at least 10 characters").max(500, "Max 500 characters"),
@@ -147,15 +148,34 @@ export default function CreatePost() {
         </div>
       </div>
 
-      {/* Marathi quote banner */}
-      <div className="mb-5 rounded-2xl border border-orange-200 bg-orange-50/70 px-5 py-4 text-center">
-        <p className="text-orange-700 font-medium text-[15px]" lang="mr">
-          "जो वाढविल धर्म सकळांचा सो वाढविल राज्य आपणासि"
-        </p>
-        <p className="text-foreground/70 text-[13px] mt-1.5">
-          {t("share.quote")}
-        </p>
-      </div>
+      {/* Bilingual seva-thought banner — changes with selected category & impact */}
+      {(() => {
+        const thought = pickSevaThought(
+          watched.category,
+          Number(watched.helpedPeople) || 0,
+        );
+        return (
+          <div
+            key={`${watched.category}-${thought.mr}`}
+            className="mb-5 rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 via-orange-50/70 to-amber-50/60 px-5 py-4 text-center shadow-sm transition-all duration-500 animate-in fade-in slide-in-from-top-1"
+            data-testid="banner-seva-thought"
+          >
+            <p
+              className="text-orange-700 font-semibold text-[15px] leading-relaxed"
+              lang="mr"
+              data-testid="text-thought-mr"
+            >
+              “{thought.mr}”
+            </p>
+            <p
+              className="text-foreground/70 text-[12.5px] mt-1.5 italic"
+              data-testid="text-thought-en"
+            >
+              {thought.en}
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Step card */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
