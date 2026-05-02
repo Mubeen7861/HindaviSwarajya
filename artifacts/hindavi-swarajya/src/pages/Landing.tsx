@@ -3,13 +3,36 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Heart, Users, Calendar, Trophy, ArrowRight,
-  Star, Shield, Zap, Globe, CheckCircle, ChevronRight,
-  Flame, Crown,
+  Shield, Globe, CheckCircle, ChevronRight,
+  Flame, Crown, Sparkles, Sword, Shield as ShieldIcon, Mountain,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SWARAJYA_RANKS, CHHAVA_RANK } from "@/lib/ranks";
+import { SWARAJYA_RANKS, CHHAVA_RANK, type RankDef, type RankTier } from "@/lib/ranks";
+
+// Tier metadata for the premium rank ladder. Order matters: pinnacle first.
+const RANK_TIERS: { id: RankTier; label: string; subtitle: string; icon: typeof Crown; accent: string; ring: string }[] = [
+  { id: "supreme",  label: "Supreme",  subtitle: "The royal council",         icon: Crown,      accent: "from-amber-500 to-orange-600",   ring: "ring-amber-300/60" },
+  { id: "command",  label: "Command",  subtitle: "Governors of the realm",    icon: Mountain,   accent: "from-emerald-500 to-teal-600",   ring: "ring-emerald-300/60" },
+  { id: "elite",    label: "Elite",    subtitle: "Marshals & nobles",         icon: ShieldIcon, accent: "from-indigo-500 to-purple-600",  ring: "ring-indigo-300/60" },
+  { id: "core",     label: "Core",     subtitle: "Captains of the army",      icon: Sword,      accent: "from-rose-500 to-red-600",       ring: "ring-rose-300/60" },
+  { id: "starter",  label: "Foundation", subtitle: "Where every sevak begins", icon: Heart,    accent: "from-stone-500 to-stone-700",    ring: "ring-stone-300/60" },
+];
+
+const PINNACLE: RankDef = SWARAJYA_RANKS[SWARAJYA_RANKS.length - 1]; // Sar Senapati
+const RANKS_BY_TIER: Record<RankTier, RankDef[]> = SWARAJYA_RANKS
+  .filter((r) => r.name !== PINNACLE.name)
+  .reduce((acc, r) => {
+    (acc[r.tier] ||= []).push(r);
+    return acc;
+  }, {} as Record<RankTier, RankDef[]>);
+
+function fmtThreshold(n: number): string {
+  if (n === 0) return "Start";
+  if (n >= 1000) return `${n / 1000}k Mudra`;
+  return `${n} Mudra`;
+}
 
 const FEATURES = [
   {
@@ -95,41 +118,88 @@ export default function Landing() {
 
       {/* ── Hero ── */}
       <section className="pt-24 pb-20 px-4 sm:px-6 relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-orange-50/30 pointer-events-none" />
-        <div className="absolute top-20 right-0 w-96 h-96 rounded-full bg-[#FF6F00]/5 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#FF6F00]/5 blur-3xl pointer-events-none" />
+        {/* Premium saffron+gold backdrop */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-amber-50/40 pointer-events-none" />
+        <div className="absolute top-20 right-0 w-[28rem] h-[28rem] rounded-full bg-[#FF6F00]/10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-amber-300/10 blur-3xl pointer-events-none" />
+        {/* Subtle radial dot pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, #FF6F00 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
 
         <div className="relative max-w-5xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <Badge className="mb-5 bg-orange-50 text-[#FF6F00] border border-orange-200 text-xs px-3 py-1 font-medium">
-              <Star className="w-3 h-3 mr-1" /> Inspired by Chhatrapati Shivaji Maharaj
-            </Badge>
+            {/* Premium "World's First" badge */}
+            <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FF6F00] to-[#E65100] text-white shadow-lg shadow-orange-200/60">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[11px] sm:text-xs font-semibold tracking-wide uppercase">
+                World's First Seva Platform
+              </span>
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-4 font-serif">
-              Serve. Connect.{" "}
-              <span className="text-[#FF6F00]">Build Swarajya.</span>
+            {/* Decorative ornament — three saffron dots */}
+            <div className="flex justify-center items-center gap-1.5 mb-4" aria-hidden="true">
+              <span className="w-1 h-1 rounded-full bg-[#FF6F00]/40" />
+              <Crown className="w-4 h-4 text-amber-500" />
+              <span className="w-1 h-1 rounded-full bg-[#FF6F00]/40" />
+            </div>
+
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-gray-900 leading-[1.05] mb-5 font-serif tracking-tight">
+              Serve. Unite.{" "}
+              <span className="bg-gradient-to-r from-[#FF6F00] via-[#E65100] to-amber-600 bg-clip-text text-transparent">
+                Build Swarajya.
+              </span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-3 leading-relaxed">
-              India's community seva platform for organizing events, sharing service stories, and helping those in need — together.
+            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-6 leading-relaxed">
+              World's first seva platform inspired by the vision of{" "}
+              <span className="font-semibold text-gray-800">Chhatrapati Shivaji Maharaj</span>
+              {" "}— a movement, not just a platform.
             </p>
 
-            <p className="text-base text-[#FF6F00] font-semibold mb-8 font-serif" lang="mr">
-              "हे स्वराज्य व्हावे, ही तर श्रींची इच्छा."
-            </p>
+            {/* Marathi emotional line — framed in a quote card */}
+            <div className="max-w-xl mx-auto mb-8 relative">
+              <div className="absolute -left-2 top-0 text-5xl text-[#FF6F00]/20 font-serif leading-none select-none" aria-hidden="true">"</div>
+              <div className="absolute -right-2 bottom-0 text-5xl text-[#FF6F00]/20 font-serif leading-none select-none rotate-180" aria-hidden="true">"</div>
+              <p className="text-base sm:text-lg text-[#FF6F00] font-semibold font-serif px-6 leading-relaxed" lang="mr">
+                हे महाराजांचं स्वप्न आहे — या आधुनिक जगात पुन्हा जिवंत करण्याचा आमचा प्रयत्न.
+              </p>
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               <Link href="/sign-up">
-                <Button size="lg" className="bg-[#FF6F00] hover:bg-[#E65100] text-white shadow-lg shadow-orange-200 gap-2 text-base px-8 h-12">
+                <Button size="lg" className="bg-gradient-to-r from-[#FF6F00] to-[#E65100] hover:from-[#E65100] hover:to-[#BF360C] text-white shadow-xl shadow-orange-200 gap-2 text-base px-8 h-12 font-semibold">
                   <Heart className="w-4 h-4" /> Start Your Seva Journey
                 </Button>
               </Link>
-              <Link href="/sign-in">
-                <Button size="lg" variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50 gap-2 text-base px-8 h-12">
-                  Sign In <ChevronRight className="w-4 h-4" />
+              <Link href="/sign-up">
+                <Button size="lg" variant="outline" className="border-2 border-[#FF6F00]/30 bg-white/60 backdrop-blur text-[#FF6F00] hover:bg-orange-50 gap-2 text-base px-8 h-12 font-semibold">
+                  Join the Movement <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
+            </div>
+
+            {/* Power taglines strip */}
+            <div className="mt-10 flex flex-wrap justify-center gap-2 text-xs">
+              {[
+                { label: "Seva is the new Swarajya", icon: Heart },
+                { label: "People-powered. Purpose-driven.", icon: Users },
+                { label: "Ek Sevak. Ek Badlav.", icon: Flame },
+              ].map((t) => (
+                <span
+                  key={t.label}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-orange-100 text-gray-600 shadow-sm"
+                >
+                  <t.icon className="w-3 h-3 text-[#FF6F00]" />
+                  {t.label}
+                </span>
+              ))}
             </div>
           </motion.div>
         </div>
@@ -193,53 +263,161 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Ranks Section ── */}
-      <section className="py-16 px-4 sm:px-6 bg-orange-50/50">
-        <div className="max-w-5xl mx-auto text-center">
-          <Zap className="w-8 h-8 text-[#FF6F00] mx-auto mb-3" />
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 font-serif mb-3">
-            The Swarajya Rank System
-          </h2>
-          <p className="text-gray-500 mb-2 max-w-xl mx-auto">
-            Earn <span className="font-bold text-[#FF6F00]">10 Mudra</span> for every person you help. Rise through 17 ranks inspired by the structure of Chhatrapati Shivaji Maharaj's Swarajya.
-          </p>
-          <p className="text-xs text-gray-400 mb-8">From Sevak to Sar Senapati — and the rare honor of <Crown className="inline w-3.5 h-3.5 text-amber-500" /> Chhava</p>
+      {/* ── Premium Rank Ladder ── */}
+      <section className="py-20 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-b from-stone-50 via-orange-50/30 to-white">
+        {/* Decorative blurs */}
+        <div className="absolute top-10 left-1/4 w-72 h-72 rounded-full bg-amber-200/20 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-1/4 w-72 h-72 rounded-full bg-[#FF6F00]/10 blur-3xl pointer-events-none" />
 
-          {/* Honorary Chhava callout */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className={`mx-auto max-w-md mb-8 rounded-2xl p-5 ${CHHAVA_RANK.bg} text-white shadow-lg`}
-          >
-            <div className="flex items-center justify-center gap-3">
-              <Crown className="w-6 h-6" />
-              <div className="text-left">
-                <p className="font-bold text-lg">Chhava <span className="opacity-80 text-sm font-medium">· छावा</span></p>
-                <p className="text-xs opacity-90">Honorary rank — awarded by admins for exceptional impact.</p>
-              </div>
+        <div className="relative max-w-6xl mx-auto">
+          {/* Section header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white border border-amber-200 shadow-sm">
+              <Crown className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-amber-700">
+                17 Ranks · 5 Tiers
+              </span>
             </div>
-          </motion.div>
-
-          {/* 17-rank ladder */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-            {SWARAJYA_RANKS.map((r, i) => (
-              <motion.div
-                key={r.name}
-                initial={{ opacity: 0, y: 8 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.025 }}
-                className={`border rounded-xl p-3 text-center ${r.bg} ${r.text} ${r.border} ${r.name === "Sar Senapati" ? "ring-2 ring-amber-400" : ""}`}
-                title={r.description}
-              >
-                <p className="text-[10px] font-semibold opacity-70 tabular-nums">#{i + 1}</p>
-                <p className="font-bold text-sm leading-tight">{r.name}</p>
-                <p className="text-[10px] opacity-70 leading-tight">{r.devanagari}</p>
-                <p className="text-[10px] mt-1 font-semibold tabular-nums opacity-80">
-                  {r.threshold === 0 ? "Start" : `${r.threshold >= 1000 ? `${r.threshold / 1000}k` : r.threshold} Mudra`}
-                </p>
-              </motion.div>
-            ))}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 font-serif mb-4 tracking-tight">
+              The <span className="bg-gradient-to-r from-amber-600 via-[#FF6F00] to-[#E65100] bg-clip-text text-transparent">Swarajya</span> Rank System
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+              Every person you help earns you{" "}
+              <span className="font-bold text-[#FF6F00]">10 Mudra</span>. Rise through the ranks of
+              the Maratha Empire — from <span className="font-semibold">Sevak</span> to{" "}
+              <span className="font-semibold">Sar Senapati</span>.
+            </p>
           </div>
+
+          {/* Pinnacle + Chhava — top honors row */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-12">
+            {/* Sar Senapati — pinnacle (spans 2 cols on lg) */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="lg:col-span-2 relative rounded-3xl overflow-hidden shadow-2xl shadow-amber-300/40"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${PINNACLE.gradient}`} />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.3),transparent_60%)]" />
+              {/* Decorative crown ring */}
+              <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full border-4 border-white/20" />
+              <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full border-4 border-white/10" />
+
+              <div className="relative p-7 sm:p-9 text-white">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur text-[10px] font-bold tracking-widest uppercase">
+                    <Sparkles className="w-3 h-3" /> Pinnacle · #17
+                  </span>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0 shadow-inner">
+                    <Crown className="w-8 h-8" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-3xl sm:text-4xl font-bold font-serif leading-none">{PINNACLE.name}</h3>
+                    <p className="text-base opacity-90 mt-1 font-serif" lang="mr">{PINNACLE.devanagari}</p>
+                    <p className="text-sm opacity-85 mt-3 leading-relaxed">{PINNACLE.description}</p>
+                    <div className="flex items-center gap-3 mt-4">
+                      <span className="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur text-xs font-bold tabular-nums">
+                        {fmtThreshold(PINNACLE.threshold)}
+                      </span>
+                      <span className="text-xs opacity-80">Supreme commander of all forces</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Chhava — honorary parallel rank */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+              className="relative rounded-3xl overflow-hidden shadow-2xl shadow-red-400/30"
+            >
+              <div className={`absolute inset-0 ${CHHAVA_RANK.bg}`} />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.25),transparent_60%)]" />
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full border-4 border-white/15" />
+
+              <div className="relative p-7 text-white h-full flex flex-col">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur text-[10px] font-bold tracking-widest uppercase">
+                    <Crown className="w-3 h-3" /> Honorary
+                  </span>
+                </div>
+                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center mb-3 shadow-inner">
+                  <Crown className="w-8 h-8" />
+                </div>
+                <h3 className="text-3xl font-bold font-serif leading-none">{CHHAVA_RANK.name}</h3>
+                <p className="text-base opacity-90 mt-1 font-serif" lang="mr">{CHHAVA_RANK.devanagari}</p>
+                <p className="text-sm opacity-90 mt-3 leading-relaxed flex-1">
+                  Awarded by the council for exceptional, lion-hearted seva. Stands above the ladder — the rarest honor in the Swarajya.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Tier-grouped ladder — Supreme down to Foundation */}
+          <div className="space-y-6">
+            {RANK_TIERS.map((tier, tIdx) => {
+              const ranks = RANKS_BY_TIER[tier.id] ?? [];
+              if (ranks.length === 0) return null;
+              const TIcon = tier.icon;
+              return (
+                <motion.div
+                  key={tier.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: tIdx * 0.05 }}
+                  className="relative rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden"
+                >
+                  {/* Tier header strip */}
+                  <div className={`relative bg-gradient-to-r ${tier.accent} px-5 py-3 text-white flex items-center justify-between`}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+                        <TIcon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold tracking-widest uppercase opacity-80">Tier {RANK_TIERS.length - tIdx}</p>
+                        <p className="text-base font-bold font-serif leading-none">{tier.label}</p>
+                      </div>
+                    </div>
+                    <p className="text-[11px] sm:text-xs opacity-90 hidden sm:block">{tier.subtitle}</p>
+                  </div>
+
+                  {/* Ranks within the tier */}
+                  <div className="p-4 sm:p-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {ranks.map((r) => {
+                        const idx = SWARAJYA_RANKS.findIndex((x) => x.name === r.name);
+                        return (
+                          <div
+                            key={r.name}
+                            className={`group relative rounded-xl border ${r.border} ${r.bg} p-3 transition-all hover:shadow-md hover:-translate-y-0.5`}
+                            title={r.description}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={`text-[10px] font-bold ${r.text} opacity-60 tabular-nums`}>#{idx + 1}</span>
+                              <span className={`text-[10px] font-bold ${r.text} opacity-80 tabular-nums px-1.5 py-0.5 rounded bg-white/60`}>
+                                {fmtThreshold(r.threshold)}
+                              </span>
+                            </div>
+                            <p className={`font-bold text-sm leading-tight ${r.text}`}>{r.name}</p>
+                            <p className={`text-[11px] ${r.text} opacity-70 font-serif leading-tight`} lang="mr">
+                              {r.devanagari}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Footer note */}
+          <p className="text-center text-xs text-gray-400 mt-8 max-w-md mx-auto">
+            Hover any rank to see its meaning. Ranks are inspired by the actual structure of Chhatrapati Shivaji Maharaj's Maratha Empire.
+          </p>
         </div>
       </section>
 
