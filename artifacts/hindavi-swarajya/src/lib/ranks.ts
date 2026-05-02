@@ -2,6 +2,9 @@
 // The threshold list MUST mirror lib/db/src/ranks.ts — the server is the
 // source of truth for the rank string stored on each user. Keep these in sync.
 
+import ashtaPradhanBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_20_AM_1_1777758103572.png";
+import sarnobatBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_15_AM_1_1777758103572.png";
+
 export const MUDRA_PER_HELP = 10;
 
 export type RankTier = "starter" | "core" | "elite" | "command" | "supreme";
@@ -17,6 +20,9 @@ export interface RankDef {
   border: string;
   ring: string;
   gradient: string;        // for hero/badge backgrounds
+  /** Optional gold-coin badge artwork rendered inline by RankBadge / Landing /
+   * Profile when present. Only set for ceremonial supreme ranks. */
+  image?: string;
 }
 
 export const SWARAJYA_RANKS: RankDef[] = [
@@ -49,9 +55,11 @@ export const SWARAJYA_RANKS: RankDef[] = [
   { name: "Subhedar",      devanagari: "सुभेदार",          threshold: 22000,  tier: "command", description: "Governor of a province",
     bg: "bg-emerald-100",  text: "text-emerald-800", border: "border-emerald-300", ring: "ring-emerald-400", gradient: "from-emerald-200 to-emerald-100" },
   { name: "Ashta Pradhan", devanagari: "अष्ट प्रधान",      threshold: 35000,  tier: "supreme", description: "One of the eight royal ministers",
-    bg: "bg-yellow-100",   text: "text-yellow-800",  border: "border-yellow-400",  ring: "ring-yellow-500",  gradient: "from-yellow-200 to-amber-100" },
+    bg: "bg-yellow-100",   text: "text-yellow-800",  border: "border-yellow-400",  ring: "ring-yellow-500",  gradient: "from-yellow-200 to-amber-100",
+    image: ashtaPradhanBadge },
   { name: "Sarnobat",      devanagari: "सरनोबत",          threshold: 60000,  tier: "supreme", description: "Commander-in-chief of all forces",
-    bg: "bg-amber-200",    text: "text-amber-900",   border: "border-amber-500",   ring: "ring-amber-600",   gradient: "from-amber-300 to-yellow-200" },
+    bg: "bg-amber-200",    text: "text-amber-900",   border: "border-amber-500",   ring: "ring-amber-600",   gradient: "from-amber-300 to-yellow-200",
+    image: sarnobatBadge },
   { name: "Sar Senapati",  devanagari: "सरसेनापती",       threshold: 100000, tier: "supreme", description: "Supreme commander — the highest rank",
     bg: "bg-gradient-to-br from-amber-300 to-orange-400", text: "text-white", border: "border-amber-500", ring: "ring-amber-600", gradient: "from-amber-400 via-orange-500 to-red-500" },
 ];

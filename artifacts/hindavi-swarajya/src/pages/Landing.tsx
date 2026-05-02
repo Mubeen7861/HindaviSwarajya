@@ -400,6 +400,13 @@ export default function Landing() {
                                 {fmtThreshold(r.threshold)}
                               </span>
                             </div>
+                            {r.image && (
+                              <img
+                                src={r.image}
+                                alt={`${r.name} badge`}
+                                className="w-12 h-12 mx-auto my-1 rounded-full object-cover ring-2 ring-amber-500/40 shadow-sm"
+                              />
+                            )}
                             <p className={`font-bold text-sm leading-tight ${r.text}`}>{r.name}</p>
                             <p className={`text-[11px] ${r.text} opacity-70 font-serif leading-tight`} lang="mr">
                               {r.devanagari}

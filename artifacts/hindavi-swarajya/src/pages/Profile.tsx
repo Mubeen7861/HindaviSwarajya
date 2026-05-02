@@ -847,10 +847,18 @@ export default function Profile() {
                           : "bg-white border-gray-100 opacity-50"
                     }`}
                   >
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold tabular-nums shrink-0
-                      bg-white/80 border border-gray-200 text-gray-500">
-                      {i + 1}
-                    </div>
+                    {rank.image ? (
+                      <img
+                        src={rank.image}
+                        alt={`${rank.name} badge`}
+                        className={`w-8 h-8 rounded-full object-cover shrink-0 ring-2 ring-amber-500/50 shadow-sm ${achieved ? "" : "grayscale opacity-60"}`}
+                      />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold tabular-nums shrink-0
+                        bg-white/80 border border-gray-200 text-gray-500">
+                        {i + 1}
+                      </div>
+                    )}
                     {achieved
                       ? <CheckCircle2 className={`w-5 h-5 ${isCurrent ? rank.text : "text-gray-400"} shrink-0`} />
                       : <div className="w-5 h-5 rounded-full border-2 border-gray-200 shrink-0" />

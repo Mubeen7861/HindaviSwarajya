@@ -29,13 +29,22 @@ export function RankBadge({ rank, chhava, showDevanagari, size = "sm" }: RankBad
 
   const def = getRankDef(rank);
   const colorClass = RANK_COLORS[rank] ?? RANK_COLORS.Sevak;
+  const coinSize = size === "md" ? "w-6 h-6" : "w-4 h-4";
   return (
     <Badge
       variant="outline"
-      className={`${colorClass} font-semibold border`}
+      className={`${colorClass} font-semibold border inline-flex items-center gap-1.5`}
       data-testid={`badge-rank-${rank.replace(/\s+/g, "-").toLowerCase()}`}
       title={def.description}
     >
+      {def.image && (
+        <img
+          src={def.image}
+          alt=""
+          aria-hidden="true"
+          className={`${coinSize} rounded-full object-cover -ml-0.5 shrink-0 ring-1 ring-amber-600/30`}
+        />
+      )}
       {rank}
       {showDevanagari && <span className="ml-1 opacity-80">· {def.devanagari}</span>}
     </Badge>
