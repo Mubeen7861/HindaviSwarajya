@@ -7,7 +7,7 @@ import {
   postTagsTable,
   postLikesTable,
 } from "@workspace/db";
-import { eq, desc, ilike, or, sql } from "drizzle-orm";
+import { eq, desc, ilike, or, and, sql, type SQL } from "drizzle-orm";
 import {
   ListPostsQueryParams,
   CreatePostBody,
@@ -84,7 +84,7 @@ router.get("/posts", async (req, res) => {
     const parsed = ListPostsQueryParams.safeParse(req.query);
     const params = parsed.success ? parsed.data : { limit: 20, offset: 0 };
 
-    const conditions = [];
+    const conditions: SQL[] = [];
 
     if (params.category) {
       conditions.push(eq(postsTable.category, params.category));
@@ -92,45 +92,38 @@ router.get("/posts", async (req, res) => {
 
     if (params.search) {
       const term = `%${params.search}%`;
-      conditions.push(
-        or(
-          ilike(postsTable.content, term),
-          sql`EXISTS (SELECT 1 FROM post_tags pt WHERE pt.post_id = ${postsTable.id} AND pt.tag ILIKE ${term})`
-        )
+      const searchCondition = or(
+        ilike(postsTable.content, term),
+        sql`EXISTS (SELECT 1 FROM post_tags pt WHERE pt.post_id = ${postsTable.id} AND pt.tag ILIKE ${term})`,
       );
+      if (searchCondition) conditions.push(searchCondition);
     }
 
-    const baseQuery = db.select().from(postsTable);
+    const orderBy = (() => {
+      switch (params.sortBy) {
+        case "likes":
+          return desc(postsTable.likes);
+        case "impact":
+          return desc(postsTable.helpedPeople);
+        case "comments":
+          return desc(
+            sql`(SELECT COUNT(*) FROM comments c WHERE c.post_id = ${postsTable.id})`,
+          );
+        default:
+          return desc(postsTable.timestamp);
+      }
+    })();
 
-    let sortedQuery = baseQuery;
-    switch (params.sortBy) {
-      case "likes":
-        sortedQuery = baseQuery.orderBy(desc(postsTable.likes)) as typeof baseQuery;
-        break;
-      case "impact":
-        sortedQuery = baseQuery.orderBy(desc(postsTable.helpedPeople)) as typeof baseQuery;
-        break;
-      case "comments":
-        sortedQuery = baseQuery.orderBy(
-          desc(sql`(SELECT COUNT(*) FROM comments c WHERE c.post_id = ${postsTable.id})`)
-        ) as typeof baseQuery;
-        break;
-      default:
-        sortedQuery = baseQuery.orderBy(desc(postsTable.timestamp)) as typeof baseQuery;
+    const limit = params.limit ?? 20;
+    const offset = params.offset ?? 0;
+
+    const query = db.select().from(postsTable).$dynamic();
+    if (conditions.length > 0) {
+      query.where(conditions.length === 1 ? conditions[0] : and(...conditions));
     }
+    const rows = await query.orderBy(orderBy).limit(limit).offset(offset);
 
-    const allConditions = conditions.length > 0 ? conditions : undefined;
-    const rows = allConditions
-      ? await (sortedQuery.where(
-          allConditions.length === 1 ? allConditions[0] : sql`${allConditions[0]} AND ${allConditions[1]}`
-        ) as never)
-      : await sortedQuery;
-
-    const limited = (rows as (typeof postsTable.$inferSelect)[]).slice(
-      params.offset ?? 0,
-      (params.offset ?? 0) + (params.limit ?? 20),
-    );
-    const result = await Promise.all(limited.map((p) => buildPost(p)));
+    const result = await Promise.all(rows.map((p) => buildPost(p)));
     res.json(result);
   } catch (err) {
     req.log.error(err);
