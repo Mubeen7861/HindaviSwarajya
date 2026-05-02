@@ -871,9 +871,11 @@ components:
           type: array
           items:
             type: string
-        image:
-          type: string
-          nullable: true
+        images:
+          type: array
+          items:
+            type: string
+          maxItems: 3
         timestamp:
           type: string
         location:
@@ -893,6 +895,7 @@ components:
         - likedBy
         - comments
         - tags
+        - images
         - timestamp
 
     CreatePostBody:
@@ -908,9 +911,11 @@ components:
           type: array
           items:
             type: string
-        image:
-          type: string
-          nullable: true
+        images:
+          type: array
+          items:
+            type: string
+          maxItems: 3
         location:
           type: string
           nullable: true
@@ -1249,9 +1254,11 @@ components:
         location:
           type: string
           nullable: true
-        image:
-          type: string
-          nullable: true
+        images:
+          type: array
+          items:
+            type: string
+          maxItems: 3
 
     UpdateEventBody:
       type: object

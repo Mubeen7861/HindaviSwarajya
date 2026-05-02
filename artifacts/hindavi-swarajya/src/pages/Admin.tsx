@@ -68,7 +68,7 @@ type AdminPost = { id: number; userId: number; userName: string; userAvatar: str
 type AdminEvent = { id: number; title: string; category: string; date: string; location: string; status: string; approvalStatus: string; organizerId: number; organizerName: string; volunteersNeeded: number; createdAt: string | null };
 type AdminHelpRequest = { id: number; title: string; category: string; urgency: string; location: string; status: string; approvalStatus: string; requesterId: number; requesterName: string; peopleNeeded: number; deadline: string | null; createdAt: string | null };
 
-type PendingPost = { id: number; userId: number; userName: string; userAvatar: string; content: string; category: string; helpedPeople: number; location: string | null; image: string | null; timestamp: string | null };
+type PendingPost = { id: number; userId: number; userName: string; userAvatar: string; content: string; category: string; helpedPeople: number; location: string | null; images: string[]; timestamp: string | null };
 type PendingEvent = { id: number; title: string; description: string; category: string; eventType: string; date: string; time: string; location: string; organizerId: number; organizerName: string; organizerAvatar: string; volunteersNeeded: number; image: string | null; createdAt: string | null };
 type PendingHelpRequest = { id: number; title: string; description: string; category: string; urgency: string; location: string; requesterId: number; requesterName: string; requesterAvatar: string; peopleNeeded: number; deadline: string | null; createdAt: string | null };
 type PendingQueue = { counts: { posts: number; events: number; helpRequests: number }; posts: PendingPost[]; events: PendingEvent[]; helpRequests: PendingHelpRequest[] };
@@ -669,8 +669,17 @@ export default function Admin() {
                                 </span>
                               </div>
                               <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap break-words">{p.content}</p>
-                              {p.image && (
-                                <img src={p.image} alt="" className="mt-3 rounded-xl max-h-48 object-cover border border-gray-100" />
+                              {p.images && p.images.length > 0 && (
+                                <div className="mt-3 flex gap-2 flex-wrap">
+                                  {p.images.slice(0, 3).map((src, i) => (
+                                    <img
+                                      key={`${p.id}-img-${i}`}
+                                      src={src}
+                                      alt=""
+                                      className="rounded-xl max-h-32 object-cover border border-gray-100"
+                                    />
+                                  ))}
+                                </div>
                               )}
                               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50">
                                 <Button

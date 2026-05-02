@@ -301,7 +301,7 @@ router.get("/admin/pending", async (req, res) => {
         category: p.category,
         helpedPeople: p.helpedPeople,
         location: p.location ?? null,
-        image: p.image ?? null,
+        images: p.images ?? [],
         timestamp: p.timestamp?.toISOString() ?? null,
       })),
       events: events.map(({ e, organizerName, organizerAvatar }) => ({

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Send, Users, MapPin, ImageIcon, Tag, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Send, Users, MapPin, ImageIcon, Tag, Sparkles, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { pickSevaThought } from "@/lib/sevaThoughts";
 
@@ -24,14 +24,17 @@ const formSchema = z.object({
   // Tags: keep as raw string in form state so the controlled <Input> never receives an array.
   tags: z.string().default(""),
   location: z.string().optional(),
-  image: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  images: z
+    .array(z.string().url("Must be a valid URL"))
+    .max(3, "You can add up to 3 photos")
+    .default([]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 const STEP_FIELDS: Record<number, (keyof FormValues)[]> = {
   1: ["content", "category", "helpedPeople"],
-  2: ["location", "image"],
+  2: ["location", "images"],
   3: ["tags"],
 };
 
@@ -76,7 +79,7 @@ export default function CreatePost() {
       helpedPeople: 1,
       tags: "",
       location: "",
-      image: "",
+      images: [],
     },
   });
 
@@ -91,10 +94,10 @@ export default function CreatePost() {
     if (watched.category) pts += 15;
     if (watched.helpedPeople && Number(watched.helpedPeople) >= 1) pts += 15;
     if (watched.location && watched.location.length > 0) pts += 10;
-    if (watched.image && watched.image.length > 0) pts += 10;
+    if (watched.images && watched.images.length > 0) pts += 10;
     if (watched.tags && watched.tags.length > 0) pts += 10;
     return Math.min(100, Math.max(10, pts));
-  }, [watched.content, watched.category, watched.helpedPeople, watched.location, watched.image, watched.tags]);
+  }, [watched.content, watched.category, watched.helpedPeople, watched.location, watched.images, watched.tags]);
 
   const goNext = async () => {
     const fields = STEP_FIELDS[step];
@@ -323,38 +326,75 @@ export default function CreatePost() {
 
                 <FormField
                   control={form.control}
-                  name="image"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[14px] font-semibold text-gray-900">
-                        {t("share.imageLabel")}
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <Input
-                            placeholder={t("share.imagePlaceholder")}
-                            className="pl-9 bg-gray-50 border-gray-200"
-                            data-testid="input-image"
-                            {...field}
-                          />
+                  name="images"
+                  render={({ field }) => {
+                    const imgs = field.value ?? [];
+                    const setImgs = (next: string[]) => field.onChange(next.slice(0, 3));
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-[14px] font-semibold text-gray-900">
+                          {t("share.imageLabel")}
+                        </FormLabel>
+                        <div className="space-y-2.5">
+                          {imgs.map((url, idx) => (
+                            <div key={idx} className="space-y-2">
+                              <div className="relative">
+                                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                  value={url}
+                                  onChange={(e) => {
+                                    const next = [...imgs];
+                                    next[idx] = e.target.value;
+                                    setImgs(next);
+                                  }}
+                                  placeholder={t("share.imagePlaceholder")}
+                                  className="pl-9 pr-10 bg-gray-50 border-gray-200"
+                                  data-testid={`input-image-${idx}`}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setImgs(imgs.filter((_, i) => i !== idx))}
+                                  aria-label={t("share.removePhoto")}
+                                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 inline-flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                                  data-testid={`button-remove-image-${idx}`}
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                              {/^https?:\/\//i.test(url) && (
+                                <div className="rounded-xl border border-gray-100 overflow-hidden">
+                                  <img
+                                    src={url}
+                                    alt={`preview-${idx + 1}`}
+                                    className="w-full h-32 object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = "none";
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {imgs.length < 3 && (
+                            <button
+                              type="button"
+                              onClick={() => setImgs([...imgs, ""])}
+                              className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-lg border-2 border-dashed border-orange-200 text-orange-600 hover:bg-orange-50 transition text-[13.5px] font-medium"
+                              data-testid="button-add-image"
+                            >
+                              <Plus className="w-4 h-4" />
+                              {t("share.addPhoto", { current: imgs.length, max: 3 })}
+                            </button>
+                          )}
+                          <p className="text-[11.5px] text-gray-500">
+                            {t("share.imagesHint")}
+                          </p>
                         </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
-
-                {watched.image && (
-                  <div className="rounded-xl border border-gray-100 overflow-hidden">
-                    <img
-                      src={watched.image}
-                      alt="preview"
-                      className="w-full h-48 object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                    />
-                  </div>
-                )}
               </>
             )}
 

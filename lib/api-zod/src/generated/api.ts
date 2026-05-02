@@ -114,6 +114,8 @@ export const UpdateMeResponse = zod
 /**
  * @summary List the current user's seva posts (all approval statuses)
  */
+export const listMyPostsResponseImagesMax = 3;
+
 export const ListMyPostsResponseItem = zod.object({
   id: zod.number(),
   userId: zod.number(),
@@ -168,7 +170,7 @@ export const ListMyPostsResponseItem = zod.object({
     }),
   ),
   tags: zod.array(zod.string()),
-  image: zod.string().nullish(),
+  images: zod.array(zod.string()).max(listMyPostsResponseImagesMax),
   timestamp: zod.string(),
   location: zod.string().nullish(),
   approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
@@ -308,6 +310,8 @@ export const ListPostsQueryParams = zod.object({
   offset: zod.coerce.number().default(listPostsQueryOffsetDefault),
 });
 
+export const listPostsResponseImagesMax = 3;
+
 export const ListPostsResponseItem = zod.object({
   id: zod.number(),
   userId: zod.number(),
@@ -362,7 +366,7 @@ export const ListPostsResponseItem = zod.object({
     }),
   ),
   tags: zod.array(zod.string()),
-  image: zod.string().nullish(),
+  images: zod.array(zod.string()).max(listPostsResponseImagesMax),
   timestamp: zod.string(),
   location: zod.string().nullish(),
   approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
@@ -372,12 +376,14 @@ export const ListPostsResponse = zod.array(ListPostsResponseItem);
 /**
  * @summary Create a seva post (auth required)
  */
+export const createPostBodyImagesMax = 3;
+
 export const CreatePostBody = zod.object({
   content: zod.string(),
   category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
   helpedPeople: zod.number(),
   tags: zod.array(zod.string()),
-  image: zod.string().nullish(),
+  images: zod.array(zod.string()).max(createPostBodyImagesMax).optional(),
   location: zod.string().nullish(),
 });
 
@@ -387,6 +393,8 @@ export const CreatePostBody = zod.object({
 export const GetPostParams = zod.object({
   id: zod.coerce.number(),
 });
+
+export const getPostResponseImagesMax = 3;
 
 export const GetPostResponse = zod.object({
   id: zod.number(),
@@ -442,7 +450,7 @@ export const GetPostResponse = zod.object({
     }),
   ),
   tags: zod.array(zod.string()),
-  image: zod.string().nullish(),
+  images: zod.array(zod.string()).max(getPostResponseImagesMax),
   timestamp: zod.string(),
   location: zod.string().nullish(),
   approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
@@ -455,6 +463,8 @@ export const UpdatePostParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const updatePostBodyImagesMax = 3;
+
 export const UpdatePostBody = zod.object({
   content: zod.string().optional(),
   category: zod
@@ -462,8 +472,10 @@ export const UpdatePostBody = zod.object({
     .optional(),
   helpedPeople: zod.number().optional(),
   location: zod.string().nullish(),
-  image: zod.string().nullish(),
+  images: zod.array(zod.string()).max(updatePostBodyImagesMax).optional(),
 });
+
+export const updatePostResponseImagesMax = 3;
 
 export const UpdatePostResponse = zod.object({
   id: zod.number(),
@@ -519,7 +531,7 @@ export const UpdatePostResponse = zod.object({
     }),
   ),
   tags: zod.array(zod.string()),
-  image: zod.string().nullish(),
+  images: zod.array(zod.string()).max(updatePostResponseImagesMax),
   timestamp: zod.string(),
   location: zod.string().nullish(),
   approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
@@ -542,6 +554,8 @@ export const DeletePostResponse = zod.object({
 export const ToggleLikeParams = zod.object({
   id: zod.coerce.number(),
 });
+
+export const toggleLikeResponseImagesMax = 3;
 
 export const ToggleLikeResponse = zod.object({
   id: zod.number(),
@@ -597,7 +611,7 @@ export const ToggleLikeResponse = zod.object({
     }),
   ),
   tags: zod.array(zod.string()),
-  image: zod.string().nullish(),
+  images: zod.array(zod.string()).max(toggleLikeResponseImagesMax),
   timestamp: zod.string(),
   location: zod.string().nullish(),
   approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),
@@ -727,6 +741,8 @@ export const GetUserPostsParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const getUserPostsResponseImagesMax = 3;
+
 export const GetUserPostsResponseItem = zod.object({
   id: zod.number(),
   userId: zod.number(),
@@ -781,7 +797,7 @@ export const GetUserPostsResponseItem = zod.object({
     }),
   ),
   tags: zod.array(zod.string()),
-  image: zod.string().nullish(),
+  images: zod.array(zod.string()).max(getUserPostsResponseImagesMax),
   timestamp: zod.string(),
   location: zod.string().nullish(),
   approvalStatus: zod.enum(["pending", "approved", "rejected"]).optional(),

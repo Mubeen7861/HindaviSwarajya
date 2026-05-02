@@ -153,16 +153,29 @@ export function PostCard({ post }: { post: SevaPost }) {
         )}
       </div>
 
-      {/* Image */}
-      {post.image && (
+      {/* Images (up to 3) */}
+      {post.images && post.images.length > 0 && (
         <Link href={`/app/post/${post.id}`}>
-          <div className="mb-3 rounded-xl overflow-hidden cursor-pointer ring-1 ring-border/40">
-            <img
-              src={post.image}
-              alt="Seva"
-              className="w-full h-48 sm:h-60 object-cover"
-              loading="lazy"
-            />
+          <div
+            className={cn(
+              "mb-3 rounded-xl overflow-hidden cursor-pointer ring-1 ring-border/40 grid gap-1",
+              post.images.length === 1 && "grid-cols-1",
+              post.images.length === 2 && "grid-cols-2",
+              post.images.length >= 3 && "grid-cols-3",
+            )}
+          >
+            {post.images.slice(0, 3).map((src, i) => (
+              <img
+                key={`${post.id}-img-${i}`}
+                src={src}
+                alt={`Seva photo ${i + 1}`}
+                className={cn(
+                  "w-full object-cover",
+                  post.images.length === 1 ? "h-48 sm:h-60" : "h-28 sm:h-36",
+                )}
+                loading="lazy"
+              />
+            ))}
           </div>
         </Link>
       )}

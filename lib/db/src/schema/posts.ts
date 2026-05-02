@@ -1,4 +1,5 @@
 import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -11,7 +12,7 @@ export const postsTable = pgTable("posts", {
   category: text("category").notNull(),
   helpedPeople: integer("helped_people").notNull().default(0),
   likes: integer("likes").notNull().default(0),
-  image: text("image"),
+  images: text("images").array().notNull().default(sql`'{}'::text[]`),
   location: text("location"),
   approvalStatus: text("approval_status").notNull().default("pending"),
   timestamp: timestamp("timestamp").defaultNow(),

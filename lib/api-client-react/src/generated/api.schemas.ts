@@ -97,7 +97,8 @@ export interface SevaPost {
   likedBy: number[];
   comments: Comment[];
   tags: string[];
-  image?: string | null;
+  /** @maxItems 3 */
+  images: string[];
   timestamp: string;
   location?: string | null;
   approvalStatus?: SevaPostApprovalStatus;
@@ -108,7 +109,8 @@ export interface CreatePostBody {
   category: SevaCategory;
   helpedPeople: number;
   tags: string[];
-  image?: string | null;
+  /** @maxItems 3 */
+  images?: string[];
   location?: string | null;
 }
 
@@ -293,7 +295,8 @@ export interface UpdatePostBody {
   category?: SevaCategory;
   helpedPeople?: number;
   location?: string | null;
-  image?: string | null;
+  /** @maxItems 3 */
+  images?: string[];
 }
 
 export interface UpdateEventBody {

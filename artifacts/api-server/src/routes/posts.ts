@@ -76,7 +76,7 @@ async function buildPost(post: typeof postsTable.$inferSelect) {
       timestamp: c.timestamp?.toISOString() ?? new Date().toISOString(),
     })),
     tags: tags.map((t) => t.tag),
-    image: post.image ?? null,
+    images: post.images ?? [],
     timestamp: post.timestamp?.toISOString() ?? new Date().toISOString(),
     location: post.location ?? null,
     approvalStatus: post.approvalStatus,
