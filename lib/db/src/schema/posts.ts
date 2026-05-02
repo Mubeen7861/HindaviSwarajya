@@ -13,6 +13,7 @@ export const postsTable = pgTable("posts", {
   likes: integer("likes").notNull().default(0),
   image: text("image"),
   location: text("location"),
+  approvalStatus: text("approval_status").notNull().default("pending"),
   timestamp: timestamp("timestamp").defaultNow(),
 });
 

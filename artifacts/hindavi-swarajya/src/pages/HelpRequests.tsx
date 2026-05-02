@@ -67,7 +67,7 @@ export default function HelpRequests() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListHelpRequestsQueryKey() });
         setCreateOpen(false);
-        toast({ title: "Help request posted!", description: "Sevaks will be notified." });
+        toast({ title: "Submitted for admin approval", description: "Sevaks will be notified once an admin approves your request." });
         setForm({ title: "", description: "", category: "Other", urgency: "Medium", location: "", peopleNeeded: "5", deadline: "", contactInfo: "" });
       },
       onError: () => toast({ title: "Failed to post request", variant: "destructive" }),

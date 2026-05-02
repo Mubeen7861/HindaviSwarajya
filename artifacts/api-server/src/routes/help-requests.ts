@@ -41,6 +41,7 @@ router.get("/help-requests", async (req, res) => {
   try {
     const limit = parseInt(req.query.limit as string) || 20;
     const rows = await db.select().from(helpRequestsTable)
+      .where(eq(helpRequestsTable.approvalStatus, "approved"))
       .orderBy(desc(helpRequestsTable.createdAt))
       .limit(limit);
     const result = await Promise.all(rows.map(buildHelpRequest));

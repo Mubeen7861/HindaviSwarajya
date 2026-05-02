@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Shield, Users, FileText, Calendar, AlertCircle, Trash2,
   TrendingUp, Activity, RefreshCw, ArrowLeft, Edit3, Check, X, LogOut,
+  CheckCircle2, XCircle, Inbox, Clock,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -44,15 +45,23 @@ function adminFetch(path: string, init?: RequestInit): Promise<Response> {
 }
 
 type Overview = {
-  counts: { users: number; posts: number; events: number; helpRequests: number; totalHelped: number };
+  counts: {
+    users: number; posts: number; events: number; helpRequests: number; totalHelped: number;
+    pendingPosts: number; pendingEvents: number; pendingHelpRequests: number;
+  };
   recentUsers: { id: number; name: string; avatar: string; rank: string; location: string; joinedAt: string | null }[];
   recentPosts: { id: number; content: string; category: string; userId: number; helpedPeople: number; timestamp: string | null }[];
 };
 
 type AdminUser = { id: number; name: string; avatar: string; location: string; rank: string; totalHelped: number; followersCount: number; postsCount: number; joinedAt: string | null };
-type AdminPost = { id: number; userId: number; userName: string; userAvatar: string; content: string; category: string; helpedPeople: number; likes: number; location: string | null; timestamp: string | null };
-type AdminEvent = { id: number; title: string; category: string; date: string; location: string; status: string; organizerId: number; organizerName: string; volunteersNeeded: number; createdAt: string | null };
-type AdminHelpRequest = { id: number; title: string; category: string; urgency: string; location: string; status: string; requesterId: number; requesterName: string; peopleNeeded: number; deadline: string | null; createdAt: string | null };
+type AdminPost = { id: number; userId: number; userName: string; userAvatar: string; content: string; category: string; helpedPeople: number; likes: number; location: string | null; approvalStatus: string; timestamp: string | null };
+type AdminEvent = { id: number; title: string; category: string; date: string; location: string; status: string; approvalStatus: string; organizerId: number; organizerName: string; volunteersNeeded: number; createdAt: string | null };
+type AdminHelpRequest = { id: number; title: string; category: string; urgency: string; location: string; status: string; approvalStatus: string; requesterId: number; requesterName: string; peopleNeeded: number; deadline: string | null; createdAt: string | null };
+
+type PendingPost = { id: number; userId: number; userName: string; userAvatar: string; content: string; category: string; helpedPeople: number; location: string | null; image: string | null; timestamp: string | null };
+type PendingEvent = { id: number; title: string; description: string; category: string; eventType: string; date: string; time: string; location: string; organizerId: number; organizerName: string; organizerAvatar: string; volunteersNeeded: number; image: string | null; createdAt: string | null };
+type PendingHelpRequest = { id: number; title: string; description: string; category: string; urgency: string; location: string; requesterId: number; requesterName: string; requesterAvatar: string; peopleNeeded: number; deadline: string | null; createdAt: string | null };
+type PendingQueue = { counts: { posts: number; events: number; helpRequests: number }; posts: PendingPost[]; events: PendingEvent[]; helpRequests: PendingHelpRequest[] };
 
 const RANKS = ["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"];
 const EVENT_STATUSES = ["upcoming", "ongoing", "completed", "cancelled"];
@@ -75,6 +84,12 @@ const statusColors: Record<string, string> = {
   in_progress: "bg-blue-100 text-blue-700",
   fulfilled: "bg-green-100 text-green-700",
   closed: "bg-gray-100 text-gray-700",
+};
+
+const approvalColors: Record<string, string> = {
+  pending: "bg-amber-100 text-amber-700",
+  approved: "bg-emerald-100 text-emerald-700",
+  rejected: "bg-rose-100 text-rose-700",
 };
 
 const urgencyColors: Record<string, string> = {
@@ -106,6 +121,7 @@ export default function Admin() {
   const [posts, setPosts] = useState<AdminPost[]>([]);
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [helpReqs, setHelpReqs] = useState<AdminHelpRequest[]>([]);
+  const [pending, setPending] = useState<PendingQueue | null>(null);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [editingRank, setEditingRank] = useState<{ id: number; rank: string } | null>(null);
 
@@ -167,6 +183,14 @@ export default function Admin() {
     } finally { setLoad("help", false); }
   }, [safeFetch]);
 
+  const fetchPending = useCallback(async () => {
+    setLoad("pending", true);
+    try {
+      const r = await safeFetch("/admin/pending");
+      if (r) setPending(await r.json());
+    } finally { setLoad("pending", false); }
+  }, [safeFetch]);
+
   useEffect(() => {
     if (!getToken()) return;
     fetchOverview();
@@ -174,7 +198,8 @@ export default function Admin() {
     fetchPosts();
     fetchEvents();
     fetchHelpReqs();
-  }, [fetchOverview, fetchUsers, fetchPosts, fetchEvents, fetchHelpReqs]);
+    fetchPending();
+  }, [fetchOverview, fetchUsers, fetchPosts, fetchEvents, fetchHelpReqs, fetchPending]);
 
   const handleLogout = () => {
     clearToken();
@@ -254,6 +279,28 @@ export default function Admin() {
     }
   };
 
+  const moderate = async (
+    kind: "posts" | "events" | "help-requests",
+    id: number,
+    action: "approve" | "reject",
+  ) => {
+    const r = await safeFetch(`/admin/${kind}/${id}/${action}`, { method: "POST" });
+    if (r?.ok) {
+      toast({
+        title: action === "approve" ? "Approved ✓" : "Rejected",
+        description: action === "approve" ? "It is now visible in the feed." : "It will not appear publicly.",
+      });
+      fetchPending();
+      fetchOverview();
+      // Keep the main lists in sync if the user is also viewing them.
+      if (kind === "posts") fetchPosts();
+      if (kind === "events") fetchEvents();
+      if (kind === "help-requests") fetchHelpReqs();
+    } else if (r) {
+      toast({ title: `${action === "approve" ? "Approval" : "Rejection"} failed`, variant: "destructive" });
+    }
+  };
+
   const deleteHelpReq = async (id: number) => {
     const r = await safeFetch(`/admin/help-requests/${id}`, { method: "DELETE" });
     if (r?.ok) {
@@ -288,7 +335,7 @@ export default function Admin() {
             variant="outline"
             size="sm"
             className="gap-2 text-xs"
-            onClick={() => { fetchOverview(); fetchUsers(); fetchPosts(); fetchEvents(); fetchHelpReqs(); }}
+            onClick={() => { fetchOverview(); fetchUsers(); fetchPosts(); fetchEvents(); fetchHelpReqs(); fetchPending(); }}
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
@@ -308,8 +355,17 @@ export default function Admin() {
       {/* Body */}
       <div className="flex-1 overflow-hidden">
         <Tabs defaultValue="overview" className="flex flex-col h-full">
-          <TabsList className="mx-6 mt-4 mb-0 grid grid-cols-5 bg-gray-100 rounded-xl h-9 shrink-0">
+          <TabsList className="mx-6 mt-4 mb-0 grid grid-cols-6 bg-gray-100 rounded-xl h-9 shrink-0">
             <TabsTrigger value="overview" className="text-xs rounded-lg">Overview</TabsTrigger>
+            <TabsTrigger value="pending" className="text-xs rounded-lg gap-1">
+              <span>Pending</span>
+              {(() => {
+                const total = (pending?.counts.posts ?? 0) + (pending?.counts.events ?? 0) + (pending?.counts.helpRequests ?? 0);
+                return total > 0 ? (
+                  <span className="text-[10px] bg-amber-200 text-amber-800 rounded-full px-1.5 font-bold">{total}</span>
+                ) : null;
+              })()}
+            </TabsTrigger>
             <TabsTrigger value="users" className="text-xs rounded-lg">
               Users {users.length > 0 && <span className="ml-1 text-[10px] bg-gray-200 text-gray-600 rounded-full px-1.5">{users.length}</span>}
             </TabsTrigger>
@@ -339,6 +395,34 @@ export default function Admin() {
                   <StatCard icon={AlertCircle} label="Help Requests" value={overview.counts.helpRequests} color="bg-red-50 text-red-600" />
                   <StatCard icon={TrendingUp} label="People Helped" value={overview.counts.totalHelped} color="bg-green-50 text-green-600" />
                 </div>
+                {(overview.counts.pendingPosts + overview.counts.pendingEvents + overview.counts.pendingHelpRequests) > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-amber-900 text-sm">
+                          {overview.counts.pendingPosts + overview.counts.pendingEvents + overview.counts.pendingHelpRequests} item(s) waiting for approval
+                        </p>
+                        <p className="text-xs text-amber-700/80">
+                          {overview.counts.pendingPosts} posts · {overview.counts.pendingEvents} events · {overview.counts.pendingHelpRequests} help requests
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="bg-amber-600 hover:bg-amber-700 text-white text-xs gap-1.5 shrink-0"
+                      onClick={() => {
+                        const trigger = document.querySelector<HTMLButtonElement>('[data-state][role="tab"][value="pending"]');
+                        trigger?.click();
+                      }}
+                    >
+                      <Inbox className="w-3.5 h-3.5" />
+                      Review queue
+                    </Button>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-50 flex items-center gap-2">
@@ -382,6 +466,196 @@ export default function Admin() {
                     </div>
                   </div>
                 </div>
+              </>
+            ) : null}
+          </TabsContent>
+
+          {/* ── Pending Approvals ── */}
+          <TabsContent value="pending" className="flex-1 overflow-y-auto px-6 py-5 mt-0 space-y-6">
+            {loading.pending && !pending ? (
+              <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-2xl" />)}</div>
+            ) : pending && (pending.counts.posts + pending.counts.events + pending.counts.helpRequests) === 0 ? (
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm py-16 px-6 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center">
+                  <CheckCircle2 className="w-7 h-7" />
+                </div>
+                <h3 className="mt-4 font-bold text-gray-900">All caught up!</h3>
+                <p className="text-sm text-muted-foreground mt-1">Nothing waiting for approval right now.</p>
+              </div>
+            ) : pending ? (
+              <>
+                {/* Pending posts */}
+                {pending.posts.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide px-1 mb-3 flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-orange-500" />
+                      Seva Posts <span className="bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 text-[10px] normal-case">{pending.posts.length}</span>
+                    </h3>
+                    <div className="space-y-3">
+                      {pending.posts.map((p) => (
+                        <div key={p.id} className="bg-white border border-amber-100 rounded-2xl shadow-sm p-4">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="w-9 h-9 shrink-0">
+                              <AvatarImage src={p.userAvatar} />
+                              <AvatarFallback className="text-xs">{p.userName.substring(0, 2)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-sm text-gray-900">{p.userName}</span>
+                                <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-medium">{p.category}</span>
+                                <span className="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">{p.helpedPeople} helped</span>
+                                {p.location && <span className="text-xs text-muted-foreground">· {p.location}</span>}
+                                <span className="text-xs text-gray-400 ml-auto">
+                                  {p.timestamp ? formatDistanceToNow(new Date(p.timestamp), { addSuffix: true }) : "—"}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap break-words">{p.content}</p>
+                              {p.image && (
+                                <img src={p.image} alt="" className="mt-3 rounded-xl max-h-48 object-cover border border-gray-100" />
+                              )}
+                              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50">
+                                <Button
+                                  size="sm"
+                                  className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+                                  onClick={() => moderate("posts", p.id, "approve")}
+                                  data-testid={`approve-post-${p.id}`}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 text-xs gap-1.5 border-rose-200 text-rose-700 hover:bg-rose-50"
+                                  onClick={() => moderate("posts", p.id, "reject")}
+                                  data-testid={`reject-post-${p.id}`}
+                                >
+                                  <XCircle className="w-3.5 h-3.5" /> Reject
+                                </Button>
+                                <span className="text-xs text-gray-400 ml-auto">ID #{p.id}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Pending events */}
+                {pending.events.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide px-1 mb-3 flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-purple-500" />
+                      Events <span className="bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 text-[10px] normal-case">{pending.events.length}</span>
+                    </h3>
+                    <div className="space-y-3">
+                      {pending.events.map((ev) => (
+                        <div key={ev.id} className="bg-white border border-amber-100 rounded-2xl shadow-sm p-4">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="w-9 h-9 shrink-0">
+                              <AvatarImage src={ev.organizerAvatar} />
+                              <AvatarFallback className="text-xs">{ev.organizerName.substring(0, 2)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-gray-900">{ev.title}</span>
+                                <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium">{ev.category}</span>
+                                <span className="text-xs text-gray-400 ml-auto">
+                                  {ev.createdAt ? formatDistanceToNow(new Date(ev.createdAt), { addSuffix: true }) : "—"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                by <span className="font-medium text-gray-700">{ev.organizerName}</span>
+                                {" · "}{ev.date} {ev.time} · {ev.location} · needs {ev.volunteersNeeded} volunteers
+                              </p>
+                              <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap break-words">{ev.description}</p>
+                              {ev.image && (
+                                <img src={ev.image} alt="" className="mt-3 rounded-xl max-h-48 object-cover border border-gray-100" />
+                              )}
+                              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50">
+                                <Button
+                                  size="sm"
+                                  className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+                                  onClick={() => moderate("events", ev.id, "approve")}
+                                  data-testid={`approve-event-${ev.id}`}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 text-xs gap-1.5 border-rose-200 text-rose-700 hover:bg-rose-50"
+                                  onClick={() => moderate("events", ev.id, "reject")}
+                                  data-testid={`reject-event-${ev.id}`}
+                                >
+                                  <XCircle className="w-3.5 h-3.5" /> Reject
+                                </Button>
+                                <span className="text-xs text-gray-400 ml-auto">ID #{ev.id}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Pending help requests */}
+                {pending.helpRequests.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide px-1 mb-3 flex items-center gap-2">
+                      <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                      Help Requests <span className="bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 text-[10px] normal-case">{pending.helpRequests.length}</span>
+                    </h3>
+                    <div className="space-y-3">
+                      {pending.helpRequests.map((hr) => (
+                        <div key={hr.id} className="bg-white border border-amber-100 rounded-2xl shadow-sm p-4">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="w-9 h-9 shrink-0">
+                              <AvatarImage src={hr.requesterAvatar} />
+                              <AvatarFallback className="text-xs">{hr.requesterName.substring(0, 2)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-gray-900">{hr.title}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${urgencyColors[hr.urgency] ?? "bg-gray-100 text-gray-600"}`}>{hr.urgency}</span>
+                                <span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full font-medium">{hr.category}</span>
+                                <span className="text-xs text-gray-400 ml-auto">
+                                  {hr.createdAt ? formatDistanceToNow(new Date(hr.createdAt), { addSuffix: true }) : "—"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                by <span className="font-medium text-gray-700">{hr.requesterName}</span>
+                                {" · "}{hr.location} · needs {hr.peopleNeeded} sevak(s){hr.deadline ? ` · by ${hr.deadline}` : ""}
+                              </p>
+                              <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap break-words">{hr.description}</p>
+                              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50">
+                                <Button
+                                  size="sm"
+                                  className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+                                  onClick={() => moderate("help-requests", hr.id, "approve")}
+                                  data-testid={`approve-help-${hr.id}`}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 text-xs gap-1.5 border-rose-200 text-rose-700 hover:bg-rose-50"
+                                  onClick={() => moderate("help-requests", hr.id, "reject")}
+                                  data-testid={`reject-help-${hr.id}`}
+                                >
+                                  <XCircle className="w-3.5 h-3.5" /> Reject
+                                </Button>
+                                <span className="text-xs text-gray-400 ml-auto">ID #{hr.id}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </>
             ) : null}
           </TabsContent>
@@ -515,7 +789,10 @@ export default function Admin() {
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-medium">{p.category}</span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-medium">{p.category}</span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${approvalColors[p.approvalStatus] ?? "bg-gray-100 text-gray-600"}`}>{p.approvalStatus}</span>
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-right font-semibold text-green-600 hidden lg:table-cell">{p.helpedPeople}</td>
                           <td className="px-4 py-3 text-right text-gray-600 hidden lg:table-cell">{p.likes}</td>
@@ -577,14 +854,17 @@ export default function Admin() {
                           <td className="px-4 py-3 text-xs text-gray-600 hidden md:table-cell">{ev.organizerName}</td>
                           <td className="px-4 py-3 text-xs text-gray-600 hidden md:table-cell">{ev.date}</td>
                           <td className="px-4 py-3">
-                            <Select value={ev.status} onValueChange={(v) => updateEventStatus(ev.id, v)}>
-                              <SelectTrigger className="h-7 text-xs w-32 border-0 shadow-none p-0 gap-1">
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[ev.status] ?? "bg-gray-100 text-gray-600"}`}>{ev.status}</span>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {EVENT_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Select value={ev.status} onValueChange={(v) => updateEventStatus(ev.id, v)}>
+                                <SelectTrigger className="h-7 text-xs w-32 border-0 shadow-none p-0 gap-1">
+                                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[ev.status] ?? "bg-gray-100 text-gray-600"}`}>{ev.status}</span>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {EVENT_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${approvalColors[ev.approvalStatus] ?? "bg-gray-100 text-gray-600"}`}>{ev.approvalStatus}</span>
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-right">
                             <AlertDialog>
@@ -643,14 +923,17 @@ export default function Admin() {
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${urgencyColors[hr.urgency] ?? "bg-gray-100 text-gray-600"}`}>{hr.urgency}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <Select value={hr.status} onValueChange={(v) => updateHelpStatus(hr.id, v)}>
-                              <SelectTrigger className="h-7 text-xs w-32 border-0 shadow-none p-0 gap-1">
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[hr.status] ?? "bg-gray-100 text-gray-600"}`}>{hr.status}</span>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {HELP_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Select value={hr.status} onValueChange={(v) => updateHelpStatus(hr.id, v)}>
+                                <SelectTrigger className="h-7 text-xs w-32 border-0 shadow-none p-0 gap-1">
+                                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[hr.status] ?? "bg-gray-100 text-gray-600"}`}>{hr.status}</span>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {HELP_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${approvalColors[hr.approvalStatus] ?? "bg-gray-100 text-gray-600"}`}>{hr.approvalStatus}</span>
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-right">
                             <AlertDialog>

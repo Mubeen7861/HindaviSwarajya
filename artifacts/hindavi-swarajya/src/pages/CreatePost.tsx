@@ -36,8 +36,8 @@ export default function CreatePost() {
     mutation: {
       onSuccess: () => {
         toast({
-          title: "Seva posted successfully!",
-          description: "Thank you for contributing to the community.",
+          title: "Submitted for admin approval",
+          description: "Your seva will appear in the feed once an admin approves it. Thank you for contributing!",
         });
         queryClient.invalidateQueries({ queryKey: getListPostsQueryKey() });
         setLocation("/app");

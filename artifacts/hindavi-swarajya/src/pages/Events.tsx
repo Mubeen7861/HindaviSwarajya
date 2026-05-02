@@ -71,7 +71,7 @@ export default function Events() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListEventsQueryKey() });
         setCreateOpen(false);
-        toast({ title: "Event created!", description: "Your seva event is now live." });
+        toast({ title: "Submitted for admin approval", description: "Your event will go live once an admin approves it." });
         setForm({ title: "", description: "", eventType: "Seminar", category: "Other", date: "", time: "10:00 AM", location: "", address: "", volunteersNeeded: "20", duration: "", requirements: "", tags: "" });
       },
       onError: () => toast({ title: "Failed to create event", variant: "destructive" }),

@@ -55,12 +55,15 @@ router.use("/admin", requireAdminAuth);
 // GET /api/admin/overview
 router.get("/admin/overview", async (req, res) => {
   try {
-    const [users, posts, events, helpReqs, helpedAgg] = await Promise.all([
+    const [users, posts, events, helpReqs, helpedAgg, pendingPosts, pendingEvents, pendingHelp] = await Promise.all([
       db.select({ count: sql<number>`count(*)::int` }).from(usersTable),
       db.select({ count: sql<number>`count(*)::int` }).from(postsTable),
       db.select({ count: sql<number>`count(*)::int` }).from(eventsTable),
       db.select({ count: sql<number>`count(*)::int` }).from(helpRequestsTable),
       db.select({ total: sql<number>`coalesce(sum(total_helped), 0)::int` }).from(usersTable),
+      db.select({ count: sql<number>`count(*)::int` }).from(postsTable).where(eq(postsTable.approvalStatus, "pending")),
+      db.select({ count: sql<number>`count(*)::int` }).from(eventsTable).where(eq(eventsTable.approvalStatus, "pending")),
+      db.select({ count: sql<number>`count(*)::int` }).from(helpRequestsTable).where(eq(helpRequestsTable.approvalStatus, "pending")),
     ]);
 
     const [recentUsers, recentPosts] = await Promise.all([
@@ -75,6 +78,9 @@ router.get("/admin/overview", async (req, res) => {
         events: events[0]?.count ?? 0,
         helpRequests: helpReqs[0]?.count ?? 0,
         totalHelped: helpedAgg[0]?.total ?? 0,
+        pendingPosts: pendingPosts[0]?.count ?? 0,
+        pendingEvents: pendingEvents[0]?.count ?? 0,
+        pendingHelpRequests: pendingHelp[0]?.count ?? 0,
       },
       recentUsers: recentUsers.map((u) => ({
         id: u.id,
@@ -206,6 +212,7 @@ router.get("/admin/posts", async (req, res) => {
         helpedPeople: post.helpedPeople,
         likes: post.likes,
         location: post.location ?? null,
+        approvalStatus: post.approvalStatus,
         timestamp: post.timestamp?.toISOString() ?? null,
       }))
     );
@@ -218,17 +225,235 @@ router.get("/admin/posts", async (req, res) => {
 router.delete("/admin/posts/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const [post] = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
-    if (!post) { res.status(404).json({ error: "Not found" }); return; }
-    await db.delete(postTagsTable).where(eq(postTagsTable.postId, id));
-    await db.delete(postLikesTable).where(eq(postLikesTable.postId, id));
-    await db.delete(commentsTable).where(eq(commentsTable.postId, id));
-    await db.delete(postsTable).where(eq(postsTable.id, id));
-    await db
-      .update(usersTable)
-      .set({ postsCount: sql`GREATEST(${usersTable.postsCount} - 1, 0)` })
-      .where(eq(usersTable.id, post.userId));
+    const ok = await db.transaction(async (tx) => {
+      const [post] = await tx.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
+      if (!post) return false;
+      const wasApproved = post.approvalStatus === "approved";
+      await tx.delete(postTagsTable).where(eq(postTagsTable.postId, id));
+      await tx.delete(postLikesTable).where(eq(postLikesTable.postId, id));
+      await tx.delete(commentsTable).where(eq(commentsTable.postId, id));
+      await tx.delete(postsTable).where(eq(postsTable.id, id));
+      if (wasApproved) {
+        await tx
+          .update(usersTable)
+          .set({
+            postsCount: sql`GREATEST(${usersTable.postsCount} - 1, 0)`,
+            totalHelped: sql`GREATEST(${usersTable.totalHelped} - ${post.helpedPeople}, 0)`,
+          })
+          .where(eq(usersTable.id, post.userId));
+      }
+      return true;
+    });
+    if (!ok) { res.status(404).json({ error: "Not found" }); return; }
     res.json({ deleted: true });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── APPROVAL QUEUE ────────────────────────────────────────────────────────────
+
+router.get("/admin/pending", async (req, res) => {
+  try {
+    const [posts, events, helpReqs] = await Promise.all([
+      db
+        .select({ p: postsTable, userName: usersTable.name, userAvatar: usersTable.avatar })
+        .from(postsTable)
+        .leftJoin(usersTable, eq(postsTable.userId, usersTable.id))
+        .where(eq(postsTable.approvalStatus, "pending"))
+        .orderBy(desc(postsTable.timestamp)),
+      db
+        .select({ e: eventsTable, organizerName: usersTable.name, organizerAvatar: usersTable.avatar })
+        .from(eventsTable)
+        .leftJoin(usersTable, eq(eventsTable.organizerId, usersTable.id))
+        .where(eq(eventsTable.approvalStatus, "pending"))
+        .orderBy(desc(eventsTable.createdAt)),
+      db
+        .select({ hr: helpRequestsTable, requesterName: usersTable.name, requesterAvatar: usersTable.avatar })
+        .from(helpRequestsTable)
+        .leftJoin(usersTable, eq(helpRequestsTable.requesterId, usersTable.id))
+        .where(eq(helpRequestsTable.approvalStatus, "pending"))
+        .orderBy(desc(helpRequestsTable.createdAt)),
+    ]);
+    res.json({
+      counts: { posts: posts.length, events: events.length, helpRequests: helpReqs.length },
+      posts: posts.map(({ p, userName, userAvatar }) => ({
+        id: p.id,
+        userId: p.userId,
+        userName: userName ?? "Unknown",
+        userAvatar: userAvatar ?? "",
+        content: p.content,
+        category: p.category,
+        helpedPeople: p.helpedPeople,
+        location: p.location ?? null,
+        image: p.image ?? null,
+        timestamp: p.timestamp?.toISOString() ?? null,
+      })),
+      events: events.map(({ e, organizerName, organizerAvatar }) => ({
+        id: e.id,
+        title: e.title,
+        description: e.description,
+        category: e.category,
+        eventType: e.eventType,
+        date: e.date,
+        time: e.time,
+        location: e.location,
+        organizerId: e.organizerId,
+        organizerName: organizerName ?? "Unknown",
+        organizerAvatar: organizerAvatar ?? "",
+        volunteersNeeded: e.volunteersNeeded,
+        image: e.image ?? null,
+        createdAt: e.createdAt?.toISOString() ?? null,
+      })),
+      helpRequests: helpReqs.map(({ hr, requesterName, requesterAvatar }) => ({
+        id: hr.id,
+        title: hr.title,
+        description: hr.description,
+        category: hr.category,
+        urgency: hr.urgency,
+        location: hr.location,
+        requesterId: hr.requesterId,
+        requesterName: requesterName ?? "Unknown",
+        requesterAvatar: requesterAvatar ?? "",
+        peopleNeeded: hr.peopleNeeded,
+        deadline: hr.deadline ?? null,
+        createdAt: hr.createdAt?.toISOString() ?? null,
+      })),
+    });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/admin/posts/:id/approve
+router.post("/admin/posts/:id/approve", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const result = await db.transaction(async (tx) => {
+      const [post] = await tx.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
+      if (!post) return { notFound: true } as const;
+      if (post.approvalStatus === "approved") {
+        return { id: post.id, approvalStatus: post.approvalStatus };
+      }
+      const wasPending = post.approvalStatus === "pending";
+      const [updated] = await tx
+        .update(postsTable)
+        .set({ approvalStatus: "approved" })
+        .where(eq(postsTable.id, id))
+        .returning();
+      if (wasPending) {
+        await tx
+          .update(usersTable)
+          .set({
+            postsCount: sql`${usersTable.postsCount} + 1`,
+            totalHelped: sql`${usersTable.totalHelped} + ${post.helpedPeople}`,
+          })
+          .where(eq(usersTable.id, post.userId));
+      }
+      return { id: updated.id, approvalStatus: updated.approvalStatus };
+    });
+    if ("notFound" in result) { res.status(404).json({ error: "Not found" }); return; }
+    res.json(result);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/admin/posts/:id/reject
+router.post("/admin/posts/:id/reject", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const result = await db.transaction(async (tx) => {
+      const [post] = await tx.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
+      if (!post) return { notFound: true } as const;
+      const wasApproved = post.approvalStatus === "approved";
+      const [updated] = await tx
+        .update(postsTable)
+        .set({ approvalStatus: "rejected" })
+        .where(eq(postsTable.id, id))
+        .returning();
+      if (wasApproved) {
+        await tx
+          .update(usersTable)
+          .set({
+            postsCount: sql`GREATEST(${usersTable.postsCount} - 1, 0)`,
+            totalHelped: sql`GREATEST(${usersTable.totalHelped} - ${post.helpedPeople}, 0)`,
+          })
+          .where(eq(usersTable.id, post.userId));
+      }
+      return { id: updated.id, approvalStatus: updated.approvalStatus };
+    });
+    if ("notFound" in result) { res.status(404).json({ error: "Not found" }); return; }
+    res.json(result);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/admin/events/:id/approve | reject
+router.post("/admin/events/:id/approve", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [event] = await db
+      .update(eventsTable)
+      .set({ approvalStatus: "approved" })
+      .where(eq(eventsTable.id, id))
+      .returning();
+    if (!event) { res.status(404).json({ error: "Not found" }); return; }
+    res.json({ id: event.id, approvalStatus: event.approvalStatus });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/admin/events/:id/reject", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [event] = await db
+      .update(eventsTable)
+      .set({ approvalStatus: "rejected" })
+      .where(eq(eventsTable.id, id))
+      .returning();
+    if (!event) { res.status(404).json({ error: "Not found" }); return; }
+    res.json({ id: event.id, approvalStatus: event.approvalStatus });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/admin/help-requests/:id/approve | reject
+router.post("/admin/help-requests/:id/approve", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [hr] = await db
+      .update(helpRequestsTable)
+      .set({ approvalStatus: "approved" })
+      .where(eq(helpRequestsTable.id, id))
+      .returning();
+    if (!hr) { res.status(404).json({ error: "Not found" }); return; }
+    res.json({ id: hr.id, approvalStatus: hr.approvalStatus });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/admin/help-requests/:id/reject", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [hr] = await db
+      .update(helpRequestsTable)
+      .set({ approvalStatus: "rejected" })
+      .where(eq(helpRequestsTable.id, id))
+      .returning();
+    if (!hr) { res.status(404).json({ error: "Not found" }); return; }
+    res.json({ id: hr.id, approvalStatus: hr.approvalStatus });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -256,6 +481,7 @@ router.get("/admin/events", async (req, res) => {
         date: event.date,
         location: event.location,
         status: event.status,
+        approvalStatus: event.approvalStatus,
         organizerId: event.organizerId,
         organizerName: organizerName ?? "Unknown",
         volunteersNeeded: event.volunteersNeeded,
@@ -316,6 +542,7 @@ router.get("/admin/help-requests", async (req, res) => {
         urgency: hr.urgency,
         location: hr.location,
         status: hr.status,
+        approvalStatus: hr.approvalStatus,
         requesterId: hr.requesterId,
         requesterName: requesterName ?? "Unknown",
         peopleNeeded: hr.peopleNeeded,

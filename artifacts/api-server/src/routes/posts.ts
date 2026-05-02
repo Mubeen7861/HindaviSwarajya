@@ -84,7 +84,7 @@ router.get("/posts", async (req, res) => {
     const parsed = ListPostsQueryParams.safeParse(req.query);
     const params = parsed.success ? parsed.data : { limit: 20, offset: 0 };
 
-    const conditions: SQL[] = [];
+    const conditions: SQL[] = [eq(postsTable.approvalStatus, "approved")];
 
     if (params.category) {
       conditions.push(eq(postsTable.category, params.category));
@@ -151,14 +151,8 @@ router.post("/posts", requireAuth, async (req, res) => {
       await db.insert(postTagsTable).values(tags.map((tag: string) => ({ postId: post.id, tag })));
     }
 
-    await db
-      .update(usersTable)
-      .set({
-        postsCount: sql`${usersTable.postsCount} + 1`,
-        totalHelped: sql`${usersTable.totalHelped} + ${rest.helpedPeople}`,
-      })
-      .where(eq(usersTable.id, userId));
-
+    // NOTE: postsCount / totalHelped are NOT incremented here — they are
+    // updated when an admin approves the post via /api/admin/posts/:id/approve.
     const result = await buildPost(post);
     res.status(201).json(result);
   } catch (err) {

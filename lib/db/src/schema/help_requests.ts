@@ -10,6 +10,7 @@ export const helpRequestsTable = pgTable("help_requests", {
   requesterId: integer("requester_id").notNull(),
   peopleNeeded: integer("people_needed").notNull().default(1),
   status: text("status").notNull().default("open"),
+  approvalStatus: text("approval_status").notNull().default("pending"),
   deadline: text("deadline"),
   contactInfo: text("contact_info"),
   createdAt: timestamp("created_at").defaultNow(),

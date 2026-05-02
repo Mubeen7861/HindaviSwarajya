@@ -6,7 +6,7 @@ import {
   eventRegistrationsTable,
   usersTable,
 } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
@@ -49,9 +49,10 @@ router.get("/events", async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const status = req.query.status as string | undefined;
 
+    const approvedOnly = eq(eventsTable.approvalStatus, "approved");
     const rows = status
-      ? await db.select().from(eventsTable).where(eq(eventsTable.status, status)).orderBy(desc(eventsTable.createdAt)).limit(limit)
-      : await db.select().from(eventsTable).orderBy(desc(eventsTable.createdAt)).limit(limit);
+      ? await db.select().from(eventsTable).where(and(eq(eventsTable.status, status), approvedOnly)).orderBy(desc(eventsTable.createdAt)).limit(limit)
+      : await db.select().from(eventsTable).where(approvedOnly).orderBy(desc(eventsTable.createdAt)).limit(limit);
 
     const result = await Promise.all(rows.map(buildEvent));
     res.json(result);

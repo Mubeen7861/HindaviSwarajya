@@ -14,6 +14,7 @@ export const eventsTable = pgTable("events", {
   volunteersNeeded: integer("volunteers_needed").notNull().default(10),
   image: text("image"),
   status: text("status").notNull().default("upcoming"),
+  approvalStatus: text("approval_status").notNull().default("pending"),
   duration: text("duration"),
   requirements: text("requirements"),
   createdAt: timestamp("created_at").defaultNow(),

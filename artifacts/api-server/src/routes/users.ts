@@ -172,7 +172,7 @@ router.get("/users/:id/posts", async (req, res) => {
     const posts = await db
       .select()
       .from(postsTable)
-      .where(eq(postsTable.userId, id))
+      .where(sql`${postsTable.userId} = ${id} AND ${postsTable.approvalStatus} = 'approved'`)
       .orderBy(desc(postsTable.timestamp));
     const result = await Promise.all(posts.map(buildPost));
     res.json(result);
