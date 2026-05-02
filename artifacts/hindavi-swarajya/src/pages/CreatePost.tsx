@@ -260,7 +260,10 @@ export default function CreatePost() {
                           </div>
                         </FormControl>
                         <p className="text-[11.5px] text-orange-600 font-medium flex items-center gap-1 mt-1">
-                          <Sparkles className="w-3 h-3" /> {t("share.earnHint")}
+                          <Sparkles className="w-3 h-3" />{" "}
+                          {t("share.earnHint", {
+                            points: Math.max(0, Number(field.value) || 0) * 10,
+                          })}
                         </p>
                         <FormMessage />
                       </FormItem>

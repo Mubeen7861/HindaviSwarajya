@@ -63,7 +63,7 @@ const en = {
     category: "Category",
     categoryPlaceholder: "Select seva type",
     peopleHelped: "People Helped",
-    earnHint: "You'll earn 10 seva points!",
+    earnHint: "You'll earn {{points}} seva points!",
     continueLocation: "Continue to Location & Photos",
     step2Q: "Where did this take place?",
     locationLabel: "Location",

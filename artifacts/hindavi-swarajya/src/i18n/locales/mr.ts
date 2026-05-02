@@ -65,7 +65,7 @@ const mr: Translation = {
     category: "श्रेणी",
     categoryPlaceholder: "सेवेचा प्रकार निवडा",
     peopleHelped: "मदत केलेले लोक",
-    earnHint: "तुम्हाला 10 सेवा गुण मिळतील!",
+    earnHint: "तुम्हाला {{points}} सेवा गुण मिळतील!",
     continueLocation: "स्थान व फोटोसाठी पुढे जा",
     step2Q: "हे कुठे घडलं?",
     locationLabel: "स्थान",
