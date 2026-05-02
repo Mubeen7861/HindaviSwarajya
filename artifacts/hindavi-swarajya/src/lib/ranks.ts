@@ -9,6 +9,16 @@ import subhedarBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_26_AM_1_1777
 import deshmukhBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_31_AM_1_1777758956663.png";
 import deshpandeBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_37_AM_1_1777758956664.png";
 import sardarBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_43_AM_1_1777758956664.png";
+import sevakBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_34_AM_1_1777759249866.png";
+import mavlaBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_43_AM_1_1777759249866.png";
+import bargirBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_49_AM_1_1777759249866.png";
+import shiledarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_26_56_AM_1_1777759249867.png";
+import naikBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_02_AM_1_1777759249867.png";
+import havaldarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_10_AM_1_1777759249867.png";
+import jumledarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_16_AM_1_1777759249867.png";
+import hazariBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_22_AM_1_1777759249868.png";
+import panchHazariBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_27_28_AM_1_1777759249868.png";
+import killedarBadge from "@assets/ChatGPT_Image_May_3,_2026,_03_32_08_AM_1_1777759373177.png";
 
 export const MUDRA_PER_HELP = 10;
 
@@ -32,28 +42,38 @@ export interface RankDef {
 
 export const SWARAJYA_RANKS: RankDef[] = [
   { name: "Sevak",         devanagari: "सेवक",          threshold: 0,      tier: "starter", description: "Starting your journey of seva",
-    bg: "bg-stone-100",    text: "text-stone-700",   border: "border-stone-300",   ring: "ring-stone-300",   gradient: "from-stone-200 to-stone-100" },
+    bg: "bg-stone-100",    text: "text-stone-700",   border: "border-stone-300",   ring: "ring-stone-300",   gradient: "from-stone-200 to-stone-100",
+    image: sevakBadge },
   { name: "Mavla",         devanagari: "मावळा",          threshold: 10,     tier: "starter", description: "Loyal foot soldier of the cause",
-    bg: "bg-amber-50",     text: "text-amber-700",   border: "border-amber-200",   ring: "ring-amber-300",   gradient: "from-amber-100 to-amber-50" },
+    bg: "bg-amber-50",     text: "text-amber-700",   border: "border-amber-200",   ring: "ring-amber-300",   gradient: "from-amber-100 to-amber-50",
+    image: mavlaBadge },
   { name: "Bargir",        devanagari: "बारगीर",          threshold: 30,     tier: "starter", description: "Trusted cavalry of the Swarajya",
-    bg: "bg-orange-50",    text: "text-orange-700",  border: "border-orange-200",  ring: "ring-orange-300",  gradient: "from-orange-100 to-orange-50" },
+    bg: "bg-orange-50",    text: "text-orange-700",  border: "border-orange-200",  ring: "ring-orange-300",  gradient: "from-orange-100 to-orange-50",
+    image: bargirBadge },
   { name: "Shiledar",      devanagari: "शिलेदार",         threshold: 60,     tier: "core",    description: "Owns their own arms and rides",
-    bg: "bg-orange-100",   text: "text-orange-800",  border: "border-orange-300",  ring: "ring-orange-400",  gradient: "from-orange-200 to-orange-100" },
+    bg: "bg-orange-100",   text: "text-orange-800",  border: "border-orange-300",  ring: "ring-orange-400",  gradient: "from-orange-200 to-orange-100",
+    image: shiledarBadge },
   { name: "Naik",          devanagari: "नाईक",            threshold: 120,    tier: "core",    description: "Leader of a small unit of sevaks",
-    bg: "bg-rose-50",      text: "text-rose-700",    border: "border-rose-200",    ring: "ring-rose-300",    gradient: "from-rose-100 to-rose-50" },
+    bg: "bg-rose-50",      text: "text-rose-700",    border: "border-rose-200",    ring: "ring-rose-300",    gradient: "from-rose-100 to-rose-50",
+    image: naikBadge },
   { name: "Havaldar",      devanagari: "हवलदार",         threshold: 240,    tier: "core",    description: "Commands a contingent of soldiers",
-    bg: "bg-rose-100",     text: "text-rose-800",    border: "border-rose-300",    ring: "ring-rose-400",    gradient: "from-rose-200 to-rose-100" },
+    bg: "bg-rose-100",     text: "text-rose-800",    border: "border-rose-300",    ring: "ring-rose-400",    gradient: "from-rose-200 to-rose-100",
+    image: havaldarBadge },
   { name: "Jumledar",      devanagari: "जुमलेदार",         threshold: 480,    tier: "core",    description: "Captain of a jumla — multiple units",
-    bg: "bg-red-100",      text: "text-red-800",     border: "border-red-300",     ring: "ring-red-400",     gradient: "from-red-200 to-red-100" },
+    bg: "bg-red-100",      text: "text-red-800",     border: "border-red-300",     ring: "ring-red-400",     gradient: "from-red-200 to-red-100",
+    image: jumledarBadge },
   { name: "Hazari",        devanagari: "हजारी",           threshold: 960,    tier: "elite",   description: "Marshal of a thousand brave warriors",
-    bg: "bg-purple-50",    text: "text-purple-700",  border: "border-purple-200",  ring: "ring-purple-300",  gradient: "from-purple-100 to-purple-50" },
+    bg: "bg-purple-50",    text: "text-purple-700",  border: "border-purple-200",  ring: "ring-purple-300",  gradient: "from-purple-100 to-purple-50",
+    image: hazariBadge },
   { name: "Panch Hazari",  devanagari: "पंच हजारी",       threshold: 2000,   tier: "elite",   description: "Commander of five thousand",
-    bg: "bg-purple-100",   text: "text-purple-800",  border: "border-purple-300",  ring: "ring-purple-400",  gradient: "from-purple-200 to-purple-100" },
+    bg: "bg-purple-100",   text: "text-purple-800",  border: "border-purple-300",  ring: "ring-purple-400",  gradient: "from-purple-200 to-purple-100",
+    image: panchHazariBadge },
   { name: "Sardar",        devanagari: "सरदार",           threshold: 4000,   tier: "elite",   description: "Noble general of the realm",
     bg: "bg-indigo-100",   text: "text-indigo-800",  border: "border-indigo-300",  ring: "ring-indigo-400",  gradient: "from-indigo-200 to-indigo-100",
     image: sardarBadge },
   { name: "Killedar",      devanagari: "किल्लेदार",        threshold: 7000,   tier: "command", description: "Guardian of a fort and its people",
-    bg: "bg-blue-100",     text: "text-blue-800",    border: "border-blue-300",    ring: "ring-blue-400",    gradient: "from-blue-200 to-blue-100" },
+    bg: "bg-blue-100",     text: "text-blue-800",    border: "border-blue-300",    ring: "ring-blue-400",    gradient: "from-blue-200 to-blue-100",
+    image: killedarBadge },
   { name: "Deshpande",     devanagari: "देशपांडे",         threshold: 10000,  tier: "command", description: "Steward of a land and its records",
     bg: "bg-cyan-100",     text: "text-cyan-800",    border: "border-cyan-300",    ring: "ring-cyan-400",    gradient: "from-cyan-200 to-cyan-100",
     image: deshpandeBadge },
