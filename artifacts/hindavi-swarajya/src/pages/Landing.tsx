@@ -417,9 +417,6 @@ export default function Landing() {
                                   <p className={`text-base ${r.text} opacity-80 font-serif leading-tight mt-0.5`} lang="mr">
                                     {r.devanagari}
                                   </p>
-                                  <p className={`text-xs sm:text-sm ${r.text} opacity-70 mt-2 italic`}>
-                                    {r.description}
-                                  </p>
                                 </div>
                               </div>
                             </div>
