@@ -2,8 +2,8 @@
 // The threshold list MUST mirror lib/db/src/ranks.ts — the server is the
 // source of truth for the rank string stored on each user. Keep these in sync.
 
-import ashtaPradhanBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_20_AM_1_1777758103572.png";
-import sarnobatBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_15_AM_1_1777758103572.png";
+import ashtaPradhanBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_20_AM_1_1777758780381.png";
+import sarnobatBadge from "@assets/ChatGPT_Image_May_3,_2026,_02_52_15_AM_1_1777758780381.png";
 
 export const MUDRA_PER_HELP = 10;
 
