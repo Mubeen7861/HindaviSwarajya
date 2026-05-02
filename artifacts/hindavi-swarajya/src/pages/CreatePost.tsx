@@ -5,8 +5,8 @@ import { useLocation } from "wouter";
 import { useCreatePost, getListPostsQueryKey } from "@workspace/api-client-react";
 import { SevaCategory } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CURRENT_USER_ID } from "@/lib/constants";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { useCurrentUserId } from "@/hooks/useCurrentUser";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,7 +30,8 @@ type FormValues = z.infer<typeof formSchema>;
 export default function CreatePost() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  
+  const currentUserId = useCurrentUserId();
+
   const createPost = useCreatePost({
     mutation: {
       onSuccess: () => {
@@ -39,7 +40,7 @@ export default function CreatePost() {
           description: "Thank you for contributing to the community.",
         });
         queryClient.invalidateQueries({ queryKey: getListPostsQueryKey() });
-        setLocation("/");
+        setLocation("/app");
       },
       onError: () => {
         toast({
@@ -64,17 +65,16 @@ export default function CreatePost() {
   });
 
   const onSubmit = (data: FormValues) => {
-    createPost.mutate({
-      data: {
-        ...data,
-        userId: CURRENT_USER_ID,
-      }
-    });
+    if (currentUserId === undefined) {
+      toast({ title: "Please sign in to share seva", variant: "destructive" });
+      return;
+    }
+    createPost.mutate({ data });
   };
 
   return (
     <div className="container max-w-2xl mx-auto px-4 py-8">
-      <Link href="/">
+      <Link href="/app">
         <Button variant="ghost" size="sm" className="mb-4 gap-2 text-muted-foreground">
           <ArrowLeft className="w-4 h-4" /> Back to Feed
         </Button>
@@ -97,11 +97,11 @@ export default function CreatePost() {
                   <FormItem>
                     <FormLabel className="text-base font-semibold">What did you do?</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Describe the act of service..." 
+                      <Textarea
+                        placeholder="Describe the act of service..."
                         className="min-h-32 resize-none"
                         data-testid="input-content"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -142,11 +142,11 @@ export default function CreatePost() {
                     <FormItem>
                       <FormLabel className="font-semibold">People Helped</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          min={1} 
+                        <Input
+                          type="number"
+                          min={1}
                           data-testid="input-helped"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormDescription>Approximate number of beneficiaries</FormDescription>
@@ -164,10 +164,10 @@ export default function CreatePost() {
                     <FormItem>
                       <FormLabel className="font-semibold">Location (Optional)</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="e.g. Pune, Maharashtra" 
+                        <Input
+                          placeholder="e.g. Pune, Maharashtra"
                           data-testid="input-location"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -182,8 +182,8 @@ export default function CreatePost() {
                     <FormItem>
                       <FormLabel className="font-semibold">Tags (Comma separated)</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="e.g. education, children, rural" 
+                        <Input
+                          placeholder="e.g. education, children, rural"
                           data-testid="input-tags"
                           value={Array.isArray(value) ? value.join(", ") : value}
                           onChange={(e) => onChange(e.target.value)}
@@ -203,10 +203,10 @@ export default function CreatePost() {
                   <FormItem>
                     <FormLabel className="font-semibold">Image URL (Optional)</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="https://example.com/image.jpg" 
+                      <Input
+                        placeholder="https://example.com/image.jpg"
                         data-testid="input-image"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -215,10 +215,10 @@ export default function CreatePost() {
               />
 
               <div className="pt-4 border-t flex justify-end">
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  disabled={createPost.isPending}
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={createPost.isPending || currentUserId === undefined}
                   className="w-full sm:w-auto gap-2"
                   data-testid="button-submit-post"
                 >

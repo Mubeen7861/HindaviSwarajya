@@ -6,9 +6,11 @@ export const rankEnum = ["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"] as co
 
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
+  clerkId: text("clerk_id").notNull().unique(),
+  email: text("email"),
   name: text("name").notNull(),
-  avatar: text("avatar").notNull(),
-  location: text("location").notNull(),
+  avatar: text("avatar"),
+  location: text("location"),
   rank: text("rank").notNull().default("Sevak"),
   totalHelped: integer("total_helped").notNull().default(0),
   followersCount: integer("followers_count").notNull().default(0),

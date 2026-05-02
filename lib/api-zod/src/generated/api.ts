@@ -16,6 +16,54 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
+ * @summary Get current authenticated user
+ */
+export const GetMeResponse = zod
+  .object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  })
+  .and(
+    zod.object({
+      bio: zod.string().optional(),
+      joinedAt: zod.string().optional(),
+    }),
+  );
+
+/**
+ * @summary Update current authenticated user's profile
+ */
+export const UpdateMeBody = zod.object({
+  name: zod.string().optional(),
+  bio: zod.string().optional(),
+  location: zod.string().optional(),
+});
+
+export const UpdateMeResponse = zod
+  .object({
+    id: zod.number(),
+    name: zod.string(),
+    avatar: zod.string(),
+    location: zod.string(),
+    rank: zod.enum(["Sevak", "Karyakarta", "Nayak", "Veer", "Sardar"]),
+    totalHelped: zod.number(),
+    followersCount: zod.number(),
+    postsCount: zod.number(),
+  })
+  .and(
+    zod.object({
+      bio: zod.string().optional(),
+      joinedAt: zod.string().optional(),
+    }),
+  );
+
+/**
  * @summary List seva posts
  */
 export const listPostsQueryLimitDefault = 20;
@@ -68,10 +116,9 @@ export const ListPostsResponseItem = zod.object({
 export const ListPostsResponse = zod.array(ListPostsResponseItem);
 
 /**
- * @summary Create a seva post
+ * @summary Create a seva post (auth required)
  */
 export const CreatePostBody = zod.object({
-  userId: zod.number(),
   content: zod.string(),
   category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
   helpedPeople: zod.number(),
@@ -123,14 +170,10 @@ export const GetPostResponse = zod.object({
 });
 
 /**
- * @summary Toggle like on a post
+ * @summary Toggle like on a post (auth required)
  */
 export const ToggleLikeParams = zod.object({
   id: zod.coerce.number(),
-});
-
-export const ToggleLikeBody = zod.object({
-  userId: zod.number(),
 });
 
 export const ToggleLikeResponse = zod.object({
@@ -169,14 +212,13 @@ export const ToggleLikeResponse = zod.object({
 });
 
 /**
- * @summary Add comment to a post
+ * @summary Add comment to a post (auth required)
  */
 export const AddCommentParams = zod.object({
   id: zod.coerce.number(),
 });
 
 export const AddCommentBody = zod.object({
-  userId: zod.number(),
   content: zod.string(),
 });
 
@@ -227,14 +269,10 @@ export const GetUserResponse = zod
   );
 
 /**
- * @summary Follow or unfollow a user
+ * @summary Follow or unfollow a user (auth required)
  */
 export const ToggleFollowParams = zod.object({
   id: zod.coerce.number(),
-});
-
-export const ToggleFollowBody = zod.object({
-  followerId: zod.number(),
 });
 
 export const ToggleFollowResponse = zod.object({
@@ -389,7 +427,7 @@ export const ListEventsResponseItem = zod.object({
 export const ListEventsResponse = zod.array(ListEventsResponseItem);
 
 /**
- * @summary Create a seva event
+ * @summary Create a seva event (auth required)
  */
 export const CreateEventBody = zod.object({
   title: zod.string(),
@@ -400,7 +438,6 @@ export const CreateEventBody = zod.object({
   time: zod.string(),
   location: zod.string(),
   address: zod.string(),
-  organizerId: zod.number(),
   volunteersNeeded: zod.number(),
   image: zod.string().nullish(),
   tags: zod.array(zod.string()),
@@ -447,14 +484,10 @@ export const GetEventResponse = zod.object({
 });
 
 /**
- * @summary Register or unregister for an event
+ * @summary Register or unregister for an event (auth required)
  */
 export const RegisterForEventParams = zod.object({
   id: zod.coerce.number(),
-});
-
-export const RegisterForEventBody = zod.object({
-  userId: zod.number(),
 });
 
 export const RegisterForEventResponse = zod.object({
@@ -501,7 +534,7 @@ export const ListHelpRequestsResponseItem = zod.object({
 export const ListHelpRequestsResponse = zod.array(ListHelpRequestsResponseItem);
 
 /**
- * @summary Create a help request
+ * @summary Create a help request (auth required)
  */
 export const CreateHelpRequestBody = zod.object({
   title: zod.string(),
@@ -509,21 +542,16 @@ export const CreateHelpRequestBody = zod.object({
   category: zod.enum(["Food", "Education", "Health", "Shelter", "Other"]),
   urgency: zod.enum(["Low", "Medium", "High", "Emergency"]),
   location: zod.string(),
-  requesterId: zod.number(),
   peopleNeeded: zod.number(),
   deadline: zod.string().nullish(),
   contactInfo: zod.string().nullish(),
 });
 
 /**
- * @summary Join or leave a help request
+ * @summary Join or leave a help request (auth required)
  */
 export const JoinHelpRequestParams = zod.object({
   id: zod.coerce.number(),
-});
-
-export const JoinHelpRequestBody = zod.object({
-  userId: zod.number(),
 });
 
 export const JoinHelpRequestResponse = zod.object({

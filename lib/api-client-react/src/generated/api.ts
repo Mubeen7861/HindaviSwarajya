@@ -22,26 +22,23 @@ import type {
   CreateEventBody,
   CreateHelpRequestBody,
   CreatePostBody,
-  FollowBody,
   FollowResult,
   GetLeaderboardParams,
   GetTrendingTagsParams,
   HealthStatus,
   HelpRequest,
-  JoinHelpRequestBody,
   JoinHelpRequestResult,
   LeaderboardEntry,
-  LikeBody,
   ListEventsParams,
   ListHelpRequestsParams,
   ListPostsParams,
   ListUsersParams,
-  RegisterEventBody,
   RegisterEventResult,
   SevaEvent,
   SevaPost,
   StatsSummary,
   TrendingTag,
+  UpdateMeBody,
   User,
   UserProfile,
 } from "./api.schemas";
@@ -130,6 +127,155 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get current authenticated user
+ */
+export const getGetMeUrl = () => {
+  return `/api/me`;
+};
+
+export const getMe = async (options?: RequestInit): Promise<UserProfile> => {
+  return customFetch<UserProfile>(getGetMeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMeQueryKey = () => {
+  return [`/api/me`] as const;
+};
+
+export const getGetMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMe>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMe>>> = ({
+    signal,
+  }) => getMe({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMe>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMeQueryResult = NonNullable<Awaited<ReturnType<typeof getMe>>>;
+export type GetMeQueryError = ErrorType<void>;
+
+/**
+ * @summary Get current authenticated user
+ */
+
+export function useGetMe<
+  TData = Awaited<ReturnType<typeof getMe>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMeQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update current authenticated user's profile
+ */
+export const getUpdateMeUrl = () => {
+  return `/api/me`;
+};
+
+export const updateMe = async (
+  updateMeBody: UpdateMeBody,
+  options?: RequestInit,
+): Promise<UserProfile> => {
+  return customFetch<UserProfile>(getUpdateMeUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateMeBody),
+  });
+};
+
+export const getUpdateMeMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMe>>,
+    TError,
+    { data: BodyType<UpdateMeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMe>>,
+  TError,
+  { data: BodyType<UpdateMeBody> },
+  TContext
+> => {
+  const mutationKey = ["updateMe"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMe>>,
+    { data: BodyType<UpdateMeBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMe(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMe>>
+>;
+export type UpdateMeMutationBody = BodyType<UpdateMeBody>;
+export type UpdateMeMutationError = ErrorType<void>;
+
+/**
+ * @summary Update current authenticated user's profile
+ */
+export const useUpdateMe = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMe>>,
+    TError,
+    { data: BodyType<UpdateMeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMe>>,
+  TError,
+  { data: BodyType<UpdateMeBody> },
+  TContext
+> => {
+  return useMutation(getUpdateMeMutationOptions(options));
+};
 
 /**
  * @summary List seva posts
@@ -226,7 +372,7 @@ export function useListPosts<
 }
 
 /**
- * @summary Create a seva post
+ * @summary Create a seva post (auth required)
  */
 export const getCreatePostUrl = () => {
   return `/api/posts`;
@@ -245,7 +391,7 @@ export const createPost = async (
 };
 
 export const getCreatePostMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -286,13 +432,13 @@ export type CreatePostMutationResult = NonNullable<
   Awaited<ReturnType<typeof createPost>>
 >;
 export type CreatePostMutationBody = BodyType<CreatePostBody>;
-export type CreatePostMutationError = ErrorType<unknown>;
+export type CreatePostMutationError = ErrorType<void>;
 
 /**
- * @summary Create a seva post
+ * @summary Create a seva post (auth required)
  */
 export const useCreatePost = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -389,7 +535,7 @@ export function useGetPost<
 }
 
 /**
- * @summary Toggle like on a post
+ * @summary Toggle like on a post (auth required)
  */
 export const getToggleLikeUrl = (id: number) => {
   return `/api/posts/${id}/like`;
@@ -397,32 +543,29 @@ export const getToggleLikeUrl = (id: number) => {
 
 export const toggleLike = async (
   id: number,
-  likeBody: LikeBody,
   options?: RequestInit,
 ): Promise<SevaPost> => {
   return customFetch<SevaPost>(getToggleLikeUrl(id), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(likeBody),
   });
 };
 
 export const getToggleLikeMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof toggleLike>>,
     TError,
-    { id: number; data: BodyType<LikeBody> },
+    { id: number },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof toggleLike>>,
   TError,
-  { id: number; data: BodyType<LikeBody> },
+  { id: number },
   TContext
 > => {
   const mutationKey = ["toggleLike"];
@@ -436,11 +579,11 @@ export const getToggleLikeMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof toggleLike>>,
-    { id: number; data: BodyType<LikeBody> }
+    { id: number }
   > = (props) => {
-    const { id, data } = props ?? {};
+    const { id } = props ?? {};
 
-    return toggleLike(id, data, requestOptions);
+    return toggleLike(id, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -449,34 +592,34 @@ export const getToggleLikeMutationOptions = <
 export type ToggleLikeMutationResult = NonNullable<
   Awaited<ReturnType<typeof toggleLike>>
 >;
-export type ToggleLikeMutationBody = BodyType<LikeBody>;
-export type ToggleLikeMutationError = ErrorType<unknown>;
+
+export type ToggleLikeMutationError = ErrorType<void>;
 
 /**
- * @summary Toggle like on a post
+ * @summary Toggle like on a post (auth required)
  */
 export const useToggleLike = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof toggleLike>>,
     TError,
-    { id: number; data: BodyType<LikeBody> },
+    { id: number },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof toggleLike>>,
   TError,
-  { id: number; data: BodyType<LikeBody> },
+  { id: number },
   TContext
 > => {
   return useMutation(getToggleLikeMutationOptions(options));
 };
 
 /**
- * @summary Add comment to a post
+ * @summary Add comment to a post (auth required)
  */
 export const getAddCommentUrl = (id: number) => {
   return `/api/posts/${id}/comments`;
@@ -496,7 +639,7 @@ export const addComment = async (
 };
 
 export const getAddCommentMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -537,13 +680,13 @@ export type AddCommentMutationResult = NonNullable<
   Awaited<ReturnType<typeof addComment>>
 >;
 export type AddCommentMutationBody = BodyType<AddCommentBody>;
-export type AddCommentMutationError = ErrorType<unknown>;
+export type AddCommentMutationError = ErrorType<void>;
 
 /**
- * @summary Add comment to a post
+ * @summary Add comment to a post (auth required)
  */
 export const useAddComment = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -734,7 +877,7 @@ export function useGetUser<
 }
 
 /**
- * @summary Follow or unfollow a user
+ * @summary Follow or unfollow a user (auth required)
  */
 export const getToggleFollowUrl = (id: number) => {
   return `/api/users/${id}/follow`;
@@ -742,32 +885,29 @@ export const getToggleFollowUrl = (id: number) => {
 
 export const toggleFollow = async (
   id: number,
-  followBody: FollowBody,
   options?: RequestInit,
 ): Promise<FollowResult> => {
   return customFetch<FollowResult>(getToggleFollowUrl(id), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(followBody),
   });
 };
 
 export const getToggleFollowMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof toggleFollow>>,
     TError,
-    { id: number; data: BodyType<FollowBody> },
+    { id: number },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof toggleFollow>>,
   TError,
-  { id: number; data: BodyType<FollowBody> },
+  { id: number },
   TContext
 > => {
   const mutationKey = ["toggleFollow"];
@@ -781,11 +921,11 @@ export const getToggleFollowMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof toggleFollow>>,
-    { id: number; data: BodyType<FollowBody> }
+    { id: number }
   > = (props) => {
-    const { id, data } = props ?? {};
+    const { id } = props ?? {};
 
-    return toggleFollow(id, data, requestOptions);
+    return toggleFollow(id, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -794,27 +934,27 @@ export const getToggleFollowMutationOptions = <
 export type ToggleFollowMutationResult = NonNullable<
   Awaited<ReturnType<typeof toggleFollow>>
 >;
-export type ToggleFollowMutationBody = BodyType<FollowBody>;
-export type ToggleFollowMutationError = ErrorType<unknown>;
+
+export type ToggleFollowMutationError = ErrorType<void>;
 
 /**
- * @summary Follow or unfollow a user
+ * @summary Follow or unfollow a user (auth required)
  */
 export const useToggleFollow = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof toggleFollow>>,
     TError,
-    { id: number; data: BodyType<FollowBody> },
+    { id: number },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof toggleFollow>>,
   TError,
-  { id: number; data: BodyType<FollowBody> },
+  { id: number },
   TContext
 > => {
   return useMutation(getToggleFollowMutationOptions(options));
@@ -1265,7 +1405,7 @@ export function useListEvents<
 }
 
 /**
- * @summary Create a seva event
+ * @summary Create a seva event (auth required)
  */
 export const getCreateEventUrl = () => {
   return `/api/events`;
@@ -1284,7 +1424,7 @@ export const createEvent = async (
 };
 
 export const getCreateEventMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1325,13 +1465,13 @@ export type CreateEventMutationResult = NonNullable<
   Awaited<ReturnType<typeof createEvent>>
 >;
 export type CreateEventMutationBody = BodyType<CreateEventBody>;
-export type CreateEventMutationError = ErrorType<unknown>;
+export type CreateEventMutationError = ErrorType<void>;
 
 /**
- * @summary Create a seva event
+ * @summary Create a seva event (auth required)
  */
 export const useCreateEvent = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1436,7 +1576,7 @@ export function useGetEvent<
 }
 
 /**
- * @summary Register or unregister for an event
+ * @summary Register or unregister for an event (auth required)
  */
 export const getRegisterForEventUrl = (id: number) => {
   return `/api/events/${id}/register`;
@@ -1444,32 +1584,29 @@ export const getRegisterForEventUrl = (id: number) => {
 
 export const registerForEvent = async (
   id: number,
-  registerEventBody: RegisterEventBody,
   options?: RequestInit,
 ): Promise<RegisterEventResult> => {
   return customFetch<RegisterEventResult>(getRegisterForEventUrl(id), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(registerEventBody),
   });
 };
 
 export const getRegisterForEventMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof registerForEvent>>,
     TError,
-    { id: number; data: BodyType<RegisterEventBody> },
+    { id: number },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof registerForEvent>>,
   TError,
-  { id: number; data: BodyType<RegisterEventBody> },
+  { id: number },
   TContext
 > => {
   const mutationKey = ["registerForEvent"];
@@ -1483,11 +1620,11 @@ export const getRegisterForEventMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof registerForEvent>>,
-    { id: number; data: BodyType<RegisterEventBody> }
+    { id: number }
   > = (props) => {
-    const { id, data } = props ?? {};
+    const { id } = props ?? {};
 
-    return registerForEvent(id, data, requestOptions);
+    return registerForEvent(id, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1496,27 +1633,27 @@ export const getRegisterForEventMutationOptions = <
 export type RegisterForEventMutationResult = NonNullable<
   Awaited<ReturnType<typeof registerForEvent>>
 >;
-export type RegisterForEventMutationBody = BodyType<RegisterEventBody>;
-export type RegisterForEventMutationError = ErrorType<unknown>;
+
+export type RegisterForEventMutationError = ErrorType<void>;
 
 /**
- * @summary Register or unregister for an event
+ * @summary Register or unregister for an event (auth required)
  */
 export const useRegisterForEvent = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof registerForEvent>>,
     TError,
-    { id: number; data: BodyType<RegisterEventBody> },
+    { id: number },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof registerForEvent>>,
   TError,
-  { id: number; data: BodyType<RegisterEventBody> },
+  { id: number },
   TContext
 > => {
   return useMutation(getRegisterForEventMutationOptions(options));
@@ -1620,7 +1757,7 @@ export function useListHelpRequests<
 }
 
 /**
- * @summary Create a help request
+ * @summary Create a help request (auth required)
  */
 export const getCreateHelpRequestUrl = () => {
   return `/api/help-requests`;
@@ -1639,7 +1776,7 @@ export const createHelpRequest = async (
 };
 
 export const getCreateHelpRequestMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1680,13 +1817,13 @@ export type CreateHelpRequestMutationResult = NonNullable<
   Awaited<ReturnType<typeof createHelpRequest>>
 >;
 export type CreateHelpRequestMutationBody = BodyType<CreateHelpRequestBody>;
-export type CreateHelpRequestMutationError = ErrorType<unknown>;
+export type CreateHelpRequestMutationError = ErrorType<void>;
 
 /**
- * @summary Create a help request
+ * @summary Create a help request (auth required)
  */
 export const useCreateHelpRequest = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1706,7 +1843,7 @@ export const useCreateHelpRequest = <
 };
 
 /**
- * @summary Join or leave a help request
+ * @summary Join or leave a help request (auth required)
  */
 export const getJoinHelpRequestUrl = (id: number) => {
   return `/api/help-requests/${id}/join`;
@@ -1714,32 +1851,29 @@ export const getJoinHelpRequestUrl = (id: number) => {
 
 export const joinHelpRequest = async (
   id: number,
-  joinHelpRequestBody: JoinHelpRequestBody,
   options?: RequestInit,
 ): Promise<JoinHelpRequestResult> => {
   return customFetch<JoinHelpRequestResult>(getJoinHelpRequestUrl(id), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(joinHelpRequestBody),
   });
 };
 
 export const getJoinHelpRequestMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof joinHelpRequest>>,
     TError,
-    { id: number; data: BodyType<JoinHelpRequestBody> },
+    { id: number },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof joinHelpRequest>>,
   TError,
-  { id: number; data: BodyType<JoinHelpRequestBody> },
+  { id: number },
   TContext
 > => {
   const mutationKey = ["joinHelpRequest"];
@@ -1753,11 +1887,11 @@ export const getJoinHelpRequestMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof joinHelpRequest>>,
-    { id: number; data: BodyType<JoinHelpRequestBody> }
+    { id: number }
   > = (props) => {
-    const { id, data } = props ?? {};
+    const { id } = props ?? {};
 
-    return joinHelpRequest(id, data, requestOptions);
+    return joinHelpRequest(id, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1766,27 +1900,27 @@ export const getJoinHelpRequestMutationOptions = <
 export type JoinHelpRequestMutationResult = NonNullable<
   Awaited<ReturnType<typeof joinHelpRequest>>
 >;
-export type JoinHelpRequestMutationBody = BodyType<JoinHelpRequestBody>;
-export type JoinHelpRequestMutationError = ErrorType<unknown>;
+
+export type JoinHelpRequestMutationError = ErrorType<void>;
 
 /**
- * @summary Join or leave a help request
+ * @summary Join or leave a help request (auth required)
  */
 export const useJoinHelpRequest = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof joinHelpRequest>>,
     TError,
-    { id: number; data: BodyType<JoinHelpRequestBody> },
+    { id: number },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof joinHelpRequest>>,
   TError,
-  { id: number; data: BodyType<JoinHelpRequestBody> },
+  { id: number },
   TContext
 > => {
   return useMutation(getJoinHelpRequestMutationOptions(options));

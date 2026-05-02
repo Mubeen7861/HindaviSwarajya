@@ -13,5 +13,3 @@ export const CATEGORY_COLORS: Record<string, string> = {
   Shelter: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
   Other: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
 };
-
-export const CURRENT_USER_ID = 1;

@@ -8,23 +8,21 @@ import {
 } from "@workspace/api-client-react";
 import { SevaEvent } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CURRENT_USER_ID } from "@/lib/constants";
+import { useCurrentUserId } from "@/hooks/useCurrentUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Calendar, Clock, MapPin, Users, Plus, Search,
+  Calendar, MapPin, Users, Plus, Search,
   CheckCircle, ArrowLeft, Sparkles, Tag, Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
 
 const EVENT_TYPES = ["Seminar","Cleaning Drive","Food Distribution","Medical Camp","Blood Donation","Tree Plantation","Awareness Campaign","Workshop","Other"] as const;
 const CATEGORIES = ["Food","Education","Health","Shelter","Other"] as const;
@@ -51,6 +49,7 @@ const statusColors: Record<string, string> = {
 export default function Events() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const currentUserId = useCurrentUserId();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
@@ -90,6 +89,10 @@ export default function Events() {
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentUserId === undefined) {
+      toast({ title: "Please sign in to create an event", variant: "destructive" });
+      return;
+    }
     createEvent.mutate({
       data: {
         title: form.title,
@@ -100,7 +103,6 @@ export default function Events() {
         time: form.time,
         location: form.location,
         address: form.address,
-        organizerId: CURRENT_USER_ID,
         volunteersNeeded: parseInt(form.volunteersNeeded) || 20,
         tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
         duration: form.duration || null,
@@ -121,7 +123,7 @@ export default function Events() {
       {/* Header */}
       <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
         <div className="flex items-center gap-3">
-          <Link href="/">
+          <Link href="/app">
             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -202,7 +204,7 @@ export default function Events() {
                 <Label>Requirements</Label>
                 <Textarea placeholder="What should volunteers bring?" value={form.requirements} onChange={e => setForm(p => ({ ...p, requirements: e.target.value }))} className="min-h-16 resize-none" />
               </div>
-              <Button type="submit" className="w-full bg-[#FF6F00] hover:bg-[#E65100] gap-2" disabled={createEvent.isPending} data-testid="button-submit-event">
+              <Button type="submit" className="w-full bg-[#FF6F00] hover:bg-[#E65100] gap-2" disabled={createEvent.isPending || currentUserId === undefined} data-testid="button-submit-event">
                 <Sparkles className="w-4 h-4" />
                 {createEvent.isPending ? "Creating..." : "Publish Event"}
               </Button>
@@ -246,7 +248,7 @@ export default function Events() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <AnimatePresence>
               {filteredEvents.map((event, i) => {
-                const isRegistered = event.volunteersRegistered.includes(CURRENT_USER_ID);
+                const isRegistered = currentUserId !== undefined && event.volunteersRegistered.includes(currentUserId);
                 const spotsLeft = event.volunteersNeeded - event.volunteersRegistered.length;
                 return (
                   <motion.div key={event.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
@@ -291,10 +293,10 @@ export default function Events() {
                           </div>
                           <Button
                             size="sm"
-                            onClick={e => { e.stopPropagation(); registerForEvent.mutate({ id: event.id, data: { userId: CURRENT_USER_ID } }); }}
+                            onClick={e => { e.stopPropagation(); registerForEvent.mutate({ id: event.id }); }}
                             className={`text-xs h-7 gap-1 ${isRegistered ? "bg-green-50 text-green-700 border border-green-200 hover:bg-red-50 hover:text-red-700 hover:border-red-200" : "bg-[#FF6F00] text-white hover:bg-[#E65100]"}`}
                             variant={isRegistered ? "outline" : "default"}
-                            disabled={registerForEvent.isPending || (spotsLeft <= 0 && !isRegistered)}
+                            disabled={registerForEvent.isPending || currentUserId === undefined || (spotsLeft <= 0 && !isRegistered)}
                             data-testid={`button-register-event-${event.id}`}
                           >
                             {isRegistered ? <><CheckCircle className="w-3 h-3" /> Registered</> : "Register"}
@@ -346,17 +348,22 @@ export default function Events() {
               <Avatar className="w-9 h-9"><AvatarImage src={selectedEvent.organizer?.avatar} /><AvatarFallback className="text-sm">{selectedEvent.organizer?.name?.substring(0, 2)}</AvatarFallback></Avatar>
               <div><p className="text-xs text-gray-400">Organized by</p><p className="text-sm font-semibold">{selectedEvent.organizer?.name}</p></div>
             </div>
-            <Button
-              className={`w-full gap-2 ${selectedEvent.volunteersRegistered.includes(CURRENT_USER_ID) ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100" : "bg-[#FF6F00] hover:bg-[#E65100] text-white"}`}
-              variant={selectedEvent.volunteersRegistered.includes(CURRENT_USER_ID) ? "outline" : "default"}
-              onClick={() => registerForEvent.mutate({ id: selectedEvent.id, data: { userId: CURRENT_USER_ID } })}
-              disabled={registerForEvent.isPending}
-            >
-              {selectedEvent.volunteersRegistered.includes(CURRENT_USER_ID)
-                ? <><Zap className="w-4 h-4" /> Cancel Registration</>
-                : <><CheckCircle className="w-4 h-4" /> Register as Volunteer</>
-              }
-            </Button>
+            {(() => {
+              const isRegistered = currentUserId !== undefined && selectedEvent.volunteersRegistered.includes(currentUserId);
+              return (
+                <Button
+                  className={`w-full gap-2 ${isRegistered ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100" : "bg-[#FF6F00] hover:bg-[#E65100] text-white"}`}
+                  variant={isRegistered ? "outline" : "default"}
+                  onClick={() => registerForEvent.mutate({ id: selectedEvent.id })}
+                  disabled={registerForEvent.isPending || currentUserId === undefined}
+                >
+                  {isRegistered
+                    ? <><Zap className="w-4 h-4" /> Cancel Registration</>
+                    : <><CheckCircle className="w-4 h-4" /> Register as Volunteer</>
+                  }
+                </Button>
+              );
+            })()}
           </DialogContent>
         </Dialog>
       )}

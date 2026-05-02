@@ -8,7 +8,7 @@ import {
 } from "@workspace/api-client-react";
 import { HelpRequest } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CURRENT_USER_ID } from "@/lib/constants";
+import { useCurrentUserId } from "@/hooks/useCurrentUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,7 @@ const categoryColors: Record<string, string> = {
 export default function HelpRequests() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const currentUserId = useCurrentUserId();
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
   const [createOpen, setCreateOpen] = useState(false);
@@ -84,6 +85,10 @@ export default function HelpRequests() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentUserId === undefined) {
+      toast({ title: "Please sign in to post a request", variant: "destructive" });
+      return;
+    }
     createHelpRequest.mutate({
       data: {
         title: form.title,
@@ -91,7 +96,6 @@ export default function HelpRequests() {
         category: form.category as "Food"|"Education"|"Health"|"Shelter"|"Other",
         urgency: form.urgency as "Low"|"Medium"|"High"|"Emergency",
         location: form.location,
-        requesterId: CURRENT_USER_ID,
         peopleNeeded: parseInt(form.peopleNeeded) || 5,
         deadline: form.deadline || null,
         contactInfo: form.contactInfo || null,
@@ -108,12 +112,20 @@ export default function HelpRequests() {
   const emergencyReqs = filteredReqs.filter(r => r.urgency === "Emergency");
   const normalReqs = filteredReqs.filter(r => r.urgency !== "Emergency");
 
+  const onJoin = (id: number) => {
+    if (currentUserId === undefined) {
+      toast({ title: "Please sign in to help", variant: "destructive" });
+      return;
+    }
+    joinHelpRequest.mutate({ id });
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
         <div className="flex items-center gap-3">
-          <Link href="/">
+          <Link href="/app">
             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -176,7 +188,7 @@ export default function HelpRequests() {
                 <Label>Contact Info (optional)</Label>
                 <Input placeholder="Phone / email" value={form.contactInfo} onChange={e => setForm(p => ({ ...p, contactInfo: e.target.value }))} />
               </div>
-              <Button type="submit" className="w-full bg-[#FF6F00] hover:bg-[#E65100] gap-2" disabled={createHelpRequest.isPending} data-testid="button-submit-help-request">
+              <Button type="submit" className="w-full bg-[#FF6F00] hover:bg-[#E65100] gap-2" disabled={createHelpRequest.isPending || currentUserId === undefined} data-testid="button-submit-help-request">
                 <Heart className="w-4 h-4" />
                 {createHelpRequest.isPending ? "Posting..." : "Post Request"}
               </Button>
@@ -223,14 +235,14 @@ export default function HelpRequests() {
                   <span className="text-sm font-bold text-red-700">Emergency Requests ({emergencyReqs.length})</span>
                 </div>
                 <div className="space-y-3">
-                  {emergencyReqs.map((r, i) => <RequestCard key={r.id} r={r} i={i} onJoin={id => joinHelpRequest.mutate({ id, data: { userId: CURRENT_USER_ID } })} onClick={() => setSelectedReq(r)} isPending={joinHelpRequest.isPending} />)}
+                  {emergencyReqs.map((r, i) => <RequestCard key={r.id} r={r} i={i} currentUserId={currentUserId} onJoin={onJoin} onClick={() => setSelectedReq(r)} isPending={joinHelpRequest.isPending} />)}
                 </div>
               </div>
             )}
             <AnimatePresence>
               {normalReqs.map((r, i) => (
                 <motion.div key={r.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-                  <RequestCard r={r} i={i} onJoin={id => joinHelpRequest.mutate({ id, data: { userId: CURRENT_USER_ID } })} onClick={() => setSelectedReq(r)} isPending={joinHelpRequest.isPending} />
+                  <RequestCard r={r} i={i} currentUserId={currentUserId} onJoin={onJoin} onClick={() => setSelectedReq(r)} isPending={joinHelpRequest.isPending} />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -260,15 +272,15 @@ export default function HelpRequests() {
               <Avatar className="w-9 h-9"><AvatarImage src={selectedReq.requester?.avatar} /><AvatarFallback>{selectedReq.requester?.name?.substring(0, 2)}</AvatarFallback></Avatar>
               <div><p className="text-xs text-gray-400">Requested by</p><p className="text-sm font-semibold">{selectedReq.requester?.name}</p></div>
             </div>
-            {selectedReq.requesterId !== CURRENT_USER_ID && (
+            {currentUserId !== undefined && selectedReq.requesterId !== currentUserId && (
               <Button
-                className={`w-full gap-2 ${selectedReq.helpersJoined.includes(CURRENT_USER_ID) ? "bg-red-50 text-red-700 border border-red-200" : "bg-[#FF6F00] hover:bg-[#E65100] text-white"}`}
-                variant={selectedReq.helpersJoined.includes(CURRENT_USER_ID) ? "outline" : "default"}
-                onClick={() => joinHelpRequest.mutate({ id: selectedReq.id, data: { userId: CURRENT_USER_ID } })}
+                className={`w-full gap-2 ${selectedReq.helpersJoined.includes(currentUserId) ? "bg-red-50 text-red-700 border border-red-200" : "bg-[#FF6F00] hover:bg-[#E65100] text-white"}`}
+                variant={selectedReq.helpersJoined.includes(currentUserId) ? "outline" : "default"}
+                onClick={() => onJoin(selectedReq.id)}
                 disabled={joinHelpRequest.isPending}
               >
                 <Heart className="w-4 h-4" />
-                {selectedReq.helpersJoined.includes(CURRENT_USER_ID) ? "Leave request" : "I can help!"}
+                {selectedReq.helpersJoined.includes(currentUserId) ? "Leave request" : "I can help!"}
               </Button>
             )}
           </DialogContent>
@@ -278,14 +290,15 @@ export default function HelpRequests() {
   );
 }
 
-function RequestCard({ r, onJoin, onClick, isPending }: {
+function RequestCard({ r, currentUserId, onJoin, onClick, isPending }: {
   r: HelpRequest; i: number;
+  currentUserId: number | undefined;
   onJoin: (id: number) => void;
   onClick: () => void;
   isPending: boolean;
 }) {
-  const isJoined = r.helpersJoined.includes(CURRENT_USER_ID);
-  const isOwn = r.requesterId === CURRENT_USER_ID;
+  const isJoined = currentUserId !== undefined && r.helpersJoined.includes(currentUserId);
+  const isOwn = currentUserId !== undefined && r.requesterId === currentUserId;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-4 cursor-pointer" onClick={onClick}>
@@ -316,7 +329,7 @@ function RequestCard({ r, onJoin, onClick, isPending }: {
             onClick={e => { e.stopPropagation(); onJoin(r.id); }}
             className={`text-xs h-7 gap-1 ${isJoined ? "bg-green-50 text-green-700 border border-green-200 hover:bg-red-50 hover:text-red-700" : "bg-[#FF6F00] text-white hover:bg-[#E65100]"}`}
             variant={isJoined ? "outline" : "default"}
-            disabled={isPending}
+            disabled={isPending || currentUserId === undefined}
             data-testid={`button-join-request-${r.id}`}
           >
             {isJoined ? <><CheckCircle className="w-3 h-3" /> Helping</> : <><Heart className="w-3 h-3" /> Help</>}

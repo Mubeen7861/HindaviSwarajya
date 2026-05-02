@@ -45,6 +45,12 @@ export type UserProfile = User & {
   joinedAt?: string;
 };
 
+export interface UpdateMeBody {
+  name?: string;
+  bio?: string;
+  location?: string;
+}
+
 export interface Comment {
   id: number;
   postId: number;
@@ -72,7 +78,6 @@ export interface SevaPost {
 }
 
 export interface CreatePostBody {
-  userId: number;
   content: string;
   category: SevaCategory;
   helpedPeople: number;
@@ -81,17 +86,8 @@ export interface CreatePostBody {
   location?: string | null;
 }
 
-export interface LikeBody {
-  userId: number;
-}
-
 export interface AddCommentBody {
-  userId: number;
   content: string;
-}
-
-export interface FollowBody {
-  followerId: number;
 }
 
 export interface FollowResult {
@@ -167,16 +163,11 @@ export interface CreateEventBody {
   time: string;
   location: string;
   address: string;
-  organizerId: number;
   volunteersNeeded: number;
   image?: string | null;
   tags: string[];
   duration?: string | null;
   requirements?: string | null;
-}
-
-export interface RegisterEventBody {
-  userId: number;
 }
 
 export interface RegisterEventResult {
@@ -237,14 +228,9 @@ export interface CreateHelpRequestBody {
   category: SevaCategory;
   urgency: CreateHelpRequestBodyUrgency;
   location: string;
-  requesterId: number;
   peopleNeeded: number;
   deadline?: string | null;
   contactInfo?: string | null;
-}
-
-export interface JoinHelpRequestBody {
-  userId: number;
 }
 
 export interface JoinHelpRequestResult {

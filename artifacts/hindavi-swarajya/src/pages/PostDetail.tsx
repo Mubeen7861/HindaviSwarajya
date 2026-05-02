@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useRoute, Link } from "wouter";
-import { 
-  useGetPost, 
-  useToggleLike, 
+import {
+  useGetPost,
   useAddComment,
   getGetPostQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CURRENT_USER_ID } from "@/lib/constants";
+import { useCurrentUserId } from "@/hooks/useCurrentUser";
 import { PostCard } from "@/components/PostCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +20,7 @@ export default function PostDetail() {
   const [, params] = useRoute("/post/:id");
   const postId = parseInt(params?.id || "0", 10);
   const queryClient = useQueryClient();
+  const currentUserId = useCurrentUserId();
   const [commentText, setCommentText] = useState("");
 
   const { data: post, isLoading } = useGetPost(postId, {
@@ -41,12 +41,11 @@ export default function PostDetail() {
 
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || currentUserId === undefined) return;
 
     addComment.mutate({
       id: postId,
       data: {
-        userId: CURRENT_USER_ID,
         content: commentText.trim()
       }
     });
@@ -111,9 +110,9 @@ export default function PostDetail() {
                 data-testid={`input-comment-${post.id}`}
               />
               <div className="flex justify-end">
-                <Button 
-                  type="submit" 
-                  disabled={!commentText.trim() || addComment.isPending}
+                <Button
+                  type="submit"
+                  disabled={!commentText.trim() || addComment.isPending || currentUserId === undefined}
                   className="gap-2"
                   data-testid={`button-submit-comment-${post.id}`}
                 >

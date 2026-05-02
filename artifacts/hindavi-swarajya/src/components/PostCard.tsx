@@ -3,14 +3,13 @@ import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import {
   Heart, MessageCircle, Share2, MapPin, Clock,
-  Bookmark, MoreVertical, UserPlus, UserCheck
+  Bookmark, MoreVertical
 } from "lucide-react";
 import { SevaPost } from "@workspace/api-client-react";
 import { useToggleLike, getListPostsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CURRENT_USER_ID } from "@/lib/constants";
+import { useCurrentUserId } from "@/hooks/useCurrentUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { RankBadge } from "./RankBadge";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -24,9 +23,9 @@ const categoryColors: Record<string, string> = {
 
 export function PostCard({ post }: { post: SevaPost }) {
   const queryClient = useQueryClient();
-  const isLiked = post.likedBy.includes(CURRENT_USER_ID);
+  const currentUserId = useCurrentUserId();
+  const isLiked = currentUserId !== undefined && post.likedBy.includes(currentUserId);
   const [saved, setSaved] = useState(false);
-  const [following, setFollowing] = useState(false);
   const [showComments, setShowComments] = useState(false);
 
   const toggleLike = useToggleLike({
@@ -38,7 +37,8 @@ export function PostCard({ post }: { post: SevaPost }) {
   });
 
   const handleLike = () => {
-    toggleLike.mutate({ id: post.id, data: { userId: CURRENT_USER_ID } });
+    if (currentUserId === undefined) return;
+    toggleLike.mutate({ id: post.id });
   };
 
   const handleShare = () => {
@@ -164,8 +164,8 @@ export function PostCard({ post }: { post: SevaPost }) {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleLike}
-              disabled={toggleLike.isPending}
-              className="flex items-center gap-1.5 text-gray-500 hover:text-[#FF6F00] transition-colors"
+              disabled={toggleLike.isPending || currentUserId === undefined}
+              className="flex items-center gap-1.5 text-gray-500 hover:text-[#FF6F00] transition-colors disabled:opacity-50"
               data-testid={`button-like-${post.id}`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? "fill-[#FF6F00] text-[#FF6F00]" : ""}`} />
@@ -185,18 +185,6 @@ export function PostCard({ post }: { post: SevaPost }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setFollowing(!following)}
-              className="text-xs text-gray-500 hover:text-[#FF6F00] hover:bg-orange-50 h-8 gap-1.5"
-            >
-              {following
-                ? <><UserCheck className="w-4 h-4" /> Following</>
-                : <><UserPlus className="w-4 h-4" /> Follow</>
-              }
-            </Button>
-
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}

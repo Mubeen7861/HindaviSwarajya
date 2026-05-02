@@ -7,6 +7,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
+import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
 
@@ -28,7 +29,7 @@ async function buildEvent(event: typeof eventsTable.$inferSelect) {
     address: event.address,
     organizerId: event.organizerId,
     organizer: u ? {
-      id: u.id, name: u.name, avatar: u.avatar, location: u.location,
+      id: u.id, name: u.name, avatar: u.avatar ?? "", location: u.location ?? "",
       rank: u.rank, totalHelped: u.totalHelped, followersCount: u.followersCount, postsCount: u.postsCount,
     } : null,
     volunteersNeeded: event.volunteersNeeded,
@@ -48,7 +49,7 @@ router.get("/events", async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const status = req.query.status as string | undefined;
 
-    let rows = status
+    const rows = status
       ? await db.select().from(eventsTable).where(eq(eventsTable.status, status)).orderBy(desc(eventsTable.createdAt)).limit(limit)
       : await db.select().from(eventsTable).orderBy(desc(eventsTable.createdAt)).limit(limit);
 
@@ -60,11 +61,11 @@ router.get("/events", async (req, res) => {
   }
 });
 
-// POST /api/events
-router.post("/events", async (req, res) => {
+// POST /api/events (auth required)
+router.post("/events", requireAuth, async (req, res) => {
   try {
-    const { tags, ...rest } = req.body;
-    const [event] = await db.insert(eventsTable).values(rest).returning();
+    const { tags, ...rest } = req.body ?? {};
+    const [event] = await db.insert(eventsTable).values({ ...rest, organizerId: req.dbUser!.id }).returning();
 
     if (tags && tags.length > 0) {
       await db.insert(eventTagsTable).values(tags.map((tag: string) => ({ eventId: event.id, tag })));
@@ -92,12 +93,11 @@ router.get("/events/:id", async (req, res) => {
   }
 });
 
-// POST /api/events/:id/register
-router.post("/events/:id/register", async (req, res) => {
+// POST /api/events/:id/register (auth required)
+router.post("/events/:id/register", requireAuth, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const userId = parseInt(req.body.userId);
-    if (!userId) { res.status(400).json({ error: "userId required" }); return; }
+    const id = parseInt(String(req.params.id));
+    const userId = req.dbUser!.id;
 
     const existing = await db.select().from(eventRegistrationsTable)
       .where(sql`${eventRegistrationsTable.eventId} = ${id} AND ${eventRegistrationsTable.userId} = ${userId}`)

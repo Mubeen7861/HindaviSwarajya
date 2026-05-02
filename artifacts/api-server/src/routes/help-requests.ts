@@ -6,6 +6,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
+import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
 
@@ -23,7 +24,7 @@ async function buildHelpRequest(req: typeof helpRequestsTable.$inferSelect) {
     location: req.location,
     requesterId: req.requesterId,
     requester: u ? {
-      id: u.id, name: u.name, avatar: u.avatar, location: u.location,
+      id: u.id, name: u.name, avatar: u.avatar ?? "", location: u.location ?? "",
       rank: u.rank, totalHelped: u.totalHelped, followersCount: u.followersCount, postsCount: u.postsCount,
     } : null,
     peopleNeeded: req.peopleNeeded,
@@ -50,10 +51,13 @@ router.get("/help-requests", async (req, res) => {
   }
 });
 
-// POST /api/help-requests
-router.post("/help-requests", async (req, res) => {
+// POST /api/help-requests (auth required)
+router.post("/help-requests", requireAuth, async (req, res) => {
   try {
-    const [helpReq] = await db.insert(helpRequestsTable).values(req.body).returning();
+    const [helpReq] = await db
+      .insert(helpRequestsTable)
+      .values({ ...req.body, requesterId: req.dbUser!.id })
+      .returning();
     const result = await buildHelpRequest(helpReq);
     res.status(201).json(result);
   } catch (err) {
@@ -62,12 +66,11 @@ router.post("/help-requests", async (req, res) => {
   }
 });
 
-// POST /api/help-requests/:id/join
-router.post("/help-requests/:id/join", async (req, res) => {
+// POST /api/help-requests/:id/join (auth required)
+router.post("/help-requests/:id/join", requireAuth, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const userId = parseInt(req.body.userId);
-    if (!userId) { res.status(400).json({ error: "userId required" }); return; }
+    const id = parseInt(String(req.params.id));
+    const userId = req.dbUser!.id;
 
     const existing = await db.select().from(helpRequestJoinsTable)
       .where(sql`${helpRequestJoinsTable.helpRequestId} = ${id} AND ${helpRequestJoinsTable.userId} = ${userId}`)

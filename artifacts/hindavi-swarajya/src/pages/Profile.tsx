@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import {
   useGetUser, useGetUserPosts, useToggleFollow,
+  useUpdateMe,
   getGetUserQueryKey, getGetUserPostsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CURRENT_USER_ID } from "@/lib/constants";
+import { useCurrentUserId, getGetMeQueryKey } from "@/hooks/useCurrentUser";
 import { PostCard } from "@/components/PostCard";
 import { RankBadge } from "@/components/RankBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -55,8 +56,12 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function Profile() {
   const [, params] = useRoute("/app/profile/:id");
-  const profileId = parseInt(params?.id || "0", 10);
-  const isOwn = profileId === CURRENT_USER_ID;
+  const currentUserId = useCurrentUserId();
+  const rawId = params?.id ?? "";
+  const isMeRoute = rawId === "me";
+  const profileId = isMeRoute ? (currentUserId ?? 0) : parseInt(rawId || "0", 10);
+  const isOwn = profileId !== 0 && profileId === currentUserId;
+
   const qc = useQueryClient();
   const { toast } = useToast();
 
@@ -64,7 +69,6 @@ export default function Profile() {
   const [editName, setEditName] = useState("");
   const [editBio, setEditBio] = useState("");
   const [editLocation, setEditLocation] = useState("");
-  const [saving, setSaving] = useState(false);
   const [following, setFollowing] = useState<boolean | null>(null);
 
   const { data: user, isLoading: userLoading } = useGetUser(profileId, {
@@ -90,8 +94,24 @@ export default function Profile() {
     },
   });
 
+  const updateMe = useUpdateMe({
+    mutation: {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getGetUserQueryKey(profileId) });
+        qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+        setEditOpen(false);
+        toast({ title: "Profile updated" });
+      },
+      onError: () => toast({ title: "Update failed", variant: "destructive" }),
+    },
+  });
+
   const handleFollow = () => {
-    toggleFollow.mutate({ id: profileId, data: { followerId: CURRENT_USER_ID } });
+    if (currentUserId === undefined) {
+      toast({ title: "Please sign in to follow", variant: "destructive" });
+      return;
+    }
+    toggleFollow.mutate({ id: profileId });
   };
 
   const openEdit = () => {
@@ -102,24 +122,8 @@ export default function Profile() {
     setEditOpen(true);
   };
 
-  const saveProfile = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/users/${profileId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, bio: editBio, location: editLocation }),
-      });
-      if (res.ok) {
-        qc.invalidateQueries({ queryKey: getGetUserQueryKey(profileId) });
-        setEditOpen(false);
-        toast({ title: "Profile updated" });
-      } else {
-        toast({ title: "Update failed", variant: "destructive" });
-      }
-    } finally {
-      setSaving(false);
-    }
+  const saveProfile = () => {
+    updateMe.mutate({ data: { name: editName, bio: editBio, location: editLocation } });
   };
 
   // Compute impact breakdown from posts
@@ -147,6 +151,14 @@ export default function Profile() {
 
   const rankStyle = RANK_COLORS[user?.rank ?? "Sevak"] ?? RANK_COLORS.Sevak;
   const isFollowing = following !== null ? following : false;
+
+  if (isMeRoute && currentUserId === undefined) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Skeleton className="h-32 w-72 rounded-2xl" />
+      </div>
+    );
+  }
 
   if (userLoading) {
     return (
@@ -217,7 +229,7 @@ export default function Profile() {
               <Button
                 size="sm"
                 onClick={handleFollow}
-                disabled={toggleFollow.isPending}
+                disabled={toggleFollow.isPending || currentUserId === undefined}
                 className={`gap-1.5 h-9 rounded-xl text-sm transition-all ${
                   isFollowing
                     ? "bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600 border border-gray-200"
@@ -486,10 +498,10 @@ export default function Profile() {
             <Button variant="outline" onClick={() => setEditOpen(false)} className="rounded-xl">Cancel</Button>
             <Button
               onClick={saveProfile}
-              disabled={saving || !editName.trim()}
+              disabled={updateMe.isPending || !editName.trim()}
               className="rounded-xl bg-[#FF6F00] hover:bg-orange-600 text-white"
             >
-              {saving ? "Saving…" : "Save Changes"}
+              {updateMe.isPending ? "Saving…" : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

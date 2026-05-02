@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: me
+    description: Current authenticated user
   - name: posts
     description: Seva post operations
   - name: users
@@ -18,6 +20,10 @@ tags:
     description: Platform statistics
   - name: tags
     description: Tag operations
+  - name: events
+    description: Seva event operations
+  - name: help
+    description: Help request operations
 paths:
   /healthz:
     get:
@@ -32,6 +38,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /me:
+    get:
+      operationId: getMe
+      tags: [me]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+    patch:
+      operationId: updateMe
+      tags: [me]
+      summary: Update current authenticated user's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMeBody"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
 
   /posts:
     get:
@@ -75,7 +115,7 @@ paths:
     post:
       operationId: createPost
       tags: [posts]
-      summary: Create a seva post
+      summary: Create a seva post (auth required)
       requestBody:
         required: true
         content:
@@ -89,6 +129,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SevaPost"
+        "401":
+          description: Not authenticated
 
   /posts/{id}:
     get:
@@ -115,19 +157,13 @@ paths:
     post:
       operationId: toggleLike
       tags: [posts]
-      summary: Toggle like on a post
+      summary: Toggle like on a post (auth required)
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LikeBody"
       responses:
         "200":
           description: Updated post
@@ -135,12 +171,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SevaPost"
+        "401":
+          description: Not authenticated
 
   /posts/{id}/comments:
     post:
       operationId: addComment
       tags: [posts]
-      summary: Add comment to a post
+      summary: Add comment to a post (auth required)
       parameters:
         - name: id
           in: path
@@ -160,6 +198,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Comment"
+        "401":
+          description: Not authenticated
 
   /users:
     get:
@@ -207,19 +247,13 @@ paths:
     post:
       operationId: toggleFollow
       tags: [users]
-      summary: Follow or unfollow a user
+      summary: Follow or unfollow a user (auth required)
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FollowBody"
       responses:
         "200":
           description: Follow status
@@ -227,6 +261,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FollowResult"
+        "401":
+          description: Not authenticated
 
   /users/{id}/posts:
     get:
@@ -332,7 +368,7 @@ paths:
     post:
       operationId: createEvent
       tags: [events]
-      summary: Create a seva event
+      summary: Create a seva event (auth required)
       requestBody:
         required: true
         content:
@@ -346,6 +382,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SevaEvent"
+        "401":
+          description: Not authenticated
 
   /events/{id}:
     get:
@@ -372,19 +410,13 @@ paths:
     post:
       operationId: registerForEvent
       tags: [events]
-      summary: Register or unregister for an event
+      summary: Register or unregister for an event (auth required)
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RegisterEventBody"
       responses:
         "200":
           description: Registration status
@@ -392,6 +424,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RegisterEventResult"
+        "401":
+          description: Not authenticated
 
   /help-requests:
     get:
@@ -424,7 +458,7 @@ paths:
     post:
       operationId: createHelpRequest
       tags: [help]
-      summary: Create a help request
+      summary: Create a help request (auth required)
       requestBody:
         required: true
         content:
@@ -438,24 +472,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HelpRequest"
+        "401":
+          description: Not authenticated
 
   /help-requests/{id}/join:
     post:
       operationId: joinHelpRequest
       tags: [help]
-      summary: Join or leave a help request
+      summary: Join or leave a help request (auth required)
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/JoinHelpRequestBody"
       responses:
         "200":
           description: Join status
@@ -463,6 +493,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JoinHelpRequestResult"
+        "401":
+          description: Not authenticated
 
 components:
   schemas:
@@ -520,6 +552,16 @@ components:
               type: string
             joinedAt:
               type: string
+
+    UpdateMeBody:
+      type: object
+      properties:
+        name:
+          type: string
+        bio:
+          type: string
+        location:
+          type: string
 
     Comment:
       type: object
@@ -600,8 +642,6 @@ components:
     CreatePostBody:
       type: object
       properties:
-        userId:
-          type: integer
         content:
           type: string
         category:
@@ -619,38 +659,18 @@ components:
           type: string
           nullable: true
       required:
-        - userId
         - content
         - category
         - helpedPeople
         - tags
 
-    LikeBody:
-      type: object
-      properties:
-        userId:
-          type: integer
-      required:
-        - userId
-
     AddCommentBody:
       type: object
       properties:
-        userId:
-          type: integer
         content:
           type: string
       required:
-        - userId
         - content
-
-    FollowBody:
-      type: object
-      properties:
-        followerId:
-          type: integer
-      required:
-        - followerId
 
     FollowResult:
       type: object
@@ -813,8 +833,6 @@ components:
           type: string
         address:
           type: string
-        organizerId:
-          type: integer
         volunteersNeeded:
           type: integer
         image:
@@ -839,17 +857,8 @@ components:
         - time
         - location
         - address
-        - organizerId
         - volunteersNeeded
         - tags
-
-    RegisterEventBody:
-      type: object
-      properties:
-        userId:
-          type: integer
-      required:
-        - userId
 
     RegisterEventResult:
       type: object
@@ -929,8 +938,6 @@ components:
           enum: [Low, Medium, High, Emergency]
         location:
           type: string
-        requesterId:
-          type: integer
         peopleNeeded:
           type: integer
         deadline:
@@ -945,16 +952,7 @@ components:
         - category
         - urgency
         - location
-        - requesterId
         - peopleNeeded
-
-    JoinHelpRequestBody:
-      type: object
-      properties:
-        userId:
-          type: integer
-      required:
-        - userId
 
     JoinHelpRequestResult:
       type: object

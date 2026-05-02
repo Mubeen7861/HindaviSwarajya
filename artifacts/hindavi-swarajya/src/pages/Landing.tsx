@@ -2,18 +2,12 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Heart, Users, Calendar, MapPin, Trophy, ArrowRight,
+  Heart, Users, Calendar, Trophy, ArrowRight,
   Star, Shield, Zap, Globe, CheckCircle, ChevronRight,
   Flame
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-const STATS = [
-  { value: "10,000+", label: "Sevaks", icon: Users },
-  { value: "50,000+", label: "Lives Touched", icon: Heart },
-  { value: "2,500+", label: "Seva Events", icon: Calendar },
-  { value: "500+", label: "Districts", icon: MapPin },
-];
+import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-client-react";
 
 const FEATURES = [
   {
@@ -54,39 +48,20 @@ const FEATURES = [
   },
 ];
 
-const TESTIMONIALS = [
-  {
-    name: "Vikrant Jadhav",
-    location: "Nashik",
-    rank: "Nayak",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=vikrant",
-    quote: "Organized 3 medical camps reaching 800+ patients through this platform. The community response was overwhelming.",
-  },
-  {
-    name: "Dr. Priya Shinde",
-    location: "Satara",
-    rank: "Karyakarta",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=priya",
-    quote: "Found volunteers for my free eye check-up camp within 24 hours. This is what Hindavi Swarajya truly means.",
-  },
-  {
-    name: "Manoj Patil",
-    location: "Kolhapur",
-    rank: "Veer",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=manoj",
-    quote: "500 families fed, thousands of lives touched. I found my purpose here — serving my community.",
-  },
-];
-
-const rankColors: Record<string, string> = {
-  Sevak: "bg-green-100 text-green-800",
-  Karyakarta: "bg-blue-100 text-blue-800",
-  Nayak: "bg-purple-100 text-purple-800",
-  Veer: "bg-orange-100 text-orange-800",
-  Sardar: "bg-yellow-100 text-yellow-800",
-};
-
 export default function Landing() {
+  const { data: stats } = useGetStatsSummary({
+    query: { queryKey: getGetStatsSummaryQueryKey(), staleTime: 60_000 },
+  });
+
+  const liveStats = stats
+    ? [
+        { value: stats.totalUsers, label: "Sevaks", icon: Users },
+        { value: stats.totalHelped, label: "Lives Touched", icon: Heart },
+        { value: stats.totalPosts, label: "Seva Acts", icon: Calendar },
+      ]
+    : [];
+  const showStats = liveStats.some((s) => (s.value ?? 0) > 0);
+
   return (
     <div className="min-h-screen bg-white text-gray-900 overflow-x-hidden">
 
@@ -154,58 +129,30 @@ export default function Landing() {
               </Link>
             </div>
           </motion.div>
-
-          {/* App Preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
-            className="mt-14 relative"
-          >
-            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-w-3xl mx-auto">
-              <div className="bg-gray-50 border-b border-gray-100 px-4 py-2.5 flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
-                </div>
-                <div className="flex-1 mx-3 bg-white rounded-full px-3 py-1 text-xs text-gray-400 border border-gray-200 text-center">
-                  hindaviswarajya.replit.app
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 p-4 bg-gray-50">
-                {[
-                  { label: "Free Medical Camp – Nashik", type: "Health", icon: "🏥", slots: "0/30" },
-                  { label: "Emergency Food – Sangli Flood Relief", type: "Emergency", icon: "🆘", slots: "0/10" },
-                  { label: "Shivaji Jayanti Seva Utsav", type: "Culture", icon: "🎪", slots: "0/50" },
-                ].map((card) => (
-                  <div key={card.label} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-left">
-                    <div className="text-xl mb-1.5">{card.icon}</div>
-                    <p className="text-xs font-bold text-gray-800 leading-tight line-clamp-2 mb-1.5">{card.label}</p>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${card.type === "Emergency" ? "bg-red-100 text-red-700" : card.type === "Health" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
-                      {card.type}
-                    </span>
-                    <p className="text-[10px] text-gray-400 mt-1">{card.slots} joined</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-gray-900/5 blur-xl rounded-full" />
-          </motion.div>
         </div>
       </section>
 
-      {/* ── Stats ── */}
-      <section className="py-14 bg-gradient-to-r from-[#FF6F00] to-[#E65100]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {STATS.map((s, i) => (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }}
-              className="text-center text-white">
-              <s.icon className="w-6 h-6 mx-auto mb-2 text-white/80" />
-              <p className="text-3xl font-bold mb-0.5">{s.value}</p>
-              <p className="text-sm text-orange-100">{s.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      {/* ── Live Stats (only when there's real data) ── */}
+      {showStats && (
+        <section className="py-14 bg-gradient-to-r from-[#FF6F00] to-[#E65100]">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {liveStats.map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+                viewport={{ once: true }}
+                className="text-center text-white"
+              >
+                <s.icon className="w-6 h-6 mx-auto mb-2 text-white/80" />
+                <p className="text-3xl font-bold mb-0.5">{s.value.toLocaleString()}</p>
+                <p className="text-sm text-orange-100">{s.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Features ── */}
       <section className="py-20 px-4 sm:px-6 bg-white">
@@ -258,39 +205,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
-      <section className="py-20 px-4 sm:px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 font-serif mb-2">
-              Sevaks across Maharashtra
-            </h2>
-            <p className="text-gray-500">Real stories from real changemakers.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div key={t.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-start gap-3 mb-3">
-                  <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-full bg-orange-50" />
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${rankColors[t.rank] ?? "bg-gray-100 text-gray-700"}`}>{t.rank}</span>
-                      <span className="text-xs text-gray-400 flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{t.location}</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed italic">"{t.quote}"</p>
-                <div className="flex mt-3">
-                  {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 text-yellow-400 fill-yellow-400" />)}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── CTA ── */}
       <section className="py-20 px-4 sm:px-6 bg-gradient-to-br from-[#FF6F00] to-[#E65100] relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -304,7 +218,7 @@ export default function Landing() {
             Ready to serve?
           </h2>
           <p className="text-lg text-orange-100 mb-8 max-w-md mx-auto">
-            Join thousands of sevaks across India. Your first act of service starts here.
+            Join the community of sevaks across India. Your first act of service starts here.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/sign-up">

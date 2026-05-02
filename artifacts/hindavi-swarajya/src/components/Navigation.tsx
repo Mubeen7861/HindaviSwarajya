@@ -1,10 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Home, Trophy, PlusCircle, User as UserIcon } from "lucide-react";
-import { CURRENT_USER_ID } from "@/lib/constants";
 
 export function Navigation() {
   const [location] = useLocation();
+  const profileHref = "/app/profile/me";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
@@ -49,9 +49,9 @@ export function Navigation() {
               <PlusCircle className="w-4 h-4" /> <span className="hidden sm:inline">Create Seva</span>
             </Button>
           </Link>
-          <Link href={`/app/profile/${CURRENT_USER_ID}`}>
+          <Link href={profileHref}>
             <Button
-              variant={location === `/app/profile/${CURRENT_USER_ID}` ? "default" : "ghost"}
+              variant={location === profileHref ? "default" : "ghost"}
               size="sm"
               className="gap-2"
               data-testid="nav-profile"
@@ -61,7 +61,7 @@ export function Navigation() {
           </Link>
         </nav>
       </div>
-      
+
       {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background flex justify-around p-2 z-50 pb-safe">
         <Link href="/app">
@@ -74,8 +74,8 @@ export function Navigation() {
             <Trophy className="w-5 h-5" />
           </Button>
         </Link>
-        <Link href={`/app/profile/${CURRENT_USER_ID}`}>
-          <Button variant={location === `/app/profile/${CURRENT_USER_ID}` ? "default" : "ghost"} size="icon" className="w-12 h-12 rounded-full">
+        <Link href={profileHref}>
+          <Button variant={location === profileHref ? "default" : "ghost"} size="icon" className="w-12 h-12 rounded-full">
             <UserIcon className="w-5 h-5" />
           </Button>
         </Link>

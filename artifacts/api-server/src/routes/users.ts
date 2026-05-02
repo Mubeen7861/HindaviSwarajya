@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, postsTable, followsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
-import { postsTable as pt, postTagsTable, postLikesTable, commentsTable } from "@workspace/db";
-import { desc } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
+import { postTagsTable, postLikesTable, commentsTable } from "@workspace/db";
+import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
 
@@ -38,8 +38,8 @@ async function buildPost(post: typeof postsTable.$inferSelect) {
       ? {
           id: u.id,
           name: u.name,
-          avatar: u.avatar,
-          location: u.location,
+          avatar: u.avatar ?? "",
+          location: u.location ?? "",
           rank: u.rank,
           totalHelped: u.totalHelped,
           followersCount: u.followersCount,
@@ -76,8 +76,8 @@ router.get("/users", async (req, res) => {
       users.map((u) => ({
         id: u.id,
         name: u.name,
-        avatar: u.avatar,
-        location: u.location,
+        avatar: u.avatar ?? "",
+        location: u.location ?? "",
         rank: u.rank,
         totalHelped: u.totalHelped,
         followersCount: u.followersCount,
@@ -102,8 +102,8 @@ router.get("/users/:id", async (req, res) => {
     res.json({
       id: user.id,
       name: user.name,
-      avatar: user.avatar,
-      location: user.location,
+      avatar: user.avatar ?? "",
+      location: user.location ?? "",
       rank: user.rank,
       totalHelped: user.totalHelped,
       followersCount: user.followersCount,
@@ -117,39 +117,14 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-// PATCH /api/users/:id
-router.patch("/users/:id", async (req, res) => {
+// POST /api/users/:id/follow (auth required)
+router.post("/users/:id/follow", requireAuth, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const { name, bio, location } = req.body as { name?: string; bio?: string; location?: string };
-    const update: Record<string, unknown> = {};
-    if (name !== undefined && name.trim()) update.name = name.trim();
-    if (bio !== undefined) update.bio = bio.trim();
-    if (location !== undefined && location.trim()) update.location = location.trim();
-    if (Object.keys(update).length === 0) {
-      res.status(400).json({ error: "Nothing to update" });
-      return;
-    }
-    const [user] = await db.update(usersTable).set(update).where(eq(usersTable.id, id)).returning();
-    if (!user) { res.status(404).json({ error: "Not found" }); return; }
-    res.json({
-      id: user.id, name: user.name, avatar: user.avatar, location: user.location,
-      rank: user.rank, totalHelped: user.totalHelped, followersCount: user.followersCount,
-      postsCount: user.postsCount, bio: user.bio ?? undefined, joinedAt: user.joinedAt?.toISOString() ?? undefined,
-    });
-  } catch (err) {
-    req.log.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+    const followedId = parseInt(String(req.params.id));
+    const followerId = req.dbUser!.id;
 
-// POST /api/users/:id/follow
-router.post("/users/:id/follow", async (req, res) => {
-  try {
-    const followedId = parseInt(req.params.id);
-    const followerId = parseInt(req.body.followerId);
-    if (!followerId) {
-      res.status(400).json({ error: "followerId required" });
+    if (followerId === followedId) {
+      res.status(400).json({ error: "Cannot follow yourself" });
       return;
     }
 

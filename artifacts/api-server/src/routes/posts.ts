@@ -7,17 +7,17 @@ import {
   postTagsTable,
   postLikesTable,
 } from "@workspace/db";
-import { eq, desc, ilike, or, sql, inArray } from "drizzle-orm";
+import { eq, desc, ilike, or, sql } from "drizzle-orm";
 import {
   ListPostsQueryParams,
   CreatePostBody,
-  ToggleLikeBody,
   AddCommentBody,
 } from "@workspace/api-zod";
+import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
 
-async function buildPost(post: typeof postsTable.$inferSelect, currentUserId?: number) {
+async function buildPost(post: typeof postsTable.$inferSelect) {
   const user = await db.select().from(usersTable).where(eq(usersTable.id, post.userId)).limit(1);
   const comments = await db
     .select({
@@ -49,8 +49,8 @@ async function buildPost(post: typeof postsTable.$inferSelect, currentUserId?: n
       ? {
           id: u.id,
           name: u.name,
-          avatar: u.avatar,
-          location: u.location,
+          avatar: u.avatar ?? "",
+          location: u.location ?? "",
           rank: u.rank,
           totalHelped: u.totalHelped,
           followersCount: u.followersCount,
@@ -84,7 +84,6 @@ router.get("/posts", async (req, res) => {
     const parsed = ListPostsQueryParams.safeParse(req.query);
     const params = parsed.success ? parsed.data : { limit: 20, offset: 0 };
 
-    let query = db.select().from(postsTable);
     const conditions = [];
 
     if (params.category) {
@@ -101,7 +100,6 @@ router.get("/posts", async (req, res) => {
       );
     }
 
-    let rows: typeof postsTable.$inferSelect[];
     const baseQuery = db.select().from(postsTable);
 
     let sortedQuery = baseQuery;
@@ -122,13 +120,16 @@ router.get("/posts", async (req, res) => {
     }
 
     const allConditions = conditions.length > 0 ? conditions : undefined;
-    rows = allConditions
+    const rows = allConditions
       ? await (sortedQuery.where(
           allConditions.length === 1 ? allConditions[0] : sql`${allConditions[0]} AND ${allConditions[1]}`
-        ) as any)
+        ) as never)
       : await sortedQuery;
 
-    const limited = rows.slice(params.offset ?? 0, (params.offset ?? 0) + (params.limit ?? 20));
+    const limited = (rows as (typeof postsTable.$inferSelect)[]).slice(
+      params.offset ?? 0,
+      (params.offset ?? 0) + (params.limit ?? 20),
+    );
     const result = await Promise.all(limited.map((p) => buildPost(p)));
     res.json(result);
   } catch (err) {
@@ -137,15 +138,16 @@ router.get("/posts", async (req, res) => {
   }
 });
 
-// POST /api/posts
-router.post("/posts", async (req, res) => {
+// POST /api/posts (auth required)
+router.post("/posts", requireAuth, async (req, res) => {
   try {
     const parsed = CreatePostBody.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid body" });
       return;
     }
-    const { tags, userId, ...rest } = parsed.data;
+    const { tags, ...rest } = parsed.data;
+    const userId = req.dbUser!.id;
 
     const [post] = await db
       .insert(postsTable)
@@ -189,16 +191,11 @@ router.get("/posts/:id", async (req, res) => {
   }
 });
 
-// POST /api/posts/:id/like
-router.post("/posts/:id/like", async (req, res) => {
+// POST /api/posts/:id/like (auth required)
+router.post("/posts/:id/like", requireAuth, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const parsed = ToggleLikeBody.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: "Invalid body" });
-      return;
-    }
-    const { userId } = parsed.data;
+    const id = parseInt(String(req.params.id));
+    const userId = req.dbUser!.id;
 
     const existing = await db
       .select()
@@ -235,34 +232,29 @@ router.post("/posts/:id/like", async (req, res) => {
   }
 });
 
-// POST /api/posts/:id/comments
-router.post("/posts/:id/comments", async (req, res) => {
+// POST /api/posts/:id/comments (auth required)
+router.post("/posts/:id/comments", requireAuth, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id));
     const parsed = AddCommentBody.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid body" });
       return;
     }
-    const { userId, content } = parsed.data;
-
-    const user = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    if (!user[0]) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+    const { content } = parsed.data;
+    const user = req.dbUser!;
 
     const [comment] = await db
       .insert(commentsTable)
-      .values({ postId: id, userId, content })
+      .values({ postId: id, userId: user.id, content })
       .returning();
 
     res.status(201).json({
       id: comment.id,
       postId: comment.postId,
       userId: comment.userId,
-      userName: user[0].name,
-      userAvatar: user[0].avatar,
+      userName: user.name,
+      userAvatar: user.avatar ?? "",
       content: comment.content,
       timestamp: comment.timestamp?.toISOString() ?? new Date().toISOString(),
     });

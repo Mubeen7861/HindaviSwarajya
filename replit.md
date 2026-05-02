@@ -61,6 +61,8 @@ Clerk proxy middleware at `artifacts/api-server/src/middlewares/clerkProxyMiddle
 
 | Method | Path | Description |
 |---|---|---|
+| GET | `/api/me` | Get current authenticated user (401 if not signed in) |
+| PATCH | `/api/me` | Update current user (name, bio, location) |
 | GET | `/api/posts` | List seva posts (filter, search, sort) |
 | POST | `/api/posts` | Create post |
 | GET | `/api/posts/:id` | Get post with comments |
@@ -81,7 +83,7 @@ Clerk proxy middleware at `artifacts/api-server/src/middlewares/clerkProxyMiddle
 
 ## DB Schema Tables
 
-- `users` — user profiles with rank, totalHelped, etc.
+- `users` — user profiles with rank, totalHelped, etc. `clerkId` is unique NOT NULL; row is auto-provisioned on first authenticated request.
 - `posts` — seva posts with category, location, peopleHelped
 - `comments` — post comments
 - `likes` — post likes
@@ -95,7 +97,11 @@ Clerk proxy middleware at `artifacts/api-server/src/middlewares/clerkProxyMiddle
 
 ## Current User
 
-`CURRENT_USER_ID = 1` (Rajendra Patil) — defined in `src/lib/constants.ts`
+The signed-in Clerk user is the source of truth. On the server, `requireAuth` (in `artifacts/api-server/src/middlewares/requireAuth.ts`) verifies the Clerk session, looks up the DB user by `users.clerkId`, lazily provisions the row from the Clerk profile if missing, and attaches `req.dbUser`. On the client, `useCurrentUser()` / `useCurrentUserId()` (in `artifacts/hindavi-swarajya/src/hooks/useCurrentUser.ts`) wrap the generated `useGetMe()` hook (gated by `useAuth().isSignedIn`). The Profile route at `/app/profile/me` resolves to the signed-in user.
+
+The Orval custom-fetch (`lib/api-client-react/src/custom-fetch.ts`) defaults `credentials: "include"` so all generated client calls send the Clerk session cookie automatically.
+
+There is no `CURRENT_USER_ID` constant. No mutating endpoint trusts user IDs from the request body — they are always derived from `req.dbUser.id`.
 
 ## Codegen Notes
 
