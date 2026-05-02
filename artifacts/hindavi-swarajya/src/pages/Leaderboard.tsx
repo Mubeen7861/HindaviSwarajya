@@ -147,8 +147,8 @@ export default function Leaderboard() {
 
                   <div className="flex flex-col items-end gap-0.5 ml-2 border-l pl-4 border-border">
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Mudra</span>
-                    <span className="font-bold text-amber-600 flex items-center gap-1 text-sm sm:text-base tabular-nums">
-                      {mudraFromHelped(entry.totalHelped).toLocaleString()} <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="font-extrabold text-amber-600 flex items-center gap-1.5 text-xl sm:text-2xl tabular-nums leading-none">
+                      {mudraFromHelped(entry.totalHelped).toLocaleString()} <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                     </span>
                   </div>
                 </motion.div>

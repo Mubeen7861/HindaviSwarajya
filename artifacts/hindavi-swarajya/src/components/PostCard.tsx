@@ -137,8 +137,16 @@ export function PostCard({ post }: { post: SevaPost }) {
         <span className={cn("inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full", catColor)}>
           {post.category}
         </span>
-        <span className="inline-flex items-center text-[11px] font-semibold text-primary px-2.5 py-1 rounded-full bg-primary/10" data-testid={`text-post-helped-${post.id}`}>
-          {post.helpedPeople} {t("post.helped")}
+        <span
+          className="inline-flex items-baseline gap-1 text-primary px-3 py-1.5 rounded-full bg-primary/10 ring-1 ring-primary/20"
+          data-testid={`text-post-helped-${post.id}`}
+        >
+          <span className="text-base sm:text-lg font-extrabold tabular-nums leading-none">
+            {post.helpedPeople}
+          </span>
+          <span className="text-[11px] font-semibold uppercase tracking-wide leading-none">
+            {t("post.helped")}
+          </span>
         </span>
         {visibleTags.map((tag) => (
           <span
