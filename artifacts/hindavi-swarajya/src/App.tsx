@@ -137,7 +137,6 @@ function AppLayout() {
             <Route path="/app/events" component={Events} />
             <Route path="/app/help" component={HelpRequests} />
             <Route path="/app/community" component={Community} />
-            <Route path="/app/admin" component={Admin} />
             <Route component={NotFound} />
           </Switch>
         </div>
@@ -209,6 +208,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/app/admin/login" component={AdminLogin} />
+            <Route path="/app/admin" component={Admin} />
             <Route path="/app/*?" component={AppRoute} />
             <Route component={NotFound} />
           </Switch>
