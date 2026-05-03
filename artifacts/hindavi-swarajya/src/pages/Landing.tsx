@@ -813,7 +813,14 @@ export default function Landing() {
           <span className="font-bold font-serif" style={{ color: "#E0C078" }}>HindaviSwarajya</span>
         </div>
         <p className="text-xs mb-1" style={{ color: "#C8A45C" }}>हिंदवी स्वराज्य — Community Seva Platform</p>
-        <p className="text-xs" style={{ color: "#8C6F3D" }}>"महाराजांचे स्वप्न, आमचे कर्तव्य" © 2026</p>
+        <p className="text-xs mb-3" style={{ color: "#8C6F3D" }}>"महाराजांचे स्वप्न, आमचे कर्तव्य" © 2026</p>
+        <a
+          href="/app/admin/login"
+          className="text-[11px] underline-offset-2 hover:underline"
+          style={{ color: "#8C6F3D" }}
+        >
+          Admin
+        </a>
       </footer>
     </div>
   );
