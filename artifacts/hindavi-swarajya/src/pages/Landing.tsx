@@ -379,7 +379,8 @@ export default function Landing() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: tIdx * 0.05 }}
-                  className="vint-card-strong relative overflow-hidden"
+                  className="relative overflow-hidden rounded-xl"
+                  style={{ border: "1px solid rgba(200,164,92,0.35)" }}
                 >
                   {/* Tier header strip — muted brown/saffron */}
                   <div
