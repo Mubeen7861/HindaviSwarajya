@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SWARAJYA_RANKS, CHHAVA_RANK, type RankDef, type RankTier } from "@/lib/ranks";
+import { Logo } from "@/components/Logo";
 
 // Tier metadata for the premium rank ladder. Order matters: foundation first, ascending to pinnacle.
 const RANK_TIERS: { id: RankTier; label: string; subtitle: string; icon: typeof Crown; accent: string; ring: string }[] = [
@@ -102,24 +103,7 @@ export default function Landing() {
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center shadow-inner"
-              style={{
-                background: "linear-gradient(180deg, #C9531E 0%, #B8430E 60%, #8B2E08 100%)",
-                border: "1px solid #8B2E08",
-                boxShadow: "0 1px 0 rgba(255,255,255,0.18) inset, 0 -2px 0 rgba(0,0,0,0.18) inset",
-              }}
-            >
-              <Flame className="w-5 h-5 text-[#FFF6E1]" />
-            </div>
-            <div>
-              <div className="text-base font-bold leading-none font-serif" style={{ color: "#8B2E08" }}>
-                HindaviSwarajya
-              </div>
-              <div className="text-[10px] leading-none mt-0.5" style={{ color: "#5C3A1E", opacity: 0.75 }}>
-                हिंदवी स्वराज्य
-              </div>
-            </div>
+            <Logo className="h-10 w-auto" />
           </div>
           <div className="flex items-center gap-2">
             <Link href="/sign-in">
@@ -800,18 +784,8 @@ export default function Landing() {
           borderTop: "1px solid rgba(200,164,92,0.45)",
         }}
       >
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center"
-            style={{
-              background: "linear-gradient(180deg, #C9531E 0%, #B8430E 60%, #8B2E08 100%)",
-              border: "1px solid #8B2E08",
-              boxShadow: "0 1px 0 rgba(255,255,255,0.18) inset",
-            }}
-          >
-            <Flame className="w-4 h-4" style={{ color: "#FFF6E1" }} />
-          </div>
-          <span className="font-bold font-serif" style={{ color: "#E0C078" }}>HindaviSwarajya</span>
+        <div className="flex items-center justify-center mb-2">
+          <Logo bare className="h-10 w-auto" />
         </div>
         <p className="text-xs mb-1" style={{ color: "#C8A45C" }}>हिंदवी स्वराज्य — Community Seva Platform</p>
         <p className="text-xs mb-3" style={{ color: "#8C6F3D" }}>"महाराजांचे स्वप्न, आमचे कर्तव्य" © 2026</p>

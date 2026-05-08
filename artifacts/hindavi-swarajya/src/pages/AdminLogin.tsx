@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Shield, Eye, EyeOff, Lock } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 const ADMIN_TOKEN_KEY = "hs_admin_token";
 
@@ -53,11 +54,12 @@ export default function AdminLogin() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF6F00] to-orange-700 flex items-center justify-center shadow-xl shadow-orange-200 mb-4">
-            <Shield className="w-8 h-8 text-white" />
+          <Logo className="h-14 w-auto mb-4" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FF6F00] to-orange-700 flex items-center justify-center shadow-lg shadow-orange-200 mb-3">
+            <Shield className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
-          <p className="text-sm text-muted-foreground mt-1">HindaviSwarajya Control Panel</p>
+          <p className="text-sm text-muted-foreground mt-1">Control Panel</p>
         </div>
 
         {/* Card */}

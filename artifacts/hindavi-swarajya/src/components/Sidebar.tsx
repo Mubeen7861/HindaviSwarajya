@@ -2,12 +2,13 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   Home, Plus, HandHeart, Users, User as UserIcon,
-  Calendar, TrendingUp, Crown,
+  Calendar, TrendingUp,
 } from "lucide-react";
 import {
   useGetStatsSummary, getGetStatsSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 
 type TabId =
@@ -46,36 +47,17 @@ function isTabActive(href: string, location: string) {
 
 function BrandLogo({ small = false }: { small?: boolean }) {
   return (
-    <Link href="/" className="flex items-center gap-3 group tap-none">
-      <div
+    <Link
+      href="/"
+      className="flex items-center group tap-none"
+      data-testid="nav-brand"
+    >
+      <Logo
         className={cn(
-          "flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shrink-0 transition-transform group-hover:scale-105",
-          small ? "w-9 h-9" : "w-11 h-11",
+          "w-auto transition-transform group-hover:scale-105",
+          small ? "h-9" : "h-11",
         )}
-      >
-        <Crown className={cn(small ? "w-4 h-4" : "w-5 h-5")} strokeWidth={2.25} />
-      </div>
-      <div className="min-w-0 leading-tight">
-        <p
-          className={cn(
-            "font-semibold text-primary tracking-tight truncate",
-            small ? "text-[15px]" : "text-[18px]",
-          )}
-          lang="mr"
-          data-testid="nav-brand"
-        >
-          हिंदवी स्वराज्य
-        </p>
-        <p
-          className={cn(
-            "text-foreground/55 font-medium truncate",
-            small ? "text-[10.5px]" : "text-[11.5px]",
-          )}
-          lang="en"
-        >
-          HindaviSwarajya
-        </p>
-      </div>
+      />
     </Link>
   );
 }

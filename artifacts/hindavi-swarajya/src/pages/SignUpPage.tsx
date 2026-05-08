@@ -1,6 +1,6 @@
 import { SignUp } from "@clerk/react";
 import { Link } from "wouter";
-import { Flame } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { shadcn } from "@clerk/themes";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -60,14 +60,8 @@ export default function SignUpPage() {
       {/* Minimal nav */}
       <div className="p-4 flex items-center gap-2.5">
         <Link href="/">
-          <div className="flex items-center gap-2 cursor-pointer">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6F00] to-[#E65100] flex items-center justify-center shadow-sm">
-              <Flame className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-[#FF6F00] leading-none font-serif">HindaviSwarajya</div>
-              <div className="text-[9px] text-gray-400 leading-none">हिंदवी स्वराज्य</div>
-            </div>
+          <div className="flex items-center cursor-pointer">
+            <Logo className="h-9 w-auto" />
           </div>
         </Link>
       </div>
