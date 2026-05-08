@@ -473,7 +473,7 @@ export default function Landing() {
           </div>
 
           {/* Pinnacle + Chhava — crowning honors (above Sar Senapati) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-8 mb-12">
             {/* Sar Senapati — pinnacle (spans 2 cols on lg) */}
             <motion.div
               initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
