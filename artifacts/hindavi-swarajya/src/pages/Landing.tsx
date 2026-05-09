@@ -189,7 +189,9 @@ export default function Landing() {
               style={{
                 color: "#2A1F14",
                 textShadow: "0 1px 0 rgba(255,246,225,0.5)",
-                ...(isMarathi ? { fontFamily: "'InfinityMarathi', 'Mukta', sans-serif" } : {}),
+                ...(isMarathi
+                  ? { fontFamily: "'InfinityMarathi', 'Mukta', sans-serif", letterSpacing: "-0.04em", wordSpacing: "-0.05em" }
+                  : {}),
               }}
             >
               {isMarathi ? (
