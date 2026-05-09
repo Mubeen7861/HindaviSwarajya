@@ -203,7 +203,8 @@ export default function Landing() {
                 <>
                   <span className="font-bold" style={{ color: "#2A1F14" }}>छत्रपती शिवाजी महाराजांच्या</span>
                   {" "}विचारांनी प्रेरित —<br className="hidden md:inline" />
-                  {" "}आधुनिक युगातील पहिलं डिजिटल हिंदवी स्वराज्य.
+                  {" "}आधुनिक युगातील पहिलं{" "}
+                  <span className="font-bold" style={{ color: "#FF6F00" }}>डिजिटल हिंदवी स्वराज्य.</span>
                 </>
               ) : (
                 <>
