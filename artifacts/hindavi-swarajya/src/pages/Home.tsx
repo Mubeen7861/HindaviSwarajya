@@ -32,7 +32,10 @@ export default function Home() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [banners, setBanners] = useState<Banner[]>([]);
+
+  const filtersActive = sortBy !== "recent" || category !== "all";
 
   useEffect(() => {
     let cancelled = false;
@@ -114,39 +117,68 @@ export default function Home() {
                 data-testid="input-search-feed"
               />
             </div>
-            <button className="inline-flex items-center gap-1.5 px-3.5 h-10 rounded-full border border-border/60 bg-background text-[12.5px] font-medium text-foreground/70 hover:bg-foreground/5 transition-colors shrink-0 tap-none">
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((v) => !v)}
+              aria-expanded={filtersOpen}
+              aria-controls="home-filters-panel"
+              data-testid="button-toggle-filters"
+              className={`relative inline-flex items-center gap-1.5 px-3.5 h-10 rounded-full border text-[12.5px] font-medium transition-colors shrink-0 tap-none ${
+                filtersOpen || filtersActive
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "border-border/60 bg-background text-foreground/70 hover:bg-foreground/5"
+              }`}
+            >
               <SlidersHorizontal className="w-3.5 h-3.5" strokeWidth={1.85} />
-              {t("home.advanced")}
+              Filters
+              {filtersActive && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary ring-2 ring-background" />
+              )}
             </button>
           </div>
 
-          {/* Sort row */}
-          <div className="flex gap-2 -mx-1 px-1 overflow-x-auto no-scrollbar">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-auto min-w-[140px] h-9 rounded-full text-[12.5px] border-border/60 bg-background" data-testid="select-sort-by">
-                <SelectValue placeholder={t("common.sortBy")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ListPostsSortBy.recent}>{t("home.sortRecent")}</SelectItem>
-                <SelectItem value={ListPostsSortBy.impact}>{t("home.sortImpact")}</SelectItem>
-                <SelectItem value={ListPostsSortBy.likes}>{t("home.sortLikes")}</SelectItem>
-                <SelectItem value={ListPostsSortBy.comments}>{t("home.sortComments")}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-auto min-w-[120px] h-9 rounded-full text-[12.5px] border-border/60 bg-background" data-testid="select-filter-category">
-                <SelectValue placeholder={t("common.category")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("home.catAll")}</SelectItem>
-                <SelectItem value={ListPostsCategory.Food}>Food</SelectItem>
-                <SelectItem value={ListPostsCategory.Education}>Education</SelectItem>
-                <SelectItem value={ListPostsCategory.Health}>Health</SelectItem>
-                <SelectItem value={ListPostsCategory.Shelter}>Shelter</SelectItem>
-                <SelectItem value={ListPostsCategory.Other}>Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filters panel — collapsible */}
+          {filtersOpen && (
+            <div
+              id="home-filters-panel"
+              className="flex gap-2 -mx-1 px-1 overflow-x-auto no-scrollbar animate-in fade-in slide-in-from-top-1 duration-150"
+            >
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-auto min-w-[140px] h-9 rounded-full text-[12.5px] border-border/60 bg-background" data-testid="select-sort-by">
+                  <SelectValue placeholder={t("common.sortBy")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ListPostsSortBy.recent}>{t("home.sortRecent")}</SelectItem>
+                  <SelectItem value={ListPostsSortBy.impact}>{t("home.sortImpact")}</SelectItem>
+                  <SelectItem value={ListPostsSortBy.likes}>{t("home.sortLikes")}</SelectItem>
+                  <SelectItem value={ListPostsSortBy.comments}>{t("home.sortComments")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-auto min-w-[120px] h-9 rounded-full text-[12.5px] border-border/60 bg-background" data-testid="select-filter-category">
+                  <SelectValue placeholder={t("common.category")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("home.catAll")}</SelectItem>
+                  <SelectItem value={ListPostsCategory.Food}>Food</SelectItem>
+                  <SelectItem value={ListPostsCategory.Education}>Education</SelectItem>
+                  <SelectItem value={ListPostsCategory.Health}>Health</SelectItem>
+                  <SelectItem value={ListPostsCategory.Shelter}>Shelter</SelectItem>
+                  <SelectItem value={ListPostsCategory.Other}>Other</SelectItem>
+                </SelectContent>
+              </Select>
+              {filtersActive && (
+                <button
+                  type="button"
+                  onClick={() => { setSortBy("recent"); setCategory("all"); }}
+                  data-testid="button-clear-filters"
+                  className="inline-flex items-center px-3 h-9 rounded-full text-[12.5px] font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors shrink-0"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
 
           {/* ── Featured banner carousel — admin-managed ── */}
           <BannerCarousel
