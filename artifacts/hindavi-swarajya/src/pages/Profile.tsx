@@ -130,6 +130,16 @@ export default function Profile() {
   >(null);
   const [logoutOpen, setLogoutOpen] = useState(false);
 
+  // Per-tab filters for own content (sort + approval status)
+  type SortKey = "recent" | "oldest";
+  type StatusKey = "all" | "approved" | "pending" | "rejected";
+  const [postsSort, setPostsSort] = useState<SortKey>("recent");
+  const [postsStatus, setPostsStatus] = useState<StatusKey>("all");
+  const [eventsSort, setEventsSort] = useState<SortKey>("recent");
+  const [eventsStatus, setEventsStatus] = useState<StatusKey>("all");
+  const [helpSort, setHelpSort] = useState<SortKey>("recent");
+  const [helpStatus, setHelpStatus] = useState<StatusKey>("all");
+
   const { data: user, isLoading: userLoading } = useGetUser(profileId, {
     query: { enabled: !!profileId, queryKey: getGetUserQueryKey(profileId) },
   });
@@ -331,6 +341,86 @@ export default function Profile() {
 
   const ownTabs = isOwn;
 
+  // Generic sort+status filter for own content lists
+  function applyFilters<
+    T extends { approvalStatus?: string | null; timestamp?: string | null; createdAt?: string | null; date?: string | null },
+  >(
+    items: T[] | undefined,
+    sort: SortKey,
+    status: StatusKey,
+    getDate: (item: T) => string | null | undefined,
+  ): T[] {
+    if (!items) return [];
+    const filtered =
+      status === "all"
+        ? items
+        : items.filter((it) => (it.approvalStatus ?? "approved") === status);
+    const sorted = [...filtered].sort((a, b) => {
+      const da = new Date(getDate(a) ?? 0).getTime();
+      const db = new Date(getDate(b) ?? 0).getTime();
+      return sort === "recent" ? db - da : da - db;
+    });
+    return sorted;
+  }
+
+  const FilterRow = ({
+    sort, onSort, status, onStatus, testIdPrefix,
+  }: {
+    sort: SortKey;
+    onSort: (v: SortKey) => void;
+    status: StatusKey;
+    onStatus: (v: StatusKey) => void;
+    testIdPrefix: string;
+  }) => (
+    <div className="flex items-center gap-2 mb-2 flex-wrap">
+      <Select value={sort} onValueChange={(v) => onSort(v as SortKey)}>
+        <SelectTrigger
+          className="w-auto min-w-[130px] h-8 rounded-full text-[12.5px] border-border/60 bg-background"
+          data-testid={`${testIdPrefix}-sort`}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="recent">Most recent</SelectItem>
+          <SelectItem value="oldest">Oldest first</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select value={status} onValueChange={(v) => onStatus(v as StatusKey)}>
+        <SelectTrigger
+          className="w-auto min-w-[100px] h-8 rounded-full text-[12.5px] border-border/60 bg-background"
+          data-testid={`${testIdPrefix}-status`}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All</SelectItem>
+          <SelectItem value="approved">Approved</SelectItem>
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="rejected">Rejected</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const filteredMyPosts = applyFilters(
+    myPosts,
+    postsSort,
+    postsStatus,
+    (p) => p.timestamp,
+  );
+  const filteredMyEvents = applyFilters(
+    myEvents,
+    eventsSort,
+    eventsStatus,
+    (e) => e.date ?? null,
+  );
+  const filteredMyHelp = applyFilters(
+    myHelp,
+    helpSort,
+    helpStatus,
+    (h) => (h as { createdAt?: string }).createdAt ?? null,
+  );
+
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* ── Banner ── */}
@@ -507,7 +597,17 @@ export default function Profile() {
                   testId="empty-state-my-sevas"
                 />
               ) : (
-                myPosts.map((post, i) => (
+                <>
+                <FilterRow
+                  sort={postsSort} onSort={setPostsSort}
+                  status={postsStatus} onStatus={setPostsStatus}
+                  testIdPrefix="my-posts"
+                />
+                {filteredMyPosts.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-8">
+                    No sevas match these filters.
+                  </p>
+                ) : filteredMyPosts.map((post, i) => (
                   <motion.div
                     key={post.id}
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -563,7 +663,8 @@ export default function Profile() {
                       </p>
                     )}
                   </motion.div>
-                ))
+                ))}
+                </>
               )}
             </TabsContent>
           )}
@@ -588,7 +689,17 @@ export default function Profile() {
                   testId="empty-state-my-events"
                 />
               ) : (
-                myEvents.map((event, i) => (
+                <>
+                <FilterRow
+                  sort={eventsSort} onSort={setEventsSort}
+                  status={eventsStatus} onStatus={setEventsStatus}
+                  testIdPrefix="my-events"
+                />
+                {filteredMyEvents.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-8">
+                    No events match these filters.
+                  </p>
+                ) : filteredMyEvents.map((event, i) => (
                   <motion.div
                     key={event.id}
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -625,7 +736,8 @@ export default function Profile() {
                       </p>
                     )}
                   </motion.div>
-                ))
+                ))}
+                </>
               )}
             </TabsContent>
           )}
@@ -650,7 +762,17 @@ export default function Profile() {
                   testId="empty-state-my-help"
                 />
               ) : (
-                myHelp.map((hr, i) => (
+                <>
+                <FilterRow
+                  sort={helpSort} onSort={setHelpSort}
+                  status={helpStatus} onStatus={setHelpStatus}
+                  testIdPrefix="my-help"
+                />
+                {filteredMyHelp.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-8">
+                    No requests match these filters.
+                  </p>
+                ) : filteredMyHelp.map((hr, i) => (
                   <motion.div
                     key={hr.id}
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -690,7 +812,8 @@ export default function Profile() {
                       </p>
                     )}
                   </motion.div>
-                ))
+                ))}
+                </>
               )}
             </TabsContent>
           )}
