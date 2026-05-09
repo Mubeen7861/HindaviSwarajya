@@ -179,12 +179,7 @@ export default function Landing() {
               {isMarathi ? (
                 <>
                   “हे स्वराज्य व्हावे,{" "}
-                  <span style={{
-                    background: "linear-gradient(180deg, #B8430E 0%, #8B2E08 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                  }}>
+                  <span style={{ color: "#FF6F00" }}>
                     ही तर श्रींची इच्छा!”
                   </span>
                 </>
