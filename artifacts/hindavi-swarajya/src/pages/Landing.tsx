@@ -206,9 +206,18 @@ export default function Landing() {
             </h1>
 
             <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-6 leading-relaxed" style={{ color: "#5C3A1E" }}>
-              World's first seva platform inspired by the vision of{" "}
-              <span className="font-bold" style={{ color: "#2A1F14" }}>Chhatrapati Shivaji Maharaj</span>
-              {" "}— a movement, not just a platform.
+              {isMarathi ? (
+                <>
+                  <span className="font-bold" style={{ color: "#2A1F14" }}>छत्रपती शिवाजी महाराजांच्या</span>
+                  {" "}विचारांनी प्रेरित — आधुनिक युगातील पहिलं डिजिटल हिंदवी स्वराज्य.
+                </>
+              ) : (
+                <>
+                  World's first seva platform inspired by the vision of{" "}
+                  <span className="font-bold" style={{ color: "#2A1F14" }}>Chhatrapati Shivaji Maharaj</span>
+                  {" "}— a movement, not just a platform.
+                </>
+              )}
             </p>
 
             {/* Marathi emotional line — framed in a vintage scroll */}
