@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   Home, Plus, HandHeart, Users, User as UserIcon,
-  Calendar, TrendingUp, Menu, ChevronRight, Sparkles, Flame,
+  Calendar, TrendingUp, Menu, ChevronRight, Sparkles,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 
 type TabId =
   | "home" | "help-request" | "create" | "community" | "profile"
-  | "events" | "leaderboard" | "all-sevas";
+  | "events" | "leaderboard";
 
 type Tab = {
   href: string;
@@ -41,15 +41,10 @@ const SECONDARY_TABS: Tab[] = [
   { href: "/app/leaderboard", id: "leaderboard", icon: TrendingUp,  labelKey: "nav.leaderboard", descKey: "nav.leaderboardDesc" },
 ];
 
-const MOBILE_TABS: TabId[] = ["home", "all-sevas", "create"];
-
-const MOBILE_ONLY_TABS: Tab[] = [
-  { href: "/app", id: "all-sevas", icon: Flame, labelKey: "nav.allSevas", descKey: "nav.allSevasDesc" },
-];
+const MOBILE_TABS: TabId[] = ["home", "community", "create", "events", "profile"];
 
 const MOBILE_LABEL_OVERRIDE: Partial<Record<TabId, string>> = {
-  home: "Home",
-  "all-sevas": "All Sevas",
+  home: "All Sevas",
 };
 
 const CREATE_MENU_ITEMS: Array<{
@@ -64,7 +59,7 @@ const CREATE_MENU_ITEMS: Array<{
   { href: "/app/events", label: "Plan an Event", desc: "Organise a seva event", icon: Calendar, testId: "create-menu-event" },
 ];
 
-const ALL_TABS = [...PRIMARY_TABS, ...SECONDARY_TABS, ...MOBILE_ONLY_TABS];
+const ALL_TABS = [...PRIMARY_TABS, ...SECONDARY_TABS];
 
 function isTabActive(href: string, location: string) {
   if (href === "/app") return location === "/app" || location === "/app/";
