@@ -1,14 +1,18 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   Home, Plus, HandHeart, Users, User as UserIcon,
-  Calendar, TrendingUp,
+  Calendar, TrendingUp, Menu, ChevronRight,
 } from "lucide-react";
 import {
   useGetStatsSummary, getGetStatsSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
+import {
+  Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 type TabId =
@@ -65,6 +69,7 @@ function BrandLogo({ small = false }: { small?: boolean }) {
 export function Sidebar() {
   const [location] = useLocation();
   const { t } = useTranslation();
+  const [sheetOpen, setSheetOpen] = useState(false);
   const { data: stats } = useGetStatsSummary({
     query: { queryKey: getGetStatsSummaryQueryKey(), staleTime: 30_000 },
   });
@@ -203,7 +208,186 @@ export function Sidebar() {
         <div className="flex items-center justify-between px-4 h-14">
           <BrandLogo small />
           <div className="flex items-center gap-1">
-            <LanguageSwitcher variant="icon" />
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  data-testid="nav-menu-trigger"
+                  aria-label={t("nav.more")}
+                  className="inline-flex items-center justify-center w-11 h-11 rounded-xl text-foreground/70 hover:bg-foreground/5 active:scale-95 transition tap-none"
+                >
+                  <Menu className="w-[22px] h-[22px]" strokeWidth={2} />
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-[86vw] max-w-sm p-0 flex flex-col"
+              >
+                {/* Header */}
+                <div className="px-5 pt-5 pb-4 border-b border-border/60 shrink-0">
+                  <BrandLogo />
+                  <SheetTitle className="sr-only">{t("nav.more")}</SheetTitle>
+                  <SheetDescription className="sr-only">
+                    {t("nav.dailyInspiration")}
+                  </SheetDescription>
+                  <p
+                    className="text-[11px] text-foreground/55 italic mt-3 truncate"
+                    lang="mr"
+                  >
+                    "महाराजांचे स्वप्न, आमचे कर्तव्य"
+                  </p>
+                </div>
+
+                {/* Scrollable nav */}
+                <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+                  {PRIMARY_TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = isTabActive(tab.href, location);
+                    const isCreate = tab.id === "create";
+                    return (
+                      <Link
+                        key={tab.id}
+                        href={tab.href}
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        <div
+                          data-testid={`nav-sheet-${tab.id}`}
+                          className={cn(
+                            "w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 cursor-pointer tap-none transition-colors",
+                            isCreate &&
+                              "bg-gradient-to-r from-primary to-orange-500 text-primary-foreground",
+                            !isCreate && isActive && "bg-primary/10 text-primary",
+                            !isCreate && !isActive &&
+                              "text-foreground/80 hover:bg-foreground/5",
+                          )}
+                        >
+                          <Icon
+                            className={cn(
+                              "w-[20px] h-[20px] shrink-0",
+                              isCreate
+                                ? "text-primary-foreground"
+                                : isActive
+                                  ? "text-primary"
+                                  : "text-foreground/55",
+                            )}
+                            strokeWidth={isCreate ? 2.5 : isActive ? 2.1 : 1.85}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className={cn(
+                                "text-[14.5px] font-semibold leading-tight truncate",
+                                isCreate && "text-primary-foreground",
+                              )}
+                            >
+                              {t(tab.labelKey)}
+                            </p>
+                            <p
+                              className={cn(
+                                "text-[11px] mt-0.5 leading-tight truncate",
+                                isCreate
+                                  ? "text-primary-foreground/85"
+                                  : "text-muted-foreground",
+                              )}
+                            >
+                              {t(tab.descKey)}
+                            </p>
+                          </div>
+                          {!isCreate && (
+                            <ChevronRight className="w-4 h-4 text-foreground/30 shrink-0" />
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+
+                  <div className="pt-4 mt-2">
+                    <p className="px-3.5 text-[10px] uppercase tracking-[0.1em] font-semibold text-foreground/45 mb-1.5">
+                      {t("nav.more")}
+                    </p>
+                    {SECONDARY_TABS.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = isTabActive(tab.href, location);
+                      return (
+                        <Link
+                          key={tab.id}
+                          href={tab.href}
+                          onClick={() => setSheetOpen(false)}
+                        >
+                          <div
+                            data-testid={`nav-sheet-${tab.id}`}
+                            className={cn(
+                              "w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 cursor-pointer tap-none transition-colors",
+                              isActive
+                                ? "bg-primary/10 text-primary"
+                                : "text-foreground/80 hover:bg-foreground/5",
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                "w-[20px] h-[20px] shrink-0",
+                                isActive ? "text-primary" : "text-foreground/55",
+                              )}
+                              strokeWidth={isActive ? 2.1 : 1.85}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[14.5px] font-semibold leading-tight truncate">
+                                {t(tab.labelKey)}
+                              </p>
+                              <p className="text-[11px] mt-0.5 leading-tight truncate text-muted-foreground">
+                                {t(tab.descKey)}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-foreground/30 shrink-0" />
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+
+                  {/* Community Impact */}
+                  <div className="pt-4 mt-2 px-1">
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="text-[11px] uppercase tracking-[0.08em] font-semibold text-blue-700">
+                          {t("nav.impact")}
+                        </span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {[
+                          { label: t("nav.impactPosts"),  value: stats?.totalPosts },
+                          { label: t("nav.impactHelped"), value: stats?.totalHelped },
+                          { label: t("nav.impactSevaks"), value: stats?.totalUsers  },
+                        ].map(({ label, value }) => (
+                          <div key={label} className="flex items-baseline justify-between">
+                            <span className="text-[12px] text-blue-700/80">{label}</span>
+                            <span className="text-[13.5px] font-semibold text-blue-900 tabular-nums">
+                              {value?.toLocaleString() ?? "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-5 py-4 border-t border-border/60 shrink-0 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p
+                      className="text-[11px] text-primary font-semibold truncate"
+                      lang="mr"
+                    >
+                      "हे स्वराज्य व्हावे, ही तर श्रींची इच्छा."
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                      {t("nav.dailyInspiration")}
+                    </p>
+                  </div>
+                  <LanguageSwitcher variant="icon" />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
