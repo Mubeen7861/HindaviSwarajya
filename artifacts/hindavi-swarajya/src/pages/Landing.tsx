@@ -785,7 +785,7 @@ export default function Landing() {
         }}
       >
         <div className="flex items-center justify-center mb-2">
-          <Logo bare className="h-10 w-auto" />
+          <Logo className="h-10 w-auto" />
         </div>
         <p className="text-xs mb-1" style={{ color: "#C8A45C" }}>हिंदवी स्वराज्य — Community Seva Platform</p>
         <p className="text-xs mb-3" style={{ color: "#8C6F3D" }}>"महाराजांचे स्वप्न, आमचे कर्तव्य" © 2026</p>
