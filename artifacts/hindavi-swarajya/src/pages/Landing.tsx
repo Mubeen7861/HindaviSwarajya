@@ -178,14 +178,14 @@ export default function Landing() {
             >
               {isMarathi ? (
                 <>
-                  महाराजांचा विचार.{" "}
+                  छत्रपती शिवाजी महाराजांच्या आदर्श स्वराज्याच्या{" "}
                   <span style={{
                     background: "linear-gradient(180deg, #B8430E 0%, #8B2E08 100%)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     backgroundClip: "text",
                   }}>
-                    नव्या युगातील स्वराज्य.
+                    विचारांनी प्रेरित.
                   </span>
                 </>
               ) : (
