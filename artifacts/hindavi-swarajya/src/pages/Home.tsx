@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useListEvents, getListEventsQueryKey } from "@workspace/api-client-react";
+import { useListHelpRequests, getListHelpRequestsQueryKey } from "@workspace/api-client-react";
+import { HandHeart, MapPin } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 
@@ -77,6 +79,10 @@ export default function Home() {
   const { data: upcomingEventsData } = useListEvents(
     { status: "upcoming" as const, limit: 3 },
     { query: { queryKey: getListEventsQueryKey({ status: "upcoming" as const, limit: 3 }) } }
+  );
+  const { data: openHelpData } = useListHelpRequests(
+    { limit: 3 },
+    { query: { queryKey: getListHelpRequestsQueryKey({ limit: 3 }) } }
   );
 
   return (
@@ -292,6 +298,61 @@ export default function Home() {
                   </div>
                 </Link>
               ))}
+            </div>
+          </div>
+
+          {/* Help Needed */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                <HandHeart className="w-4 h-4 text-primary" />
+                Help Needed
+              </h3>
+              <Link href="/app/help">
+                <span className="text-xs text-primary font-semibold cursor-pointer hover:underline">View All</span>
+              </Link>
+            </div>
+            <div className="p-3 space-y-2.5">
+              {!openHelpData ? (
+                <div className="space-y-2">{[1,2].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
+              ) : openHelpData.length === 0 ? (
+                <p className="text-xs text-center text-muted-foreground py-4">No open help requests</p>
+              ) : openHelpData.map((hr) => {
+                const isEmergency = hr.urgency === "Emergency";
+                const isHigh = hr.urgency === "High";
+                const tone = isEmergency
+                  ? "bg-red-50 text-red-600"
+                  : isHigh
+                    ? "bg-orange-50 text-primary"
+                    : "bg-orange-50 text-primary";
+                return (
+                  <Link key={hr.id} href="/app/help">
+                    <div className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 mt-0.5 ${tone}`}>
+                        <HandHeart className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-800 leading-tight truncate">{hr.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                          {isEmergency || isHigh ? (
+                            <span className={`font-semibold ${isEmergency ? "text-red-600" : "text-primary"}`}>
+                              {hr.urgency}
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 truncate">
+                              <MapPin className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{hr.location}</span>
+                            </span>
+                          )}
+                          <span>·</span>
+                          <Users className="w-3 h-3" />
+                          <span>{hr.helpersJoined?.length ?? 0}/{hr.peopleNeeded}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
