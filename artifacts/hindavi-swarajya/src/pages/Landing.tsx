@@ -163,7 +163,7 @@ export default function Landing() {
             {/* Vintage seal badge */}
             <div className="vint-chip inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full font-bold uppercase tracking-widest text-[10px] sm:text-[11px]">
               <Sparkles className="w-3.5 h-3.5" />
-              World's First Seva Platform
+              {isMarathi ? "सामुदायिक सेवा मंच" : "Community Seva Platform"}
               <Sparkles className="w-3.5 h-3.5" />
             </div>
 
