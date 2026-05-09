@@ -253,22 +253,6 @@ export default function Landing() {
               </Link>
             </div>
 
-            {/* Power taglines strip */}
-            <div className="mt-10 flex flex-wrap justify-center gap-2 text-xs">
-              {[
-                { label: "Seva is the new Swarajya", icon: Heart },
-                { label: "People-powered. Purpose-driven.", icon: Users },
-                { label: "Ek Sevak. Ek Badlav.", icon: Flame },
-              ].map((t) => (
-                <span
-                  key={t.label}
-                  className="vint-chip inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold"
-                >
-                  <t.icon className="w-3 h-3" style={{ color: "#B8430E" }} />
-                  {t.label}
-                </span>
-              ))}
-            </div>
           </motion.div>
         </div>
       </section>
