@@ -194,9 +194,9 @@ export default function Landing() {
             >
               {isMarathi ? (
                 <>
-                  “हे स्वराज्य व्हावे,{" "}
+                  “he svarajya vhavae,{" "}
                   <span style={{ color: "#FF6F00" }}>
-                    ही तर श्रींची इच्छा!”
+                    haI tar MaaI /caaI qcCa!”
                   </span>
                 </>
               ) : (
