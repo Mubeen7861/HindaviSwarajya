@@ -14,6 +14,17 @@ import { SWARAJYA_RANKS, CHHAVA_RANK, type RankDef, type RankTier } from "@/lib/
 import { Logo } from "@/components/Logo";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import infinityMarathiFontUrl from "@assets/Infinity_39_Font_1778338478694.ttf";
+
+const marathiHeadingFontStyle = `
+@font-face {
+  font-family: 'InfinityMarathi';
+  src: url(${JSON.stringify(infinityMarathiFontUrl)}) format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+`;
 
 // Tier metadata for the premium rank ladder. Order matters: foundation first, ascending to pinnacle.
 const RANK_TIERS: { id: RankTier; label: string; subtitle: string; icon: typeof Crown; accent: string; ring: string }[] = [
@@ -96,6 +107,7 @@ export default function Landing() {
 
   return (
     <div className="vintage-landing min-h-screen vint-parchment overflow-x-hidden">
+      <style>{marathiHeadingFontStyle}</style>
 
       {/* ── Navbar (parchment, antique gold rule) ── */}
       <nav
@@ -174,7 +186,11 @@ export default function Landing() {
 
             <h1
               className="text-5xl sm:text-6xl md:text-7xl font-extrabold leading-[1.05] mb-5 tracking-tight"
-              style={{ color: "#2A1F14", textShadow: "0 1px 0 rgba(255,246,225,0.5)" }}
+              style={{
+                color: "#2A1F14",
+                textShadow: "0 1px 0 rgba(255,246,225,0.5)",
+                ...(isMarathi ? { fontFamily: "'InfinityMarathi', 'Mukta', sans-serif" } : {}),
+              }}
             >
               {isMarathi ? (
                 <>
