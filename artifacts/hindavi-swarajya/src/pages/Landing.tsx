@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SWARAJYA_RANKS, CHHAVA_RANK, type RankDef, type RankTier } from "@/lib/ranks";
 import { Logo } from "@/components/Logo";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 // Tier metadata for the premium rank ladder. Order matters: foundation first, ascending to pinnacle.
 const RANK_TIERS: { id: RankTier; label: string; subtitle: string; icon: typeof Crown; accent: string; ring: string }[] = [
@@ -77,6 +78,8 @@ const FEATURES = [
 ];
 
 export default function Landing() {
+  const { i18n } = useTranslation();
+  const isMarathi = i18n.language?.startsWith("mr");
   const { data: stats, isLoading: statsLoading } = useGetStatsSummary({
     query: { queryKey: getGetStatsSummaryQueryKey(), staleTime: 60_000 },
   });
@@ -175,15 +178,31 @@ export default function Landing() {
               className="text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.05] mb-5 font-serif tracking-tight"
               style={{ color: "#2A1F14", textShadow: "0 1px 0 rgba(255,246,225,0.5)" }}
             >
-              Serve. Unite.{" "}
-              <span style={{
-                background: "linear-gradient(180deg, #B8430E 0%, #8B2E08 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}>
-                Build Swarajya.
-              </span>
+              {isMarathi ? (
+                <>
+                  महाराजांचा विचार.{" "}
+                  <span style={{
+                    background: "linear-gradient(180deg, #B8430E 0%, #8B2E08 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}>
+                    नव्या युगातील स्वराज्य.
+                  </span>
+                </>
+              ) : (
+                <>
+                  Serve. Unite.{" "}
+                  <span style={{
+                    background: "linear-gradient(180deg, #B8430E 0%, #8B2E08 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}>
+                    Build Swarajya.
+                  </span>
+                </>
+              )}
             </h1>
 
             <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-6 leading-relaxed" style={{ color: "#5C3A1E" }}>
