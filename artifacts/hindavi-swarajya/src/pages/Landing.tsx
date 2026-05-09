@@ -173,7 +173,7 @@ export default function Landing() {
             </div>
 
             <h1
-              className="text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.05] mb-5 font-serif tracking-tight"
+              className="text-5xl sm:text-6xl md:text-7xl font-extrabold leading-[1.05] mb-5 tracking-tight"
               style={{ color: "#2A1F14", textShadow: "0 1px 0 rgba(255,246,225,0.5)" }}
             >
               {isMarathi ? (
