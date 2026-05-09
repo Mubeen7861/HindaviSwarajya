@@ -3,8 +3,9 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   Home, Plus, HandHeart, Users, User as UserIcon,
-  Calendar, TrendingUp, Menu, ChevronRight,
+  Calendar, TrendingUp, Menu, ChevronRight, Sparkles,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   useGetStatsSummary, getGetStatsSummaryQueryKey,
 } from "@workspace/api-client-react";
@@ -40,7 +41,23 @@ const SECONDARY_TABS: Tab[] = [
   { href: "/app/leaderboard", id: "leaderboard", icon: TrendingUp,  labelKey: "nav.leaderboard", descKey: "nav.leaderboardDesc" },
 ];
 
-const MOBILE_TABS: TabId[] = ["home", "help-request", "create", "events", "profile"];
+const MOBILE_TABS: TabId[] = ["home", "community", "create", "events", "profile"];
+
+const MOBILE_LABEL_OVERRIDE: Partial<Record<TabId, string>> = {
+  home: "All Sevas",
+};
+
+const CREATE_MENU_ITEMS: Array<{
+  href: string;
+  label: string;
+  desc: string;
+  icon: typeof Home;
+  testId: string;
+}> = [
+  { href: "/app/create", label: "New Seva", desc: "Share an act of service", icon: Sparkles, testId: "create-menu-seva" },
+  { href: "/app/help",   label: "Ask for Help", desc: "Post a help request",  icon: HandHeart, testId: "create-menu-help" },
+  { href: "/app/events", label: "Plan an Event", desc: "Organise a seva event", icon: Calendar, testId: "create-menu-event" },
+];
 
 const ALL_TABS = [...PRIMARY_TABS, ...SECONDARY_TABS];
 
@@ -407,18 +424,50 @@ export function Sidebar() {
 
               if (isCreate) {
                 return (
-                  <Link key={tab.id} href={tab.href}>
-                    <div
-                      data-testid={`nav-${tab.id}`}
-                      className="flex items-center justify-center w-12 h-12 -mt-5 rounded-2xl bg-primary text-primary-foreground shadow-md tap-none active:scale-95 transition-transform"
-                      aria-label={t(tab.labelKey)}
+                  <Popover key={tab.id}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        data-testid={`nav-${tab.id}`}
+                        className="flex items-center justify-center w-12 h-12 -mt-5 rounded-2xl bg-primary text-primary-foreground shadow-md tap-none active:scale-95 transition-transform data-[state=open]:rotate-45 data-[state=open]:bg-primary/90"
+                        aria-label={t(tab.labelKey)}
+                      >
+                        <Icon className="w-5 h-5 transition-transform" strokeWidth={2.5} />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      side="top"
+                      align="center"
+                      sideOffset={14}
+                      className="p-2 w-60 rounded-2xl border border-border/60 shadow-xl bg-background/95 backdrop-blur"
                     >
-                      <Icon className="w-5 h-5" strokeWidth={2.5} />
-                    </div>
-                  </Link>
+                      <div className="space-y-1">
+                        {CREATE_MENU_ITEMS.map((item) => {
+                          const ItemIcon = item.icon;
+                          return (
+                            <Link key={item.href} href={item.href}>
+                              <div
+                                data-testid={item.testId}
+                                className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-foreground/5 active:bg-foreground/10 transition-colors cursor-pointer tap-none"
+                              >
+                                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary shrink-0">
+                                  <ItemIcon className="w-[18px] h-[18px]" strokeWidth={2} />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-[13px] font-semibold text-foreground leading-tight">{item.label}</p>
+                                  <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{item.desc}</p>
+                                </div>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 );
               }
 
+              const label = MOBILE_LABEL_OVERRIDE[tab.id] ?? t(tab.labelKey);
               return (
                 <Link key={tab.id} href={tab.href}>
                   <div
@@ -427,7 +476,7 @@ export function Sidebar() {
                       "flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-colors tap-none",
                       isActive ? "text-primary" : "text-foreground/45",
                     )}
-                    aria-label={t(tab.labelKey)}
+                    aria-label={label}
                     aria-current={isActive ? "page" : undefined}
                   >
                     <Icon
@@ -440,7 +489,7 @@ export function Sidebar() {
                         isActive ? "text-primary" : "text-foreground/55",
                       )}
                     >
-                      {t(tab.labelKey)}
+                      {label}
                     </span>
                   </div>
                 </Link>
