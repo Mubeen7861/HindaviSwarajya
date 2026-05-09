@@ -12,6 +12,7 @@ import { useGetStatsSummary, getGetStatsSummaryQueryKey } from "@workspace/api-c
 import { Skeleton } from "@/components/ui/skeleton";
 import { SWARAJYA_RANKS, CHHAVA_RANK, type RankDef, type RankTier } from "@/lib/ranks";
 import { Logo } from "@/components/Logo";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 // Tier metadata for the premium rank ladder. Order matters: foundation first, ascending to pinnacle.
 const RANK_TIERS: { id: RankTier; label: string; subtitle: string; icon: typeof Crown; accent: string; ring: string }[] = [
@@ -106,8 +107,9 @@ export default function Landing() {
             <Logo className="h-10 w-auto" />
           </div>
           <div className="flex items-center gap-2">
+            <LanguageSwitcher variant="compact" />
             <Link href="/sign-in">
-              <Button variant="ghost" className="font-semibold" style={{ color: "#5C3A1E" }}>
+              <Button variant="ghost" className="font-semibold hidden sm:inline-flex" style={{ color: "#5C3A1E" }}>
                 Sign In
               </Button>
             </Link>
