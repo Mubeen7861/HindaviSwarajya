@@ -40,7 +40,7 @@ const SECONDARY_TABS: Tab[] = [
   { href: "/app/leaderboard", id: "leaderboard", icon: TrendingUp,  labelKey: "nav.leaderboard", descKey: "nav.leaderboardDesc" },
 ];
 
-const MOBILE_TABS: TabId[] = ["home", "help-request", "create", "community", "profile"];
+const MOBILE_TABS: TabId[] = ["home", "help-request", "create", "events", "profile"];
 
 const ALL_TABS = [...PRIMARY_TABS, ...SECONDARY_TABS];
 
